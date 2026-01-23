@@ -71,6 +71,7 @@ const hideResults = () => {
     elements.progressSection.classList.add('hidden');
     elements.downloadSection.classList.add('hidden');
     elements.errorSection.classList.add('hidden');
+    // We DO NOT hide game container here to allow playing across sessions
 };
 
 /**
@@ -257,6 +258,9 @@ const handleSubmit = async (e) => {
     hideResults();
     setLoading(true);
 
+    // START THE GAME!
+    showGame();
+
     try {
         // Fetch video info
         const videoInfo = await fetchVideoInfo(videoId);
@@ -298,10 +302,221 @@ const handleUrlInput = () => {
     }
 };
 
+/**
+ * ========================================
+ * SNAKE GAME LOGIC
+ * ========================================
+ */
+const gameElements = {
+    container: document.getElementById('game-container'),
+    canvas: document.getElementById('game-canvas'),
+    ctx: document.getElementById('game-canvas').getContext('2d'),
+    score: document.getElementById('score'),
+    restartBtn: document.getElementById('restart-btn'),
+    highScoresList: document.getElementById('high-scores-list')
+};
+
+const gameConfig = {
+    tileSize: 16,
+    speed: 100,
+    colors: {
+        snake: '#ffffff',
+        food: '#10b981',
+        head: '#a1a1aa'
+    }
+};
+
+let gameLoop = null;
+let snake = [];
+let food = { x: 0, y: 0 };
+let velocity = { x: 0, y: 0 };
+let score = 0;
+let isGameRunning = false;
+
+// Load High Scores
+const getHighScores = () => {
+    const scores = localStorage.getItem('snakeHighScores');
+    return scores ? JSON.parse(scores) : [];
+};
+
+const saveHighScore = (score) => {
+    const scores = getHighScores();
+    scores.push({
+        score,
+        date: new Date().toLocaleDateString()
+    });
+
+    // Sort descending and keep top 5
+    scores.sort((a, b) => b.score - a.score);
+    const topScores = scores.slice(0, 5);
+
+    localStorage.setItem('snakeHighScores', JSON.stringify(topScores));
+    displayHighScores();
+};
+
+const displayHighScores = () => {
+    const scores = getHighScores();
+    gameElements.highScoresList.innerHTML = scores.length
+        ? scores.map((s, i) => `
+            <li>
+                <span>#${i + 1}</span>
+                <span>${s.score}</span>
+            </li>
+        `).join('')
+        : '<li><span style="width:100%;text-align:center">No scores yet</span></li>';
+};
+
+// Initialize specific game state
+const initGame = () => {
+    const startX = 10;
+    const startY = 10;
+    snake = [
+        { x: startX, y: startY },
+        { x: startX - 1, y: startY },
+        { x: startX - 2, y: startY }
+    ];
+
+    velocity = { x: 1, y: 0 };
+    score = 0;
+    gameElements.score.textContent = score;
+    gameElements.restartBtn.classList.add('hidden');
+
+    spawnFood();
+    isGameRunning = true;
+    displayHighScores();
+
+    if (gameElements.ctx) {
+        gameElements.container.classList.remove('hidden');
+        if (gameLoop) clearInterval(gameLoop);
+        gameLoop = setInterval(updateGame, gameConfig.speed);
+    }
+};
+
+const spawnFood = () => {
+    const tileCount = gameElements.canvas.width / gameConfig.tileSize;
+    food.x = Math.floor(Math.random() * tileCount);
+    food.y = Math.floor(Math.random() * tileCount);
+
+    for (let part of snake) {
+        if (part.x === food.x && part.y === food.y) {
+            spawnFood();
+            break;
+        }
+    }
+};
+
+const updateGame = () => {
+    if (!isGameRunning) return;
+
+    const head = { x: snake[0].x + velocity.x, y: snake[0].y + velocity.y };
+    const tileCount = gameElements.canvas.width / gameConfig.tileSize;
+
+    // Wall Collision (Wrap around)
+    if (head.x < 0) head.x = tileCount - 1;
+    if (head.x >= tileCount) head.x = 0;
+    if (head.y < 0) head.y = tileCount - 1;
+    if (head.y >= tileCount) head.y = 0;
+
+    // Self Collision
+    for (let part of snake) {
+        if (head.x === part.x && head.y === part.y) {
+            gameOver();
+            return;
+        }
+    }
+
+    snake.unshift(head);
+
+    // Food Collision
+    if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        gameElements.score.textContent = score;
+        spawnFood();
+    } else {
+        snake.pop();
+    }
+
+    drawGame();
+};
+
+const drawGame = () => {
+    // Clear Screen
+    gameElements.ctx.fillStyle = 'rgba(10, 10, 12, 0.8)';
+    gameElements.ctx.fillRect(0, 0, gameElements.canvas.width, gameElements.canvas.height);
+
+    // Draw Snake
+    snake.forEach((part, index) => {
+        gameElements.ctx.fillStyle = index === 0 ? gameConfig.colors.head : gameConfig.colors.snake;
+        gameElements.ctx.fillRect(
+            part.x * gameConfig.tileSize,
+            part.y * gameConfig.tileSize,
+            gameConfig.tileSize - 2,
+            gameConfig.tileSize - 2
+        );
+    });
+
+    // Draw Food
+    gameElements.ctx.fillStyle = gameConfig.colors.food;
+    gameElements.ctx.beginPath();
+    const centerX = (food.x * gameConfig.tileSize) + (gameConfig.tileSize / 2);
+    const centerY = (food.y * gameConfig.tileSize) + (gameConfig.tileSize / 2);
+    gameElements.ctx.arc(centerX, centerY, (gameConfig.tileSize / 2) - 2, 0, 2 * Math.PI);
+    gameElements.ctx.fill();
+};
+
+const gameOver = () => {
+    isGameRunning = false;
+    clearInterval(gameLoop);
+    saveHighScore(score);
+    gameElements.restartBtn.classList.remove('hidden');
+
+    // Draw "Game Over"
+    gameElements.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    gameElements.ctx.fillRect(0, 0, gameElements.canvas.width, gameElements.canvas.height);
+    gameElements.ctx.fillStyle = '#fff';
+    gameElements.ctx.font = '24px Inter';
+    gameElements.ctx.textAlign = 'center';
+    gameElements.ctx.fillText('Game Over', gameElements.canvas.width / 2, gameElements.canvas.height / 2);
+};
+
+// Start waiting for user to play
+const showGame = () => {
+    gameElements.container.classList.remove('hidden');
+    displayHighScores();
+    if (!isGameRunning) {
+        initGame();
+    }
+};
+
+// Game Controls
+document.addEventListener('keydown', (e) => {
+    if (!isGameRunning) return;
+
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+    }
+
+    switch (e.key) {
+        case 'ArrowUp':
+            if (velocity.y !== 1) velocity = { x: 0, y: -1 };
+            break;
+        case 'ArrowDown':
+            if (velocity.y !== -1) velocity = { x: 0, y: 1 };
+            break;
+        case 'ArrowLeft':
+            if (velocity.x !== 1) velocity = { x: -1, y: 0 };
+            break;
+        case 'ArrowRight':
+            if (velocity.x !== -1) velocity = { x: 1, y: 0 };
+            break;
+    }
+});
+
 // Event Listeners
 elements.form.addEventListener('submit', handleSubmit);
 elements.pasteBtn.addEventListener('click', handlePaste);
 elements.urlInput.addEventListener('input', handleUrlInput);
+gameElements.restartBtn.addEventListener('click', initGame);
 
 // Fix: Use explicit click handlers for format buttons
 elements.formatBtns.forEach(btn => {

@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="game.css">
 </head>
 
 <body>
@@ -124,6 +125,28 @@
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
                 <p id="error-message"></p>
+            </div>
+
+            <!-- Mini Game Area -->
+            <div id="game-container" class="game-container hidden">
+                <div class="game-header">
+                    <span class="game-title">Play Snake!</span>
+                    <span class="game-score">Score: <span id="score">0</span></span>
+                </div>
+                <canvas id="game-canvas" width="320" height="320"></canvas>
+
+                <div class="game-footer">
+                    <p class="game-controls">Use Arrow Keys to move</p>
+                    <button id="restart-btn" class="restart-btn hidden">Play Again</button>
+                </div>
+
+                <!-- High Scores -->
+                <div class="high-scores">
+                    <h4>High Scores</h4>
+                    <ul id="high-scores-list">
+                        <!-- Scores will be injected here -->
+                    </ul>
+                </div>
             </div>
         </section>
 

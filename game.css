@@ -1,0 +1,131 @@
+/* ========================================
+   Game Styles
+   ======================================== */
+.game-container {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    animation: fadeIn 0.5s ease-out;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 320px;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.game-score {
+    color: var(--primary);
+    font-family: monospace;
+}
+
+canvas {
+    background: hsla(240, 10%, 3.9%, 0.5);
+    /* Slightly transparent dark background */
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    image-rendering: pixelated;
+    /* Sharp pixels for retro feel */
+}
+
+/* Enhancing the canvas with a subtle glow for "active" gameplay */
+canvas:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.game-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 320px;
+}
+
+.game-controls {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    opacity: 0.8;
+}
+
+.restart-btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    cursor: pointer;
+}
+
+.restart-btn:hover {
+    background: var(--accent);
+}
+
+.high-scores {
+    width: 100%;
+    max-width: 320px;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--secondary);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.high-scores h4 {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.5rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+#high-scores-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#high-scores-list li {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+#high-scores-list li:last-child {
+    border-bottom: none;
+}
+
+#high-scores-list span:first-child {
+    color: var(--muted-foreground);
+}
+
+#high-scores-list span:last-child {
+    font-family: monospace;
+    color: var(--primary);
+}
