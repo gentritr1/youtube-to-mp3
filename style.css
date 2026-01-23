@@ -23,10 +23,10 @@
     --input: hsl(240 3.7% 15.9%);
     --ring: hsl(240 4.9% 83.9%);
     --success: hsl(142 76% 36%);
-    
+
     /* Radius */
     --radius: 0.5rem;
-    
+
     /* Transitions */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -35,7 +35,9 @@
 /* ========================================
    Reset & Base
    ======================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -244,8 +246,13 @@ body {
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ========================================
@@ -322,50 +329,119 @@ body {
 /* ========================================
    Download Section
    ======================================== */
+/* ========================================
+   Download Section (Modern shadcn UI)
+   ======================================== */
 .download-section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1.25rem;
     margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
+    padding: 1.5rem;
+    background: var(--card);
+    /* Ensure alignment with theme */
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-align: center;
+    animation: slideUpFade 0.4s ease-out forwards;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Subtle background glow for premium feel */
+.download-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--success), transparent);
+    opacity: 0.5;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .success-icon {
-    width: 48px;
-    height: 48px;
+    width: 3.5rem;
+    height: 3.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: hsla(142, 76%, 36%, 0.1);
+    background: hsla(142, 76%, 36%, 0.15);
+    /* Slightly clearer background */
+    border: 1px solid hsla(142, 76%, 36%, 0.2);
     border-radius: 50%;
     color: var(--success);
+    margin-bottom: 0.25rem;
+    box-shadow: 0 0 15px hsla(142, 76%, 36%, 0.15);
+}
+
+.success-icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
 }
 
 .success-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--foreground);
+    letter-spacing: -0.015em;
+}
+
+.success-subtext {
     font-size: 0.875rem;
-    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-top: -1rem;
+    margin-bottom: 0.5rem;
 }
 
 .download-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     width: 100%;
-    height: 2.75rem;
-    background: var(--success);
-    border-radius: var(--radius);
-    color: white;
+    height: 3rem;
+    /* Taller button for prominence */
+    background: var(--foreground);
+    /* White on dark theme for high contrast */
+    color: var(--background);
+    /* Dark text on white button */
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
-    transition: opacity var(--transition-fast);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .download-btn:hover {
-    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+    background: #ffffff;
+}
+
+.download-btn:active {
+    transform: translateY(0);
+}
+
+.download-btn svg {
+    margin-right: 4px;
 }
 
 /* ========================================
@@ -425,7 +501,7 @@ body {
     .container {
         padding: 1.5rem 1rem;
     }
-    
+
     .thumbnail {
         width: 100px;
         height: 56px;

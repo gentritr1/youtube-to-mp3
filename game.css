@@ -7,21 +7,21 @@
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-    animation: fadeIn 0.5s ease-out;
+    animation: gameEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);
     width: 100%;
 }
 
-@keyframes fadeIn {
+@keyframes gameEnter {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(20px) scale(0.95);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -41,13 +41,12 @@
 }
 
 canvas {
-    background: hsla(240, 10%, 3.9%, 0.5);
-    /* Slightly transparent dark background */
-    border: 2px solid var(--border);
+    background: hsla(240, 10%, 3.9%, 0.8);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    image-rendering: pixelated;
-    /* Sharp pixels for retro feel */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    /* Remove pixelated rendering for smooth primitives */
+    image-rendering: auto;
 }
 
 /* Enhancing the canvas with a subtle glow for "active" gameplay */
