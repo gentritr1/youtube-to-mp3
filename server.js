@@ -70,6 +70,9 @@ app.post('/api/convert', async (req, res) => {
     const taskId = randomUUID();
     const url = `https://www.youtube.com/watch?v=${videoId}`;
 
+    // Get video title first if not provided in request
+    let title = req.body.title || 'video';
+
     // Initialize task
     tasks.set(taskId, {
         state: 'processing',
@@ -77,6 +80,7 @@ app.post('/api/convert', async (req, res) => {
         status: 'Starting...',
         videoId,
         format,
+        title,
     });
 
     // Start conversion in background
@@ -97,6 +101,39 @@ app.get('/api/progress/:taskId', (req, res) => {
     }
 
     res.json(task);
+});
+
+/**
+ * Download file with human-friendly name
+ */
+app.get('/api/download/:taskId', (req, res) => {
+    const { taskId } = req.params;
+    const task = tasks.get(taskId);
+
+    if (!task || task.state !== 'completed') {
+        return res.status(404).json({ message: 'File not found or still processing' });
+    }
+
+    const outputFile = `${taskId}.${task.format}`;
+    const filePath = path.join(downloadsDir, outputFile);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'File no longer exists' });
+    }
+
+    // Sanitize title for filename
+    const safeTitle = (task.title || 'video')
+        .replace(/[<>:"/\\|?*]/g, '') // Remove invalid chars
+        .replace(/\s+/g, '_')         // Replace spaces with underscores
+        .substring(0, 100);           // Limit length
+
+    const downloadName = `${safeTitle}.${task.format}`;
+
+    // Explicitly set content type to help the browser
+    const contentType = task.format === 'mp3' ? 'audio/mpeg' : 'video/mp4';
+    res.setHeader('Content-Type', contentType);
+
+    res.download(filePath, downloadName);
 });
 
 /**
@@ -215,7 +252,7 @@ function convertVideo(taskId, url, format) {
             task.state = 'completed';
             task.progress = 100;
             task.status = 'Complete!';
-            task.downloadUrl = `http://localhost:${PORT}/downloads/${outputFile}`;
+            task.downloadUrl = `/api/download/${taskId}`;
         } else {
             task.state = 'error';
             task.error = 'Output file not found';

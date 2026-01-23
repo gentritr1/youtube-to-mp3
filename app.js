@@ -127,7 +127,7 @@ const fetchVideoInfo = async (videoId) => {
 /**
  * Convert video via backend
  */
-const convertVideo = async (videoId, format) => {
+const convertVideo = async (videoId, format, title) => {
     elements.progressSection.classList.remove('hidden');
     updateProgress(10, 'Starting conversion...');
 
@@ -135,7 +135,7 @@ const convertVideo = async (videoId, format) => {
         const response = await fetch(`${API_URL}/api/convert`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ videoId, format }),
+            body: JSON.stringify({ videoId, format, title }),
         });
 
         if (!response.ok) {
@@ -169,7 +169,10 @@ const pollProgress = async (taskId) => {
         updateProgress(data.progress, data.status);
 
         if (data.state === 'completed') {
-            return data.downloadUrl;
+            // Ensure download URL is absolute if it starts with /
+            return data.downloadUrl.startsWith('/')
+                ? `${API_URL}${data.downloadUrl}`
+                : data.downloadUrl;
         }
 
         if (data.state === 'error') {
@@ -263,12 +266,12 @@ const handleSubmit = async (e) => {
         elements.preview.classList.remove('hidden');
 
         // Convert video
-        const downloadUrl = await convertVideo(videoId, state.format);
+        const downloadUrl = await convertVideo(videoId, state.format, videoInfo.title);
 
         // Show download section
         elements.progressSection.classList.add('hidden');
         elements.downloadLink.href = downloadUrl;
-        elements.downloadLink.download = `${videoInfo.title}.${state.format}`;
+        // Server now provides the correct filename via Content-Disposition
         elements.downloadSection.classList.remove('hidden');
 
     } catch (error) {
