@@ -304,7 +304,7 @@ const handleUrlInput = () => {
 
 /**
  * ========================================
- * SNAKE GAME LOGIC
+ * SNAKE GAME LOGIC (Canvas + 60FPS Interpolation)
  * ========================================
  */
 const gameElements = {
@@ -318,25 +318,38 @@ const gameElements = {
 
 const gameConfig = {
     tileSize: 16,
-    speed: 100,
+    tickRate: 80, // Logic updates every 80ms (faster gameplay)
     colors: {
         snake: '#ffffff',
-        food: '#10b981',
-        head: '#a1a1aa'
+        snakeHead: '#ffffff',
+        food: '#10b981', // Emerald 500
+        bg: 'rgba(10, 10, 12, 0.8)',
+        particles: ['#10b981', '#34d399', '#6ee7b7'] // Green shades
     }
 };
 
-let gameLoop = null;
+// Game State
+let lastTime = 0;
+let timeAccumulator = 0;
+let animationFrameId = null;
+
 let snake = [];
+let prevSnake = []; // For interpolation
 let food = { x: 0, y: 0 };
+let particles = []; // Explosion particles
+
+// Movement
 let velocity = { x: 0, y: 0 };
-let score = 0;
+let nextVelocity = { x: 0, y: 0 }; // Buffer for next input
 let isGameRunning = false;
+let score = 0;
 
 // Load High Scores
 const getHighScores = () => {
-    const scores = localStorage.getItem('snakeHighScores');
-    return scores ? JSON.parse(scores) : [];
+    try {
+        const scores = localStorage.getItem('snakeHighScores');
+        return scores ? JSON.parse(scores) : [];
+    } catch (e) { return []; }
 };
 
 const saveHighScore = (score) => {
@@ -366,52 +379,126 @@ const displayHighScores = () => {
         : '<li><span style="width:100%;text-align:center">No scores yet</span></li>';
 };
 
-// Initialize specific game state
+// --- Particle System ---
+const createParticles = (x, y) => {
+    const headerX = (x * gameConfig.tileSize) + (gameConfig.tileSize / 2);
+    const headerY = (y * gameConfig.tileSize) + (gameConfig.tileSize / 2);
+
+    for (let i = 0; i < 8; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 2 + 1;
+        particles.push({
+            x: headerX,
+            y: headerY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 1.0,
+            color: gameConfig.colors.particles[Math.floor(Math.random() * gameConfig.colors.particles.length)]
+        });
+    }
+};
+
+const updateParticles = () => {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.05;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+};
+
+const drawParticles = (ctx) => {
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+    });
+};
+
+// --- Game Loop ---
+
 const initGame = () => {
     const startX = 10;
     const startY = 10;
+
+    // Initial state
     snake = [
         { x: startX, y: startY },
         { x: startX - 1, y: startY },
         { x: startX - 2, y: startY }
     ];
+    // Clone for interpolation
+    prevSnake = JSON.parse(JSON.stringify(snake));
 
     velocity = { x: 1, y: 0 };
+    nextVelocity = { x: 1, y: 0 };
+
     score = 0;
+    particles = [];
     gameElements.score.textContent = score;
     gameElements.restartBtn.classList.add('hidden');
 
     spawnFood();
-    isGameRunning = true;
-    displayHighScores();
 
-    if (gameElements.ctx) {
-        gameElements.container.classList.remove('hidden');
-        if (gameLoop) clearInterval(gameLoop);
-        gameLoop = setInterval(updateGame, gameConfig.speed);
+    isGameRunning = true;
+    lastTime = performance.now();
+    timeAccumulator = 0;
+
+    displayHighScores();
+    gameElements.container.classList.remove('hidden');
+
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    requestAnimationFrame(gameLoop);
+};
+
+const gameLoop = (timestamp) => {
+    if (!isGameRunning) return;
+
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+    timeAccumulator += deltaTime;
+
+    // Logic Update (Fixed Time Step)
+    while (timeAccumulator >= gameConfig.tickRate) {
+        updateGameLogic();
+        timeAccumulator -= gameConfig.tickRate;
     }
+
+    // Render Update (Interpolated)
+    const interpolationAlpha = timeAccumulator / gameConfig.tickRate;
+    drawGame(interpolationAlpha);
+    updateParticles(); // Update effects every frame
+
+    animationFrameId = requestAnimationFrame(gameLoop);
 };
 
 const spawnFood = () => {
     const tileCount = gameElements.canvas.width / gameConfig.tileSize;
-    food.x = Math.floor(Math.random() * tileCount);
-    food.y = Math.floor(Math.random() * tileCount);
+    let valid = false;
 
-    for (let part of snake) {
-        if (part.x === food.x && part.y === food.y) {
-            spawnFood();
-            break;
-        }
+    while (!valid) {
+        food.x = Math.floor(Math.random() * tileCount);
+        food.y = Math.floor(Math.random() * tileCount);
+
+        valid = !snake.some(part => part.x === food.x && part.y === food.y);
     }
 };
 
-const updateGame = () => {
-    if (!isGameRunning) return;
+const updateGameLogic = () => {
+    // Save current state as previous for interpolation
+    prevSnake = JSON.parse(JSON.stringify(snake));
+
+    // Apply buffered input
+    velocity = { ...nextVelocity };
 
     const head = { x: snake[0].x + velocity.x, y: snake[0].y + velocity.y };
     const tileCount = gameElements.canvas.width / gameConfig.tileSize;
 
-    // Wall Collision (Wrap around)
+    // Wall Collision (Wrap)
     if (head.x < 0) head.x = tileCount - 1;
     if (head.x >= tileCount) head.x = 0;
     if (head.y < 0) head.y = tileCount - 1;
@@ -431,84 +518,120 @@ const updateGame = () => {
     if (head.x === food.x && head.y === food.y) {
         score += 10;
         gameElements.score.textContent = score;
+        createParticles(food.x, food.y); // Boom!
         spawnFood();
     } else {
         snake.pop();
     }
-
-    drawGame();
 };
 
-const drawGame = () => {
-    // Clear Screen
-    gameElements.ctx.fillStyle = 'rgba(10, 10, 12, 0.8)';
-    gameElements.ctx.fillRect(0, 0, gameElements.canvas.width, gameElements.canvas.height);
+const drawGame = (alpha) => {
+    const ctx = gameElements.ctx;
+    const ts = gameConfig.tileSize;
+
+    // Clear with semi-transparent black for trails? No, clean clear is better for clarity
+    ctx.fillStyle = gameConfig.colors.bg;
+    ctx.fillRect(0, 0, gameElements.canvas.width, gameElements.canvas.height);
+
+    // Draw Particles
+    drawParticles(ctx);
+
+    // Draw Food (Pulse effect)
+    const time = Date.now() / 200;
+    const pulse = Math.sin(time) * 2;
+
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = gameConfig.colors.food;
+    ctx.fillStyle = gameConfig.colors.food;
+
+    ctx.beginPath();
+    const fx = (food.x * ts) + (ts / 2);
+    const fy = (food.y * ts) + (ts / 2);
+    ctx.arc(fx, fy, (ts / 2) - 2 + (pulse * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reset Shadow
+    ctx.shadowBlur = 0;
 
     // Draw Snake
-    snake.forEach((part, index) => {
-        gameElements.ctx.fillStyle = index === 0 ? gameConfig.colors.head : gameConfig.colors.snake;
-        gameElements.ctx.fillRect(
-            part.x * gameConfig.tileSize,
-            part.y * gameConfig.tileSize,
-            gameConfig.tileSize - 2,
-            gameConfig.tileSize - 2
-        );
-    });
+    snake.forEach((part, i) => {
+        // Interpolation logic
+        let drawX = part.x * ts;
+        let drawY = part.y * ts;
 
-    // Draw Food
-    gameElements.ctx.fillStyle = gameConfig.colors.food;
-    gameElements.ctx.beginPath();
-    const centerX = (food.x * gameConfig.tileSize) + (gameConfig.tileSize / 2);
-    const centerY = (food.y * gameConfig.tileSize) + (gameConfig.tileSize / 2);
-    gameElements.ctx.arc(centerX, centerY, (gameConfig.tileSize / 2) - 2, 0, 2 * Math.PI);
-    gameElements.ctx.fill();
+        // If we have a previous state, interpolate
+        if (prevSnake[i]) {
+            const px = prevSnake[i].x * ts;
+            const py = prevSnake[i].y * ts;
+
+            // Handle wrapping interpolation edge case
+            // If distance is huge (wrapped), don't interpolate visual to avoid flying across screen
+            if (Math.abs(px - drawX) < ts * 2 && Math.abs(py - drawY) < ts * 2) {
+                drawX = px + (drawX - px) * alpha;
+                drawY = py + (drawY - py) * alpha;
+            }
+        }
+
+        ctx.shadowBlur = i === 0 ? 15 : 0; // Glow for head
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillStyle = i === 0 ? gameConfig.colors.snakeHead : gameConfig.colors.snake;
+
+        // Draw rounded rects for style
+        ctx.beginPath();
+        const size = ts - 2;
+        ctx.roundRect(drawX, drawY, size, size, i === 0 ? 4 : 2);
+        ctx.fill();
+    });
 };
 
 const gameOver = () => {
     isGameRunning = false;
-    clearInterval(gameLoop);
+    cancelAnimationFrame(animationFrameId);
     saveHighScore(score);
     gameElements.restartBtn.classList.remove('hidden');
 
-    // Draw "Game Over"
-    gameElements.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    gameElements.ctx.fillRect(0, 0, gameElements.canvas.width, gameElements.canvas.height);
-    gameElements.ctx.fillStyle = '#fff';
-    gameElements.ctx.font = '24px Inter';
-    gameElements.ctx.textAlign = 'center';
-    gameElements.ctx.fillText('Game Over', gameElements.canvas.width / 2, gameElements.canvas.height / 2);
+    // Draw Game Over Overlay
+    const ctx = gameElements.ctx;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, gameElements.canvas.width, gameElements.canvas.height);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 24px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', gameElements.canvas.width / 2, gameElements.canvas.height / 2);
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillStyle = '#a1a1aa';
+    ctx.fillText(`Final Score: ${score}`, gameElements.canvas.width / 2, gameElements.canvas.height / 2 + 25);
 };
 
-// Start waiting for user to play
 const showGame = () => {
     gameElements.container.classList.remove('hidden');
     displayHighScores();
-    if (!isGameRunning) {
-        initGame();
-    }
+    if (!isGameRunning) initGame();
 };
 
-// Game Controls
+// Controls
 document.addEventListener('keydown', (e) => {
     if (!isGameRunning) return;
 
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
-    }
 
-    switch (e.key) {
-        case 'ArrowUp':
-            if (velocity.y !== 1) velocity = { x: 0, y: -1 };
-            break;
-        case 'ArrowDown':
-            if (velocity.y !== -1) velocity = { x: 0, y: 1 };
-            break;
-        case 'ArrowLeft':
-            if (velocity.x !== 1) velocity = { x: -1, y: 0 };
-            break;
-        case 'ArrowRight':
-            if (velocity.x !== -1) velocity = { x: 1, y: 0 };
-            break;
+        switch (e.key) {
+            case 'ArrowUp':
+                if (velocity.y === 0) nextVelocity = { x: 0, y: -1 };
+                break;
+            case 'ArrowDown':
+                if (velocity.y === 0) nextVelocity = { x: 0, y: 1 };
+                break;
+            case 'ArrowLeft':
+                if (velocity.x === 0) nextVelocity = { x: -1, y: 0 };
+                break;
+            case 'ArrowRight':
+                if (velocity.x === 0) nextVelocity = { x: 1, y: 0 };
+                break;
+        }
     }
 });
 
