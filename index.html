@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Converter | YouTube to MP3/MP4</title>
+    <meta name="description" content="Fast, minimal YouTube to MP3 and MP4 converter">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="container">
+        <header class="header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <h1>YT Converter</h1>
+            </div>
+            <p class="tagline">Convert YouTube videos to MP3 or MP4</p>
+        </header>
+
+        <section class="converter-card">
+            <form id="converter-form" class="form">
+                <div class="input-group">
+                    <label for="url-input" class="sr-only">YouTube URL</label>
+                    <input type="url" id="url-input" class="input" placeholder="Paste YouTube URL here..."
+                        autocomplete="off" required>
+                    <button type="button" id="paste-btn" class="paste-btn" title="Paste from clipboard">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="format-toggle">
+                    <button type="button" class="format-btn active" data-format="mp3">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                        MP3
+                    </button>
+                    <button type="button" class="format-btn" data-format="mp4">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                            <line x1="7" y1="2" x2="7" y2="22"></line>
+                            <line x1="17" y1="2" x2="17" y2="22"></line>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <line x1="2" y1="7" x2="7" y2="7"></line>
+                            <line x1="2" y1="17" x2="7" y2="17"></line>
+                            <line x1="17" y1="17" x2="22" y2="17"></line>
+                            <line x1="17" y1="7" x2="22" y2="7"></line>
+                        </svg>
+                        MP4
+                    </button>
+                </div>
+
+                <button type="submit" id="convert-btn" class="convert-btn">
+                    <span class="btn-text">Convert</span>
+                    <span class="btn-loader hidden">
+                        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                        </svg>
+                    </span>
+                </button>
+            </form>
+
+            <!-- Preview Section (hidden by default) -->
+            <div id="preview" class="preview hidden">
+                <img id="thumbnail" class="thumbnail" alt="Video thumbnail">
+                <div class="preview-info">
+                    <h3 id="video-title" class="video-title"></h3>
+                    <p id="video-duration" class="video-duration"></p>
+                </div>
+            </div>
+
+            <!-- Progress Section (hidden by default) -->
+            <div id="progress-section" class="progress-section hidden">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <p id="progress-text" class="progress-text">Preparing...</p>
+            </div>
+
+            <!-- Download Section (hidden by default) -->
+            <div id="download-section" class="download-section hidden">
+                <div class="success-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <p class="success-text">Ready to download!</p>
+                <a id="download-link" class="download-btn" download>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                </a>
+            </div>
+
+            <!-- Error Section (hidden by default) -->
+            <div id="error-section" class="error-section hidden">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p id="error-message"></p>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>Built for personal use only. Respect copyright laws.</p>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
