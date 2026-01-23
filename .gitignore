@@ -11,5 +11,5 @@ npm-debug.log*
 # User requested
 *.630
 
-# Downloaded content
-downloads/
+# Runtime data
+tasks.json

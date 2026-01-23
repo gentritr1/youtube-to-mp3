@@ -21,16 +21,40 @@ app.use(express.json());
 
 // Serve static frontend files
 app.use(express.static(__dirname));
-app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
 
-// Ensure downloads directory exists
-const downloadsDir = path.join(__dirname, 'downloads');
+// Use user's Downloads folder instead of project folder
+const downloadsDir = path.join(process.env.HOME || process.env.USERPROFILE, 'Downloads');
+console.log('Downloads directory:', downloadsDir);
+
+// Ensure downloads directory exists (it should already exist)
 if (!fs.existsSync(downloadsDir)) {
+    console.warn('Downloads folder does not exist, creating it...');
     fs.mkdirSync(downloadsDir, { recursive: true });
 }
 
-// In-memory task store
-const tasks = new Map();
+// Persistent task store
+const TASKS_FILE = path.join(__dirname, 'tasks.json');
+let tasks = new Map();
+
+// Load tasks from disk
+try {
+    if (fs.existsSync(TASKS_FILE)) {
+        const data = fs.readFileSync(TASKS_FILE, 'utf8');
+        tasks = new Map(JSON.parse(data));
+        console.log(`Loaded ${tasks.size} tasks from disk`);
+    }
+} catch (error) {
+    console.error('Failed to load tasks:', error);
+}
+
+// Save tasks to disk
+function saveTasks() {
+    try {
+        fs.writeFileSync(TASKS_FILE, JSON.stringify([...tasks]), 'utf8');
+    } catch (error) {
+        console.error('Failed to save tasks:', error);
+    }
+}
 
 /**
  * Get video info using yt-dlp
@@ -105,8 +129,9 @@ app.get('/api/progress/:taskId', (req, res) => {
 
 /**
  * Download file with human-friendly name
+ * The :filename param is optional and helps browsers set the name
  */
-app.get('/api/download/:taskId', (req, res) => {
+app.get('/api/download/:taskId/:filename?', (req, res) => {
     const { taskId } = req.params;
     const task = tasks.get(taskId);
 
@@ -114,26 +139,20 @@ app.get('/api/download/:taskId', (req, res) => {
         return res.status(404).json({ message: 'File not found or still processing' });
     }
 
-    const outputFile = `${taskId}.${task.format}`;
-    const filePath = path.join(downloadsDir, outputFile);
+    // Use the sanitized filename stored in the task
+    const filePath = path.join(downloadsDir, task.filename);
 
     if (!fs.existsSync(filePath)) {
+        console.error(`File not found: ${filePath}`);
         return res.status(404).json({ message: 'File no longer exists' });
     }
 
-    // Sanitize title for filename
-    const safeTitle = (task.title || 'video')
-        .replace(/[<>:"/\\|?*]/g, '') // Remove invalid chars
-        .replace(/\s+/g, '_')         // Replace spaces with underscores
-        .substring(0, 100);           // Limit length
-
-    const downloadName = `${safeTitle}.${task.format}`;
-
-    // Explicitly set content type to help the browser
+    // Explicitly set content type
     const contentType = task.format === 'mp3' ? 'audio/mpeg' : 'video/mp4';
     res.setHeader('Content-Type', contentType);
 
-    res.download(filePath, downloadName);
+    console.log(`[Download] Serving file: ${task.filename}`);
+    res.download(filePath, task.filename);
 });
 
 /**
@@ -194,7 +213,22 @@ function getVideoInfo(url) {
  */
 function convertVideo(taskId, url, format) {
     const task = tasks.get(taskId);
-    const outputTemplate = path.join(downloadsDir, `${taskId}.%(ext)s`);
+
+    // Generate sanitized filename for the output
+    const safeTitle = (task.title || 'video')
+        .replace(/[<>:"/\\|?*✦]/g, '')  // Remove invalid chars and special symbols
+        .replace(/[^\x00-\x7F]/g, '')    // Remove non-ASCII characters
+        .replace(/\s+/g, '_')            // Replace spaces with underscores
+        .replace(/_{2,}/g, '_')          // Replace multiple underscores with single
+        .replace(/^_|_$/g, '')           // Remove leading/trailing underscores
+        .substring(0, 100)               // Limit length
+        || 'download';                   // Fallback if empty
+
+    const filename = `${safeTitle}.%(ext)s`;
+    const outputTemplate = path.join(downloadsDir, filename);
+
+    // Store the expected filename for later
+    task.filename = `${safeTitle}.${format}`;
 
     const args = format === 'mp3'
         ? [
@@ -214,6 +248,7 @@ function convertVideo(taskId, url, format) {
             '--progress',
             url
         ];
+
 
     const ytdlp = spawn('yt-dlp', args);
 
@@ -241,21 +276,23 @@ function convertVideo(taskId, url, format) {
         if (code !== 0) {
             task.state = 'error';
             task.error = 'Conversion failed';
+            saveTasks();
             return;
         }
 
-        // Find the output file
-        const outputFile = `${taskId}.${format}`;
-        const outputPath = path.join(downloadsDir, outputFile);
+        // Find the output file using the sanitized filename
+        const outputPath = path.join(downloadsDir, task.filename);
 
         if (fs.existsSync(outputPath)) {
             task.state = 'completed';
             task.progress = 100;
             task.status = 'Complete!';
-            task.downloadUrl = `/api/download/${taskId}`;
+            task.downloadUrl = `/api/download/${taskId}/${encodeURIComponent(task.filename)}`;
+            saveTasks();
         } else {
             task.state = 'error';
-            task.error = 'Output file not found';
+            task.error = `Output file not found: ${task.filename}`;
+            saveTasks();
         }
     });
 
@@ -264,6 +301,7 @@ function convertVideo(taskId, url, format) {
         task.error = err.code === 'ENOENT'
             ? 'yt-dlp not installed'
             : err.message;
+        saveTasks();
     });
 }
 

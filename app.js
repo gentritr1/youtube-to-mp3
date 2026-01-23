@@ -170,9 +170,14 @@ const pollProgress = async (taskId) => {
 
         if (data.state === 'completed') {
             // Ensure download URL is absolute if it starts with /
-            return data.downloadUrl.startsWith('/')
+            const url = data.downloadUrl.startsWith('/')
                 ? `${API_URL}${data.downloadUrl}`
                 : data.downloadUrl;
+
+            return {
+                url,
+                filename: data.filename
+            };
         }
 
         if (data.state === 'error') {
@@ -266,12 +271,11 @@ const handleSubmit = async (e) => {
         elements.preview.classList.remove('hidden');
 
         // Convert video
-        const downloadUrl = await convertVideo(videoId, state.format, videoInfo.title);
+        const { url: downloadUrl, filename } = await convertVideo(videoId, state.format, videoInfo.title);
 
         // Show download section
         elements.progressSection.classList.add('hidden');
         elements.downloadLink.href = downloadUrl;
-        // Server now provides the correct filename via Content-Disposition
         elements.downloadSection.classList.remove('hidden');
 
     } catch (error) {
@@ -304,6 +308,7 @@ elements.formatBtns.forEach(btn => {
     btn.addEventListener('click', handleFormatChange);
     btn.addEventListener('mousedown', (e) => e.preventDefault()); // Prevent focus issues
 });
+
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
