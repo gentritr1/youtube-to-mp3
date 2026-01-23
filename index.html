@@ -87,6 +87,28 @@
                 </div>
             </div>
 
+            <!-- Mini Game Area (Moved up for stability) -->
+            <div id="game-container" class="game-container hidden">
+                <div class="game-header">
+                    <span class="game-title">Play Snake!</span>
+                    <span class="game-score">Score: <span id="score">0</span></span>
+                </div>
+                <canvas id="game-canvas" width="320" height="320"></canvas>
+
+                <div class="game-footer">
+                    <p class="game-controls">Use Arrow Keys to move</p>
+                    <button id="restart-btn" class="restart-btn hidden">Play Again</button>
+                </div>
+
+                <!-- High Scores -->
+                <div class="high-scores">
+                    <h4>High Scores</h4>
+                    <ul id="high-scores-list">
+                        <!-- Scores will be injected here -->
+                    </ul>
+                </div>
+            </div>
+
             <!-- Progress Section (hidden by default) -->
             <div id="progress-section" class="progress-section hidden">
                 <div class="progress-bar">
@@ -127,27 +149,7 @@
                 <p id="error-message"></p>
             </div>
 
-            <!-- Mini Game Area -->
-            <div id="game-container" class="game-container hidden">
-                <div class="game-header">
-                    <span class="game-title">Play Snake!</span>
-                    <span class="game-score">Score: <span id="score">0</span></span>
-                </div>
-                <canvas id="game-canvas" width="320" height="320"></canvas>
 
-                <div class="game-footer">
-                    <p class="game-controls">Use Arrow Keys to move</p>
-                    <button id="restart-btn" class="restart-btn hidden">Play Again</button>
-                </div>
-
-                <!-- High Scores -->
-                <div class="high-scores">
-                    <h4>High Scores</h4>
-                    <ul id="high-scores-list">
-                        <!-- Scores will be injected here -->
-                    </ul>
-                </div>
-            </div>
         </section>
 
         <footer class="footer">
