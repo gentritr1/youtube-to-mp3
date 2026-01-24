@@ -93,10 +93,47 @@
                     <span class="game-title">Play Snake!</span>
                     <span class="game-score">Score: <span id="score">0</span></span>
                 </div>
+
+                <!-- Stats Bar -->
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span class="stat-icon">📏</span>
+                        <span>Length:</span>
+                        <span id="snake-length" class="stat-value">3</span>
+                    </div>
+                    <div id="combo-display" class="combo-display">
+                        <span>🔥</span>
+                        <span id="combo-count">x2</span>
+                        <span>COMBO!</span>
+                    </div>
+                    <div id="split-indicator" class="split-indicator">
+                        <span>🐍</span>
+                        <span>Snake <span id="split-snake-num">1</span></span>
+                        <kbd>X</kbd>
+                    </div>
+                    <div id="powerup-indicator" class="powerup-indicator">
+                        <span id="powerup-icon">👻</span>
+                        <span id="powerup-timer">5s</span>
+                    </div>
+                </div>
+
                 <canvas id="game-canvas" width="320" height="320"></canvas>
 
+                <!-- Power-up Legend -->
+                <div class="powerup-legend">
+                    <div class="legend-item"><span class="legend-dot normal"></span>+10</div>
+                    <div class="legend-item"><span class="legend-dot golden"></span>2x Grow</div>
+                    <div class="legend-item"><span class="legend-dot speed"></span>Speed</div>
+                    <div class="legend-item"><span class="legend-dot ghost"></span>Ghost</div>
+                    <div class="legend-item"><span class="legend-dot split"></span>Split</div>
+                </div>
+
                 <div class="game-footer">
-                    <p class="game-controls">Use Arrow Keys to move</p>
+                    <p class="game-controls">
+                        <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> move
+                        <span class="control-divider">•</span>
+                        <kbd>X</kbd> switch
+                    </p>
                     <button id="restart-btn" class="restart-btn hidden">Play Again</button>
                 </div>
 
@@ -157,6 +194,7 @@
         </footer>
     </main>
 
+    <script src="js/snake-game.js"></script>
     <script src="app.js"></script>
 </body>
 
