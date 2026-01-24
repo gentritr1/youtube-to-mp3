@@ -73,7 +73,10 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 ```
 
 ### Frontend
+### Frontend
 - **Vanilla JS & ES6+**: High performance with zero heavy framework overhead.
+- **Modular CSS Architecture**: Organized style modules (`/css/components`, `/css/layout`, `/css/animations`) for maintainability.
+- **Premium Animations**: Physics-based SVG animations (Walking Note, Spinning Reel) for a polished user experience.
 - **Modular Game Engine**: The Snake Game is self-contained in `js/snake-game.js`.
 - **Polling System**: Async task-based polling for progress without layout shifts.
 - **Input Locking**: Prevents state conflicts during conversion (idempotency on UI).
@@ -98,10 +101,11 @@ npm run test:watch
 ## 📁 File Structure
 
 - `/server/` - Modular backend (routes, services, utils, middleware)
+- `/css/` - Modular styling architecture (base, layout, components, animations)
 - `/index.html` - Optimized semantic layout with prioritized download area
 - `/app.js` - Frontend service layer handling API calls and game lifecycle
-- `/style.css` - Core design system, "Zen" background animations
-- `/game.css` - Snake game canvas and HUD styles
+- `/style.css` - CSS entry point (imports modules)
+- `/game.css` - Snake game specific styles
 - `/js/snake-game.js` - Encapsulated Snake Game logic
 - `/tests/` - Vitest unit tests
 
