@@ -73,7 +73,6 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 ```
 
 ### Frontend
-### Frontend
 - **Vanilla JS & ES6+**: High performance with zero heavy framework overhead.
 - **Modular CSS Architecture**: Organized style modules (`/css/components`, `/css/layout`, `/css/animations`) for maintainability.
 - **Premium Animations**: Physics-based SVG animations (Walking Note, Spinning Reel) for a polished user experience.
