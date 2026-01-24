@@ -91,6 +91,32 @@ app.post('/api/convert', async (req, res) => {
         return res.status(400).json({ message: 'Format must be mp3 or mp4' });
     }
 
+    // [IDEMPOTENCY CHECK]
+    // Check if task already exists
+    for (const [existingId, task] of tasks.entries()) {
+        const isSameRequest = task.videoId === videoId && task.format === format;
+
+        if (isSameRequest) {
+            // Case 1: Processing - Reuse task
+            if (task.state === 'processing') {
+                console.log(`[Idempotency] Reusing processing task ${existingId}`);
+                return res.json({ taskId: existingId });
+            }
+
+            // Case 2: Completed - Check if file still exists
+            if (task.state === 'completed') {
+                const filePath = path.join(downloadsDir, task.filename);
+                if (fs.existsSync(filePath)) {
+                    console.log(`[Idempotency] Serving cached file from task ${existingId}`);
+                    return res.json({ taskId: existingId });
+                } else {
+                    // File deleted (cleanup), remove stale task
+                    tasks.delete(existingId);
+                }
+            }
+        }
+    }
+
     const taskId = randomUUID();
     const url = `https://www.youtube.com/watch?v=${videoId}`;
 

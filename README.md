@@ -48,27 +48,62 @@ brew install yt-dlp ffmpeg
 
 ## 🏗 Architecture & Technical Details
 
-The application is built with a focus on modularity and stability:
+The application is built with a focus on **modularity**, **high cohesion**, and **low coupling**:
+
+### Backend (Express & Node.js)
+```
+/server
+├── index.js              # Entry point: Express app setup
+├── config.js             # Centralized constants (paths, timeouts)
+├── routes/
+│   ├── index.js          # Route aggregator
+│   ├── info.js           # GET /api/info
+│   ├── convert.js        # POST /api/convert (with idempotency)
+│   ├── progress.js       # GET /api/progress/:taskId
+│   └── download.js       # GET /api/download/:taskId/:filename
+├── services/
+│   ├── ytdlp.js          # yt-dlp wrapper (getVideoInfo, convertVideo)
+│   └── taskManager.js    # Task CRUD, persistence, idempotency
+├── utils/
+│   ├── parseProgress.js  # Parse yt-dlp output
+│   ├── sanitize.js       # Filename sanitization
+│   └── formatDuration.js # Duration formatting
+└── middleware/
+    └── errorHandler.js   # Centralized error handling
+```
 
 ### Frontend
 - **Vanilla JS & ES6+**: High performance with zero heavy framework overhead.
-- **Modular Game Engine**: The Snake Game is self-contained in `js/snake-game.js`, exposing a clean API for the main `app.js` to control.
-- **Polling System**: Uses an asynchronous task-based polling architecture to track conversion progress without refreshing or moving the layout.
-- **Layout Stability**: Status cards (Preview, Progress, Download) use a fixed-height card system to ensure the Game container doesn't "jump" during conversion state changes.
+- **Modular Game Engine**: The Snake Game is self-contained in `js/snake-game.js`.
+- **Polling System**: Async task-based polling for progress without layout shifts.
+- **Input Locking**: Prevents state conflicts during conversion (idempotency on UI).
 
-### Backend (Express & Node.js)
-- **Task Queue**: Each conversion is assigned a unique `taskId`.
-- **Progress Tracking**: Standard output from `yt-dlp` is parsed to provide accurate percentage-based progress to the frontend via `/api/progress/:taskId`.
-- **Automatic Cleanup**: Temporary files are managed to keep the server lightweight.
+### Key Features
+- **Idempotency**: Same video + format = reuse existing task (no duplicate processing).
+- **Persistence**: Tasks survive server restarts via `tasks.json`.
+- **Testability**: Utilities and services are unit-testable in isolation.
+
+## 🧪 Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Watch mode for development:
+```bash
+npm run test:watch
+```
 
 ## 📁 File Structure
 
-- `/server.js`: Express server with API endpoints for info, conversion, and progress.
-- `/index.html`: Optimized semantic layout with prioritized download area.
-- `/app.js`: Service layer handling API calls, clipboard access, and game lifecycle.
-- `/style.css`: Core design system, "Zen" background animations, and UI transitions.
-- `/game.css`: Specialized styles for the canvas and game HUD components.
-- `/js/snake-game.js`: Encapsulated Snake Game logic (Classes for Snake, Food, Particles).
+- `/server/` - Modular backend (routes, services, utils, middleware)
+- `/index.html` - Optimized semantic layout with prioritized download area
+- `/app.js` - Frontend service layer handling API calls and game lifecycle
+- `/style.css` - Core design system, "Zen" background animations
+- `/game.css` - Snake game canvas and HUD styles
+- `/js/snake-game.js` - Encapsulated Snake Game logic
+- `/tests/` - Vitest unit tests
 
 ## 📄 License
 MIT

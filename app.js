@@ -80,6 +80,10 @@ const hideResults = () => {
 const setLoading = (loading) => {
     state.isLoading = loading;
     elements.convertBtn.disabled = loading;
+    elements.urlInput.disabled = loading; // Disable input
+    elements.pasteBtn.disabled = loading; // Disable paste
+    elements.formatBtns.forEach(btn => btn.disabled = loading); // Disable format toggle
+
     elements.btnText.classList.toggle('hidden', loading);
     elements.btnLoader.classList.toggle('hidden', !loading);
 };
