@@ -446,4 +446,164 @@ canvas.playing {
     font-family: 'Courier New', monospace;
     font-weight: 600;
     color: var(--primary);
+}/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablet and smaller */
+@media (max-width: 768px) {
+    .game-container {
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+
+    .game-header,
+    .powerup-legend,
+    .game-restart-container,
+    .game-footer,
+    .high-scores {
+        max-width: 100%;
+        padding: 0 0.5rem;
+    }
+
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .restart-btn {
+        font-size: 0.85rem;
+        padding: 9px 20px;
+    }
+
+    .game-stats {
+        gap: 0.75rem;
+    }
+
+    .powerup-legend {
+        gap: 0.75rem;
+        font-size: 0.7rem;
+    }
+
+    .legend-dot {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .game-container {
+        margin-top: 1rem;
+        padding: 0.75rem;
+    }
+
+    .game-header {
+        font-size: 0.8rem;
+    }
+
+    .game-stats {
+        gap: 0.5rem;
+    }
+
+    .stat-item {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.6rem;
+    }
+
+    .powerup-indicator {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.6rem;
+    }
+
+    .split-indicator {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.6rem;
+    }
+
+    .powerup-legend {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        font-size: 0.65rem;
+    }
+
+    .legend-item {
+        min-width: 60px;
+    }
+
+    .game-controls {
+        font-size: 0.65rem;
+    }
+
+    .game-controls kbd {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.25rem;
+    }
+
+    .restart-btn {
+        font-size: 0.8rem;
+        padding: 8px 18px;
+    }
+
+    .high-scores {
+        font-size: 0.75rem;
+    }
+
+    .high-scores h4 {
+        font-size: 0.8rem;
+    }
+
+    #high-scores-list li {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.4rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+    .game-stats {
+        flex-direction: column;
+        gap: 0.4rem;
+        width: 100%;
+    }
+
+    .stat-item,
+    .powerup-indicator,
+    .split-indicator {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .powerup-legend {
+        font-size: 0.6rem;
+    }
+
+    .restart-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* Hover effects only on devices that support hover */
+@media (hover: hover) and (pointer: fine) {
+    .restart-btn:hover {
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    #high-scores-list li:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+}
+
+/* Reduce animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .restart-btn {
+        animation: none;
+    }
 }

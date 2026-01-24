@@ -758,69 +758,176 @@
             this.elements.restartBtn.classList.remove('hidden');
             this.canvas.classList.remove('playing');
 
-            // Use requestAnimationFrame to ensure we draw on top of everything
-            requestAnimationFrame(() => {
+            // Animate the game over screen
+            let opacity = 0;
+            const fadeIn = () => {
                 const ctx = this.ctx;
                 const canvas = this.canvas;
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
 
-                // Clear everything first
+                // Clear everything
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // FULLY OPAQUE solid black background - no transparency at all
+                // Solid black background
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Subtle red glow at edges
-                const vignette = ctx.createRadialGradient(cx, cy, 80, cx, cy, canvas.width / 1.2);
+                // Animated red vignette
+                const vignette = ctx.createRadialGradient(cx, cy, 60, cx, cy, canvas.width / 1.1);
                 vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-                vignette.addColorStop(1, 'rgba(239, 68, 68, 0.15)');
+                vignette.addColorStop(1, `rgba(239, 68, 68, ${0.2 * opacity})`);
                 ctx.fillStyle = vignette;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Skull emoji
-                ctx.font = '52px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('💀', cx, cy - 60);
+                // Apply fade opacity
+                ctx.globalAlpha = opacity;
 
-                // GAME OVER text - bright red with strong glow
-                ctx.shadowBlur = 25;
+                // Draw custom broken snake icon
+                this.drawBrokenSnake(ctx, cx, cy - 70, 40);
+
+                // GAME OVER text with gradient
+                const textGradient = ctx.createLinearGradient(cx - 100, 0, cx + 100, 0);
+                textGradient.addColorStop(0, '#ef4444');
+                textGradient.addColorStop(0.5, '#dc2626');
+                textGradient.addColorStop(1, '#ef4444');
+
+                ctx.shadowBlur = 30;
                 ctx.shadowColor = '#ef4444';
-                ctx.fillStyle = '#ef4444';
-                ctx.font = 'bold 32px Inter, system-ui, sans-serif';
-                ctx.fillText('GAME OVER', cx, cy - 5);
+                ctx.fillStyle = textGradient;
+                ctx.font = 'bold 36px Inter, system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', cx, cy - 10);
                 ctx.shadowBlur = 0;
+
+                // Divider line
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx - 80, cy + 10);
+                ctx.lineTo(cx + 80, cy + 10);
+                ctx.stroke();
 
                 // Score label
                 ctx.fillStyle = '#9ca3af';
-                ctx.font = '13px Inter, system-ui, sans-serif';
-                ctx.fillText('FINAL SCORE', cx, cy + 30);
+                ctx.font = '14px Inter, system-ui, sans-serif';
+                ctx.fillText('FINAL SCORE', cx, cy + 35);
 
-                // Score number - large and bright green
-                ctx.shadowBlur = 15;
+                // Score number with glow
+                const scoreGradient = ctx.createLinearGradient(cx - 60, 0, cx + 60, 0);
+                scoreGradient.addColorStop(0, '#34d399');
+                scoreGradient.addColorStop(0.5, '#10b981');
+                scoreGradient.addColorStop(1, '#34d399');
+
+                ctx.shadowBlur = 20;
                 ctx.shadowColor = '#10b981';
-                ctx.fillStyle = '#10b981';
-                ctx.font = 'bold 48px Inter, system-ui, sans-serif';
-                ctx.fillText(this.score.toString(), cx, cy + 80);
+                ctx.fillStyle = scoreGradient;
+                ctx.font = 'bold 52px Inter, system-ui, sans-serif';
+                ctx.fillText(this.score.toString(), cx, cy + 90);
                 ctx.shadowBlur = 0;
 
-                // Achievement badges
-                let badgeY = cy + 115;
+                // Achievement badges with icons
+                let badgeY = cy + 125;
 
                 if (this.comboCount >= 2) {
-                    ctx.font = '14px Inter, system-ui, sans-serif';
+                    ctx.font = '15px Inter, system-ui, sans-serif';
                     ctx.fillStyle = '#fbbf24';
-                    ctx.fillText(`🔥 Best Combo: x${this.comboCount}`, cx, badgeY);
-                    badgeY += 24;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#fbbf24';
+                    ctx.fillText(`🔥 COMBO x${this.comboCount}`, cx, badgeY);
+                    ctx.shadowBlur = 0;
+                    badgeY += 26;
                 }
 
                 if (this.snakes.length > 1) {
-                    ctx.font = '14px Inter, system-ui, sans-serif';
+                    ctx.font = '15px Inter, system-ui, sans-serif';
                     ctx.fillStyle = '#f43f5e';
-                    ctx.fillText('✂️ Split Master!', cx, badgeY);
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#f43f5e';
+                    ctx.fillText('✂️ SPLIT MASTER', cx, badgeY);
+                    ctx.shadowBlur = 0;
                 }
-            });
+
+                ctx.globalAlpha = 1;
+
+                // Animate fade in
+                if (opacity < 1) {
+                    opacity += 0.08;
+                    requestAnimationFrame(fadeIn);
+                }
+            };
+
+            requestAnimationFrame(fadeIn);
+        }
+
+        drawBrokenSnake(ctx, x, y, size) {
+            // Draw a broken snake icon (two snake segments separated)
+            const segmentSize = size / 3;
+
+            // Left segment (broken off)
+            ctx.save();
+            ctx.translate(x - size / 2 - 5, y);
+            ctx.rotate(-0.3);
+
+            // Segment 1
+            ctx.fillStyle = '#10b981';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#10b981';
+            ctx.beginPath();
+            ctx.roundRect(-segmentSize, -segmentSize / 2, segmentSize, segmentSize, 3);
+            ctx.fill();
+
+            // Segment 2
+            ctx.fillStyle = '#059669';
+            ctx.beginPath();
+            ctx.roundRect(-segmentSize * 2 - 2, -segmentSize / 2, segmentSize, segmentSize, 3);
+            ctx.fill();
+
+            ctx.restore();
+
+            // Right segment (broken off)
+            ctx.save();
+            ctx.translate(x + size / 2 + 5, y);
+            ctx.rotate(0.3);
+
+            // Segment 1 (head)
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(0, -segmentSize / 2, segmentSize, segmentSize, 4);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#000000';
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.arc(segmentSize * 0.3, -2, 1.5, 0, Math.PI * 2);
+            ctx.arc(segmentSize * 0.3, 2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Segment 2
+            ctx.fillStyle = '#10b981';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#10b981';
+            ctx.beginPath();
+            ctx.roundRect(segmentSize + 2, -segmentSize / 2, segmentSize, segmentSize, 3);
+            ctx.fill();
+
+            ctx.restore();
+
+            // Crack/break effect in the middle
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y - 12);
+            ctx.lineTo(x + 8, y + 12);
+            ctx.moveTo(x - 8, y + 12);
+            ctx.lineTo(x + 8, y - 12);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         }
 
         getHighScores() {
