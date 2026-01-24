@@ -758,63 +758,69 @@
             this.elements.restartBtn.classList.remove('hidden');
             this.canvas.classList.remove('playing');
 
-            const ctx = this.ctx;
-            const canvas = this.canvas;
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
+            // Use requestAnimationFrame to ensure we draw on top of everything
+            requestAnimationFrame(() => {
+                const ctx = this.ctx;
+                const canvas = this.canvas;
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
 
-            // FULLY OPAQUE solid black background
-            ctx.fillStyle = '#0a0a0c';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Clear everything first
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Subtle red glow at edges
-            const vignette = ctx.createRadialGradient(cx, cy, 80, cx, cy, canvas.width / 1.2);
-            vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-            vignette.addColorStop(1, 'rgba(239, 68, 68, 0.12)');
-            ctx.fillStyle = vignette;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // FULLY OPAQUE solid black background - no transparency at all
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Skull emoji
-            ctx.font = '48px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('💀', cx, cy - 55);
+                // Subtle red glow at edges
+                const vignette = ctx.createRadialGradient(cx, cy, 80, cx, cy, canvas.width / 1.2);
+                vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                vignette.addColorStop(1, 'rgba(239, 68, 68, 0.15)');
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // GAME OVER text - bright red with glow
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#ef4444';
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 28px Inter, system-ui, sans-serif';
-            ctx.fillText('GAME OVER', cx, cy);
-            ctx.shadowBlur = 0;
+                // Skull emoji
+                ctx.font = '52px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('💀', cx, cy - 60);
 
-            // Score label
-            ctx.fillStyle = '#71717a';
-            ctx.font = '12px Inter, system-ui, sans-serif';
-            ctx.fillText('FINAL SCORE', cx, cy + 30);
+                // GAME OVER text - bright red with strong glow
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#ef4444';
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 32px Inter, system-ui, sans-serif';
+                ctx.fillText('GAME OVER', cx, cy - 5);
+                ctx.shadowBlur = 0;
 
-            // Score number - large and bright green
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = '#10b981';
-            ctx.fillStyle = '#10b981';
-            ctx.font = 'bold 40px Inter, system-ui, sans-serif';
-            ctx.fillText(this.score.toString(), cx, cy + 75);
-            ctx.shadowBlur = 0;
-
-            // Achievement badges
-            let badgeY = cy + 105;
-
-            if (this.comboCount >= 2) {
+                // Score label
+                ctx.fillStyle = '#9ca3af';
                 ctx.font = '13px Inter, system-ui, sans-serif';
-                ctx.fillStyle = '#fbbf24';
-                ctx.fillText(`🔥 Best Combo: x${this.comboCount}`, cx, badgeY);
-                badgeY += 22;
-            }
+                ctx.fillText('FINAL SCORE', cx, cy + 30);
 
-            if (this.snakes.length > 1) {
-                ctx.font = '13px Inter, system-ui, sans-serif';
-                ctx.fillStyle = '#f43f5e';
-                ctx.fillText('✂️ Split Master!', cx, badgeY);
-            }
+                // Score number - large and bright green
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#10b981';
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 48px Inter, system-ui, sans-serif';
+                ctx.fillText(this.score.toString(), cx, cy + 80);
+                ctx.shadowBlur = 0;
+
+                // Achievement badges
+                let badgeY = cy + 115;
+
+                if (this.comboCount >= 2) {
+                    ctx.font = '14px Inter, system-ui, sans-serif';
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillText(`🔥 Best Combo: x${this.comboCount}`, cx, badgeY);
+                    badgeY += 24;
+                }
+
+                if (this.snakes.length > 1) {
+                    ctx.font = '14px Inter, system-ui, sans-serif';
+                    ctx.fillStyle = '#f43f5e';
+                    ctx.fillText('✂️ Split Master!', cx, badgeY);
+                }
+            });
         }
 
         getHighScores() {

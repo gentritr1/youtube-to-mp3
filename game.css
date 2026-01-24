@@ -238,12 +238,23 @@ canvas.playing {
         inset 0 0 30px rgba(0, 0, 0, 0.6);
 }
 
-.game-footer {
+/* Play Again Button Container */
+.game-restart-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     width: 100%;
     max-width: 320px;
+    margin-top: 1rem;
+}
+
+.game-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 320px;
+    margin-top: 0.5rem;
 }
 
 .game-controls {
