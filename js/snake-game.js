@@ -476,12 +476,73 @@
             this.lastEatTime = 0;
             this.comboCount = 0;
 
+            this.touchStartX = 0;
+            this.touchStartY = 0;
+            this.lastTapTime = 0;
+
             this.bindEvents();
         }
 
         bindEvents() {
             document.addEventListener('keydown', this.handleKeyDown.bind(this));
             this.elements.restartBtn.addEventListener('click', () => this.init());
+
+            // Touch Controls
+            this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+            this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+            this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+        }
+
+        handleTouchStart(e) {
+            if (!this.isRunning) return;
+            // Prevent default to stop scrolling/zooming while playing
+            if (e.target === this.canvas) e.preventDefault();
+
+            this.touchStartX = e.changedTouches[0].screenX;
+            this.touchStartY = e.changedTouches[0].screenY;
+
+            // Double tap detection
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - this.lastTapTime;
+            if (tapLength < 300 && tapLength > 0) {
+                this.switchSnake();
+                e.preventDefault();
+            }
+            this.lastTapTime = currentTime;
+        }
+
+        handleTouchMove(e) {
+            // Prevent scrolling while swipe-moving on canvas
+            if (this.isRunning && e.target === this.canvas) {
+                e.preventDefault();
+            }
+        }
+
+        handleTouchEnd(e) {
+            if (!this.isRunning) return;
+
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+
+            const dx = touchEndX - this.touchStartX;
+            const dy = touchEndY - this.touchStartY;
+
+            // Minimum swipe threshold to avoid accidental micros-moves
+            if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
+
+            const activeSnake = this.snakes[this.activeSnakeIndex];
+            if (!activeSnake) return;
+
+            // Determine primary axis of swipe
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal
+                if (dx > 0) activeSnake.setDirection({ x: 1, y: 0 }); // Right
+                else activeSnake.setDirection({ x: -1, y: 0 }); // Left
+            } else {
+                // Vertical
+                if (dy > 0) activeSnake.setDirection({ x: 0, y: 1 }); // Down
+                else activeSnake.setDirection({ x: 0, y: -1 }); // Up
+            }
         }
 
         handleKeyDown(e) {

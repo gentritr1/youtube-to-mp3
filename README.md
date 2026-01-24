@@ -6,6 +6,7 @@ A clean, modern, and minimal YouTube media converter built with Node.js and Vani
 
 - **Zen Atmosphere**: Ambient pulsing background gradients (Emerald & Violet), subtle noise textures, and fluid fade-in animations for a premium user experience.
 - **Optimized Workflow**: Real-time conversion feedback (Progress Bar) and instant download notifications prioritized above the game for zero friction.
+- **Mobile Support**: Fully responsive design with touch controls for the game (Swipe to move, Double-tap to switch).
 - **Snake Game (Enhanced Edition)**: A modular, feature-rich snake game with:
   - **Dynamic Power-ups**: Golden (3x growth), Speed, Ghost (no collision), and Split.
   - **Snake Splitting**: Ability to cut your snake in half and switch between them with `X`.

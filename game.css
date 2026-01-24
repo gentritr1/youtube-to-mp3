@@ -608,3 +608,18 @@ canvas.playing {
         animation: none;
     }
 }
+
+/* Mobile Controls Visibility */
+.mobile-controls {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: inline;
+    }
+
+    .desktop-controls {
+        display: none;
+    }
+}
