@@ -68,12 +68,13 @@
 /* Stats Bar */
 .game-stats {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     width: 100%;
     max-width: 320px;
     gap: 0.5rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
 }
 
 .stat-item {
@@ -446,7 +447,9 @@ canvas.playing {
     font-family: 'Courier New', monospace;
     font-weight: 600;
     color: var(--primary);
-}/* ========================================
+}
+
+/* ========================================
    RESPONSIVE DESIGN
    ======================================== */
 
@@ -562,7 +565,6 @@ canvas.playing {
 /* Very small screens */
 @media (max-width: 360px) {
     .game-stats {
-        flex-direction: column;
         gap: 0.4rem;
         width: 100%;
     }
@@ -570,7 +572,6 @@ canvas.playing {
     .stat-item,
     .powerup-indicator,
     .split-indicator {
-        width: 100%;
         justify-content: center;
     }
 
