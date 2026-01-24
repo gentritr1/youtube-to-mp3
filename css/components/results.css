@@ -1,0 +1,198 @@
+/* ========================================
+   Result Components (Preview, Download, etc)
+   ======================================== */
+
+.converter-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+}
+
+/* Preview */
+.preview {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.thumbnail {
+    width: 120px;
+    height: 68px;
+    object-fit: cover;
+    border-radius: calc(var(--radius) - 2px);
+    background: var(--secondary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.preview-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.video-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.video-duration {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* Progress */
+.progress-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width var(--transition-base);
+}
+
+.progress-text {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+    text-align: center;
+    font-weight: 500;
+    margin-top: 0;
+}
+
+/* Download */
+.download-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--success);
+    border-radius: var(--radius);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+    animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.success-icon {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--success);
+    margin: 0;
+}
+
+.success-icon svg {
+    width: 2rem;
+    height: 2rem;
+}
+
+.download-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.success-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.success-subtext {
+    display: none;
+}
+
+.download-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: auto;
+    height: 2.25rem;
+    padding: 0 1rem;
+    font-size: 0.8125rem;
+    margin-left: auto;
+    white-space: nowrap;
+    background: var(--foreground);
+    color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.download-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+    background: #ffffff;
+}
+
+.download-btn:active {
+    transform: translateY(0);
+}
+
+.download-btn svg {
+    margin-right: 4px;
+}
+
+/* Error */
+.error-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0.875rem;
+    background: hsla(0, 62.8%, 30.6%, 0.1);
+    border: 1px solid hsla(0, 62.8%, 30.6%, 0.2);
+    border-radius: var(--radius);
+    color: hsl(0 62.8% 60%);
+}
+
+.error-section p {
+    font-size: 0.875rem;
+}

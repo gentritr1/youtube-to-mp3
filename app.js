@@ -206,11 +206,11 @@ const handleFormatChange = (e) => {
     const btn = e.currentTarget;
     const format = btn.dataset.format;
 
-    if (!format || format === state.format) return;
+    if (!format) return; // Only guard against missing data
 
     state.format = format;
 
-    // Update UI
+    // Update UI - Always force update to ensure sync
     elements.formatBtns.forEach(b => {
         b.classList.toggle('active', b.dataset.format === format);
     });
@@ -342,10 +342,9 @@ elements.form.addEventListener('submit', handleSubmit);
 elements.pasteBtn.addEventListener('click', handlePaste);
 elements.urlInput.addEventListener('input', handleUrlInput);
 
-// Fix: Use explicit click handlers for format buttons
+// Fix: Use explicit click handlers for format buttons, Removed mousedown preventDefault to fix click issues
 elements.formatBtns.forEach(btn => {
     btn.addEventListener('click', handleFormatChange);
-    btn.addEventListener('mousedown', (e) => e.preventDefault());
 });
 
 // Keyboard shortcuts
