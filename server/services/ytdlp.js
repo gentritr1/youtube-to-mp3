@@ -67,55 +67,69 @@ const getCommonArgs = () => {
  * @param {string} url - YouTube URL
  * @returns {Promise<object>} Video metadata
  */
-export function getVideoInfo(url) {
-    return new Promise((resolve, reject) => {
-        const args = [
-            '--dump-json',
-            ...getCommonArgs(),
-            url
-        ];
+export async function getVideoInfo(url) {
+    const runInfoWithArgs = (useCookies) => {
+        return new Promise((resolve, reject) => {
+            const args = [
+                '--dump-json',
+                '--no-warnings',
+                '--no-check-certificates',
+                '--force-ipv4',
+                '--referer', 'https://www.youtube.com/',
+                '--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+                '--extractor-args', 'youtube:player_client=ios',
+                '--geo-bypass',
+                '--socket-timeout', '30',
+                url
+            ];
 
-        const ytdlp = spawn('yt-dlp', args);
-        let stdout = '';
-        let stderr = '';
-
-        ytdlp.stdout.on('data', (data) => {
-            stdout += data.toString();
-        });
-
-        ytdlp.stderr.on('data', (data) => {
-            stderr += data.toString();
-        });
-
-        ytdlp.on('close', (code) => {
-            if (code !== 0) {
-                console.error('yt-dlp error:', stderr);
-                reject(new Error(stderr || 'Failed to get video info'));
-                return;
+            if (useCookies && process.env.YT_COOKIES) {
+                const cookiesPath = '/tmp/yt_cookies.txt';
+                try {
+                    fs.writeFileSync(cookiesPath, process.env.YT_COOKIES.trim());
+                    args.splice(args.length - 1, 0, '--cookies', cookiesPath); // Insert before URL
+                } catch (e) { }
             }
 
-            try {
-                const info = JSON.parse(stdout);
-                resolve({
-                    id: info.id,
-                    title: info.title,
-                    thumbnail: info.thumbnail,
-                    author: info.uploader || info.channel,
-                    duration: formatDuration(info.duration),
-                });
-            } catch (e) {
-                reject(new Error('Failed to parse video info'));
-            }
-        });
+            const ytdlp = spawn('yt-dlp', args);
+            let stdout = '';
+            let stderr = '';
 
-        ytdlp.on('error', (err) => {
-            if (err.code === 'ENOENT') {
-                reject(new Error('yt-dlp not installed. Run: brew install yt-dlp'));
-            } else {
-                reject(err);
-            }
+            ytdlp.stdout.on('data', (data) => stdout += data.toString());
+            ytdlp.stderr.on('data', (data) => stderr += data.toString());
+
+            ytdlp.on('close', (code) => {
+                if (code !== 0) {
+                    reject(new Error(stderr || 'Failed to get video info'));
+                    return;
+                }
+                try {
+                    const info = JSON.parse(stdout);
+                    resolve({
+                        id: info.id,
+                        title: info.title,
+                        thumbnail: info.thumbnail,
+                        author: info.uploader || info.channel,
+                        duration: formatDuration(info.duration),
+                    });
+                } catch (e) {
+                    reject(new Error('Failed to parse video info'));
+                }
+            });
         });
-    });
+    };
+
+    // Attempt 1: No Cookies (Anonymous)
+    try {
+        return await runInfoWithArgs(false);
+    } catch (err) {
+        // Attempt 2: Retry with Cookies if available
+        if (process.env.YT_COOKIES && (err.message.includes('Sign in') || err.message.includes('bot'))) {
+            console.log('[Info] Failed anonymously, retrying with cookies...');
+            return await runInfoWithArgs(true);
+        }
+        throw err;
+    }
 }
 
 
