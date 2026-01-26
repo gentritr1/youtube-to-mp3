@@ -129,9 +129,9 @@ export function convertVideo(taskId, url, format) {
         ? [
             '-x',
             '--audio-format', 'mp3',
-            '--audio-quality', '192K', // Slightly lower but still high quality to save CPU
+            '--audio-quality', config.IS_PROD ? '192K' : '0',
             '--no-playlist',
-            '--concurrent-fragments', '1',
+            ...(config.IS_PROD ? ['--concurrent-fragments', '1'] : []),
             '-o', outputTemplate,
             ...commonArgs,
             '--progress',
@@ -141,7 +141,7 @@ export function convertVideo(taskId, url, format) {
             '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             '--merge-output-format', 'mp4',
             '--no-playlist',
-            '--concurrent-fragments', '1',
+            ...(config.IS_PROD ? ['--concurrent-fragments', '1'] : []),
             '-o', outputTemplate,
             ...commonArgs,
             '--progress',

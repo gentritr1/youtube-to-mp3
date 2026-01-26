@@ -10,6 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const config = {
     PORT: process.env.PORT || 3000,
+    IS_PROD: !!process.env.RENDER || process.env.NODE_ENV === 'production',
 
     // Paths
     ROOT_DIR: path.resolve(__dirname, '..'),
