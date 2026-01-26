@@ -28,6 +28,7 @@ const getCommonArgs = () => {
     const cookiesPath = '/tmp/yt_cookies.txt';
 
     // Advanced Stealth: Add modern user agent and matching browser headers
+    // Using iPhone UA as it's often less restricted
     args.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
     args.push('--add-header', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
     args.push('--add-header', 'Accept-Language: en-US,en;q=0.9');
@@ -35,8 +36,8 @@ const getCommonArgs = () => {
     args.push('--add-header', 'Sec-Fetch-Site: cross-site');
     args.push('--add-header', 'Sec-Fetch-Dest: document');
 
-    // Switch to multiple player clients to find more available formats
-    args.push('--extractor-args', 'youtube:player_client=android,web,ios');
+    // Use Android client which is robust and supports most formats while bypassing some bot detection
+    args.push('--extractor-args', 'youtube:player_client=android');
     args.push('--geo-bypass');
     args.push('--socket-timeout', '30');
 
@@ -49,7 +50,7 @@ const getCommonArgs = () => {
             }
 
             fs.writeFileSync(cookiesPath, cookiesText);
-            console.log('Updated /tmp/yt_cookies.txt (Size: ' + cookiesText.length + ' bytes)');
+            // console.log('Updated /tmp/yt_cookies.txt (Size: ' + cookiesText.length + ' bytes)');
             args.push('--cookies', cookiesPath);
         } catch (e) {
             console.error('Failed to write cookies to /tmp', e);
@@ -144,6 +145,7 @@ export function convertVideo(taskId, url, format) {
 
     const args = format === 'mp3'
         ? [
+            '-f', 'bestaudio/best', // Explicitly select audio
             '-x',
             '--audio-format', 'mp3',
             '--audio-quality', config.IS_PROD ? '192K' : '0',
@@ -155,8 +157,8 @@ export function convertVideo(taskId, url, format) {
             url
         ]
         : [
-            // More flexible format string to avoid "format not available"
-            '-f', 'bv[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b',
+            // Simplified format string - let yt-dlp and ffmpeg handle the best combination
+            '-f', 'bestvideo+bestaudio/best',
             '--merge-output-format', 'mp4',
             '--no-playlist',
             ...(config.IS_PROD ? ['--concurrent-fragments', '1'] : []),
