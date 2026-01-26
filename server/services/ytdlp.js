@@ -12,6 +12,41 @@ import { parseProgress } from '../utils/parseProgress.js';
 import { sanitizeFilename } from '../utils/sanitize.js';
 import { getTask, updateTask, saveTasks } from './taskManager.js';
 
+
+/**
+ * Helper to get common yt-dlp arguments
+ */
+const getCommonArgs = () => {
+    const args = ['--no-warnings', '--no-check-certificates'];
+
+    // Add user agent to avoid some bot detection
+    args.push('--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    // Handle Cookies from Environment Variable (for Render/Deployment)
+    if (process.env.YT_COOKIES) {
+        const cookiesPath = path.join(config.ROOT_DIR, 'cookies.txt');
+        // Write cookies if they don't exist or content changed (simple check)
+        if (!fs.existsSync(cookiesPath)) {
+            try {
+                fs.writeFileSync(cookiesPath, process.env.YT_COOKIES);
+                console.log('Created cookies.txt from environment variable');
+            } catch (e) {
+                console.error('Failed to write cookies.txt', e);
+            }
+        }
+        args.push('--cookies', cookiesPath);
+    }
+    // Fallback: Check if a local cookies.txt exists (for local dev)
+    else {
+        const localCookies = path.join(config.ROOT_DIR, 'cookies.txt');
+        if (fs.existsSync(localCookies)) {
+            args.push('--cookies', localCookies);
+        }
+    }
+
+    return args;
+};
+
 /**
  * Get video info using yt-dlp
  * @param {string} url - YouTube URL
@@ -21,7 +56,7 @@ export function getVideoInfo(url) {
     return new Promise((resolve, reject) => {
         const args = [
             '--dump-json',
-            '--no-warnings',
+            ...getCommonArgs(),
             url
         ];
 
@@ -39,6 +74,7 @@ export function getVideoInfo(url) {
 
         ytdlp.on('close', (code) => {
             if (code !== 0) {
+                console.error('yt-dlp error:', stderr);
                 reject(new Error(stderr || 'Failed to get video info'));
                 return;
             }
@@ -67,6 +103,7 @@ export function getVideoInfo(url) {
     });
 }
 
+
 /**
  * Convert video using yt-dlp
  * @param {string} taskId - Task identifier
@@ -84,13 +121,15 @@ export function convertVideo(taskId, url, format) {
     // Store the expected filename for later
     task.filename = `${safeTitle}.${format}`;
 
+    const commonArgs = getCommonArgs();
+
     const args = format === 'mp3'
         ? [
-            '-x',                           // Extract audio
-            '--audio-format', 'mp3',        // Convert to MP3
-            '--audio-quality', '0',         // Best quality
+            '-x',
+            '--audio-format', 'mp3',
+            '--audio-quality', '0',
             '-o', outputTemplate,
-            '--no-warnings',
+            ...commonArgs,
             '--progress',
             url
         ]
@@ -98,7 +137,7 @@ export function convertVideo(taskId, url, format) {
             '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             '--merge-output-format', 'mp4',
             '-o', outputTemplate,
-            '--no-warnings',
+            ...commonArgs,
             '--progress',
             url
         ];
