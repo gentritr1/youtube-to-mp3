@@ -131,6 +131,9 @@ export async function convertVideo(taskId, url, format) {
 
     const safeTitle = sanitizeFilename(task.title);
     const filename = `${safeTitle}.%(ext)s`;
+    // Define outputTemplate at function scope so it's available everywhere
+    const outputTemplate = path.join(config.DOWNLOADS_DIR, filename);
+
     // Initial attempt: Try WITHOUT cookies first to avoid account flagging
     // Only use basic arguments initially
     const baseArgs = [
