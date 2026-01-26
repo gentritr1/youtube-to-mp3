@@ -30,14 +30,9 @@ const getCommonArgs = () => {
     // Advanced Stealth: Add modern user agent and matching browser headers
     // Using iPhone UA as it's often less restricted
     args.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
-    args.push('--add-header', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
-    args.push('--add-header', 'Accept-Language: en-US,en;q=0.9');
-    args.push('--add-header', 'Sec-Fetch-Mode: navigate');
-    args.push('--add-header', 'Sec-Fetch-Site: cross-site');
-    args.push('--add-header', 'Sec-Fetch-Dest: document');
 
-    // Use Android client which is robust and supports most formats while bypassing some bot detection
-    args.push('--extractor-args', 'youtube:player_client=android');
+    // Switch to iOS player client which is often less restricted
+    args.push('--extractor-args', 'youtube:player_client=ios');
     args.push('--geo-bypass');
     args.push('--socket-timeout', '30');
 
