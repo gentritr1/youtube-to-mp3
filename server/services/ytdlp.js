@@ -35,8 +35,8 @@ const getCommonArgs = () => {
     args.push('--add-header', 'Sec-Fetch-Site: cross-site');
     args.push('--add-header', 'Sec-Fetch-Dest: document');
 
-    // Switch to iOS player client which is often less restricted
-    args.push('--extractor-args', 'youtube:player_client=ios,web');
+    // Switch to multiple player clients to find more available formats
+    args.push('--extractor-args', 'youtube:player_client=android,web,ios');
     args.push('--geo-bypass');
     args.push('--socket-timeout', '30');
 
@@ -155,7 +155,8 @@ export function convertVideo(taskId, url, format) {
             url
         ]
         : [
-            '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            // More flexible format string to avoid "format not available"
+            '-f', 'bv[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b',
             '--merge-output-format', 'mp4',
             '--no-playlist',
             ...(config.IS_PROD ? ['--concurrent-fragments', '1'] : []),
