@@ -6,6 +6,6 @@
 # REPLACE 'https://your-app-name.onrender.com' with your actual backend URL after deploying it!
 [[redirects]]
   from = "/api/*"
-  to = "https://your-app-name.onrender.com/api/:splat"
+  to = "https://youtube-to-mp3-50g8.onrender.com/api/:splat"
   status = 200
   force = true
