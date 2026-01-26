@@ -77,12 +77,13 @@ export async function getVideoInfo(url) {
                 '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
+                // Use iOS client globally for Info step as it's the most reliable for metadata currently
+                '--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+                '--extractor-args', 'youtube:player_client=ios',
             ];
 
             // Production (Render): Use Stealth iOS Client to bypass blocks
             if (config.IS_PROD) {
-                args.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
-                args.push('--extractor-args', 'youtube:player_client=ios');
                 args.push('--geo-bypass');
                 args.push('--socket-timeout', '30');
             }
