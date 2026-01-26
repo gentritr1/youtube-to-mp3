@@ -24,19 +24,25 @@ const getCommonArgs = () => {
         '--referer', 'https://www.youtube.com/'
     ];
 
-    // Add user agent to avoid some bot detection
-    args.push('--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    // Use /tmp for cookies as it's guaranteed writable on almost all cloud hosts
+    const cookiesPath = '/tmp/yt_cookies.txt';
+
+    // Add modern user agent and headers to look more like a real browser
+    args.push('--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    args.push('--add-header', 'Accept-Language: en-US,en;q=0.9');
+    args.push('--add-header', 'Sec-Ch-Ua: "Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
+    args.push('--add-header', 'Sec-Ch-Ua-Mobile: ?0');
+    args.push('--add-header', 'Sec-Ch-Ua-Platform: "Windows"');
 
     // Handle Cookies from Environment Variable (for Render/Deployment)
     if (process.env.YT_COOKIES) {
-        const cookiesPath = path.join(config.ROOT_DIR, 'cookies.txt');
         try {
             fs.writeFileSync(cookiesPath, process.env.YT_COOKIES);
-            console.log('Updated cookies.txt from environment variable');
+            console.log('Updated /tmp/yt_cookies.txt from environment variable');
+            args.push('--cookies', cookiesPath);
         } catch (e) {
-            console.error('Failed to write cookies.txt', e);
+            console.error('Failed to write cookies to /tmp', e);
         }
-        args.push('--cookies', cookiesPath);
     }
     // Fallback: Check if a local cookies.txt exists (for local dev)
     else {
