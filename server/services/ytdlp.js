@@ -76,12 +76,21 @@ export async function getVideoInfo(url) {
                 '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
-                '--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-                '--extractor-args', 'youtube:player_client=ios',
-                '--geo-bypass',
-                '--socket-timeout', '30',
                 url
             ];
+
+            // Production (Render): Use Stealth iOS Client to bypass blocks
+            if (config.IS_PROD) {
+                args.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
+                args.push('--extractor-args', 'youtube:player_client=ios');
+                args.push('--geo-bypass');
+                args.push('--socket-timeout', '30');
+            }
+            // Local: Use default client (or Android) for best quality/speed
+            else {
+                // Removing specific client enforcement locally often yields better results/speed
+                // But if you prefer high-speed downloading, we can leave defaults
+            }
 
             if (useCookies && process.env.YT_COOKIES) {
                 const cookiesPath = '/tmp/yt_cookies.txt';
@@ -155,9 +164,14 @@ export async function convertVideo(taskId, url, format) {
         '--no-check-certificates',
         '--force-ipv4',
         '--referer', 'https://www.youtube.com/',
-        '--geo-bypass',
-        '--socket-timeout', '30'
     ];
+
+    if (config.IS_PROD) {
+        baseArgs.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
+        baseArgs.push('--extractor-args', 'youtube:player_client=ios');
+        baseArgs.push('--geo-bypass');
+        baseArgs.push('--socket-timeout', '30');
+    }
 
     const formatArgs = format === 'mp3'
         ? [
