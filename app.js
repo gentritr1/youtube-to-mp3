@@ -4,7 +4,7 @@
  */
 
 // Configuration
-const API_URL = 'http://localhost:3000';
+const API_URL = '';
 
 // DOM Elements
 const elements = {

@@ -1,0 +1,11 @@
+[build]
+  publish = "."
+  command = "# No build command needed for static HTML/JS"
+
+# Proxy API requests to the Backend Service (e.g., Render, Railway)
+# REPLACE 'https://your-app-name.onrender.com' with your actual backend URL after deploying it!
+[[redirects]]
+  from = "/api/*"
+  to = "https://your-app-name.onrender.com/api/:splat"
+  status = 200
+  force = true
