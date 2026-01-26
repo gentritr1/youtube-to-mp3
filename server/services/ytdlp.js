@@ -70,13 +70,13 @@ const getCommonArgs = () => {
 export async function getVideoInfo(url) {
     const runInfoWithArgs = (useCookies) => {
         return new Promise((resolve, reject) => {
+            // Base args
             const args = [
                 '--dump-json',
                 '--no-warnings',
                 '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
-                url
             ];
 
             // Production (Render): Use Stealth iOS Client to bypass blocks
@@ -86,19 +86,17 @@ export async function getVideoInfo(url) {
                 args.push('--geo-bypass');
                 args.push('--socket-timeout', '30');
             }
-            // Local: Use default client (or Android) for best quality/speed
-            else {
-                // Removing specific client enforcement locally often yields better results/speed
-                // But if you prefer high-speed downloading, we can leave defaults
-            }
 
             if (useCookies && process.env.YT_COOKIES) {
                 const cookiesPath = '/tmp/yt_cookies.txt';
                 try {
                     fs.writeFileSync(cookiesPath, process.env.YT_COOKIES.trim());
-                    args.splice(args.length - 1, 0, '--cookies', cookiesPath); // Insert before URL
+                    args.push('--cookies', cookiesPath);
                 } catch (e) { }
             }
+
+            // URL must be last
+            args.push(url);
 
             const ytdlp = spawn('yt-dlp', args);
             let stdout = '';
