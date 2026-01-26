@@ -1,55 +1,55 @@
 # How to Deploy YT Converter
 
-Because this application uses **FFmpeg** and **yt-dlp** (system-level tools), it cannot be hosted entirely on standard static hosting (like Netlify Free Tier) in a single piece. 
+## Deployment Architecture
 
-You need a Server or Docker container for the backend processing.
-
-We recommend a **Hybrid Deployment**:
-1. **Frontend** on **Netlify** (Fast, standard web hosting)
-2. **Backend** on **Render** (Free tier available, supports Docker)
+- **Frontend**: Netlify (Hosting static HTML/JS/CSS)
+- **Backend**: Render (Hosting Docker container for FFmpeg/yt-dlp)
 
 ---
 
-## Step 1: Deploy Backend to Render
+## Part 1: Deploy Backend to Render
 
 1. Create a [GitHub repository](https://github.com/new) and push your code.
 2. Sign up for [Render.com](https://render.com).
 3. Click **New +** -> **Web Service**.
 4. Connect your GitHub repository.
-5. Select **Docker** as the Runtime (it will automatically find the `Dockerfile` we created).
-6. Pick the **Free** instance type.
+5. **Runtime**: Select **Docker**.
+6. **Instance Type**: Select **Free**.
 7. Click **Create Web Service**.
-8. Wait for the build to finish. Render will give you a URL like `https://yt-converter-123.onrender.com`.
-   - **Copy this URL.**
+8. **Copy the URL** Render gives you (e.g., `https://yt-converter-123.onrender.com`).
 
 ---
 
-## Step 2: Configure Netlify
+## Part 2: Configure Netlify (Frontend)
 
 1. Open `netlify.toml` in your project.
-2. Find the `[redirects]` section.
-3. Replace the placeholder URL with your **Render URL** from Step 1.
-   
+2. Update the `to = "..."` line with your **Render URL**.
    ```toml
-   # Example
    to = "https://yt-converter-123.onrender.com/api/:splat"
    ```
-4. Commit and push this change to GitHub.
+3. Commit and push: `git push`
+4. Deploy to Netlify (Import from Git -> Select Repo -> Deploy).
 
 ---
 
-## Step 3: Deploy Frontend to Netlify
+## ⚠️ Troubleshooting: "Sign in to confirm you’re not a bot"
 
-1. Sign up for [Netlify](https://netlify.com).
-2. Click **Add new site** -> **Import from existing project**.
-3. Connect Git Provider -> GitHub.
-4. Select your repository.
-5. In "Build settings":
-   - **Build command**: (Leave empty)
-   - **Publish directory**: `.` (Dot, meaning current directory)
-6. Click **Deploy**.
+If you see this error, YouTube is blocking the generic Server IP. You MUST provide your "Cookies" to prove you are a human.
 
-**That's it!** 
-- Your users visit the Netlify URL.
-- When they click "Convert", Netlify proxies the request to your Render server.
-- The Render server processes the video and returns the download.
+### How to fix it (The Cookie Method):
+
+1.  **Get your Cookies**:
+    *   Install the plugin **"Get cookies.txt LOCALLY"** for Chrome or Firefox.
+    *   Log into YouTube in your browser.
+    *   Click the extension icon to download `cookies.txt`.
+    *   Open the file and **Copy ALL the text**.
+
+2.  **Add to Render**:
+    *   Go to your Render Dashboard -> Select your Service.
+    *   Click **Environment** tab.
+    *   Click **Add Environment Variable**.
+    *   **Key**: `YT_COOKIES`
+    *   **Value**: (Paste the entire text from cookies.txt)
+    *   Click **Save Changes**.
+
+Render will restart your server. The error should now be gone!

@@ -17,7 +17,12 @@ import { getTask, updateTask, saveTasks } from './taskManager.js';
  * Helper to get common yt-dlp arguments
  */
 const getCommonArgs = () => {
-    const args = ['--no-warnings', '--no-check-certificates'];
+    const args = [
+        '--no-warnings',
+        '--no-check-certificates',
+        '--force-ipv4',
+        '--referer', 'https://www.youtube.com/'
+    ];
 
     // Add user agent to avoid some bot detection
     args.push('--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
