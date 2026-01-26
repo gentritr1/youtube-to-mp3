@@ -30,14 +30,11 @@ const getCommonArgs = () => {
     // Handle Cookies from Environment Variable (for Render/Deployment)
     if (process.env.YT_COOKIES) {
         const cookiesPath = path.join(config.ROOT_DIR, 'cookies.txt');
-        // Write cookies if they don't exist or content changed (simple check)
-        if (!fs.existsSync(cookiesPath)) {
-            try {
-                fs.writeFileSync(cookiesPath, process.env.YT_COOKIES);
-                console.log('Created cookies.txt from environment variable');
-            } catch (e) {
-                console.error('Failed to write cookies.txt', e);
-            }
+        try {
+            fs.writeFileSync(cookiesPath, process.env.YT_COOKIES);
+            console.log('Updated cookies.txt from environment variable');
+        } catch (e) {
+            console.error('Failed to write cookies.txt', e);
         }
         args.push('--cookies', cookiesPath);
     }
@@ -132,7 +129,9 @@ export function convertVideo(taskId, url, format) {
         ? [
             '-x',
             '--audio-format', 'mp3',
-            '--audio-quality', '0',
+            '--audio-quality', '192K', // Slightly lower but still high quality to save CPU
+            '--no-playlist',
+            '--concurrent-fragments', '1',
             '-o', outputTemplate,
             ...commonArgs,
             '--progress',
@@ -141,6 +140,8 @@ export function convertVideo(taskId, url, format) {
         : [
             '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             '--merge-output-format', 'mp4',
+            '--no-playlist',
+            '--concurrent-fragments', '1',
             '-o', outputTemplate,
             ...commonArgs,
             '--progress',
@@ -148,6 +149,7 @@ export function convertVideo(taskId, url, format) {
         ];
 
     const ytdlp = spawn('yt-dlp', args);
+    let lastError = '';
 
     ytdlp.stdout.on('data', (data) => {
         const output = data.toString();
@@ -166,12 +168,20 @@ export function convertVideo(taskId, url, format) {
         if (progress) {
             task.progress = progress.percent;
             task.status = progress.status;
+        } else {
+            lastError += output;
         }
     });
 
     ytdlp.on('close', (code) => {
         if (code !== 0) {
-            updateTask(taskId, { state: 'error', error: 'Conversion failed' });
+            console.error(`yt-dlp failed with code ${code}. Error: ${lastError}`);
+            updateTask(taskId, {
+                state: 'error',
+                error: lastError.includes('Sign in to confirm your age')
+                    ? 'This video requires age verification. (Cookies needed)'
+                    : lastError.slice(-100).trim() || 'Conversion failed'
+            });
             return;
         }
 

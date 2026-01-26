@@ -16,8 +16,8 @@ RUN npm install
 # Copy application code
 COPY . .
 
-# Create downloads directory (consistent with config.js defaulting to HOME/Downloads)
-RUN mkdir -p /root/Downloads
+# Create downloads directory
+RUN mkdir -p /app/downloads && chmod 777 /app/downloads
 
 # Expose port
 ENV PORT=3000

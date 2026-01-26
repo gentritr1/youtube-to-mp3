@@ -29,6 +29,22 @@ if (!fs.existsSync(config.DOWNLOADS_DIR)) {
 // Load persisted tasks
 loadTasks();
 
+// Dependency Checks
+import { execSync } from 'child_process';
+try {
+    const ytdlpVer = execSync('yt-dlp --version').toString().trim();
+    console.log(`[System] yt-dlp version: ${ytdlpVer}`);
+} catch (e) {
+    console.error('[System] CRITICAL: yt-dlp not found in path!');
+}
+
+try {
+    const ffmpegVer = execSync('ffmpeg -version').toString().split('\n')[0];
+    console.log(`[System] ffmpeg version: ${ffmpegVer}`);
+} catch (e) {
+    console.error('[System] CRITICAL: ffmpeg not found in path!');
+}
+
 // API Routes
 app.use('/api', routes);
 

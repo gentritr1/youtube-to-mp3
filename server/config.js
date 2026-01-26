@@ -13,7 +13,7 @@ export const config = {
 
     // Paths
     ROOT_DIR: path.resolve(__dirname, '..'),
-    DOWNLOADS_DIR: path.join(process.env.HOME || process.env.USERPROFILE, 'Downloads'),
+    DOWNLOADS_DIR: path.resolve(__dirname, '..', 'downloads'),
     TASKS_FILE: path.resolve(__dirname, '..', 'tasks.json'),
 
     // Timeouts

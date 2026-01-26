@@ -164,7 +164,7 @@ const convertVideo = async (videoId, format, title) => {
  * Poll conversion progress
  */
 const pollProgress = async (taskId) => {
-    const maxAttempts = 120; // 2 minutes max
+    const maxAttempts = 600; // 10 minutes max (at 1s interval)
     let attempts = 0;
 
     while (attempts < maxAttempts) {
