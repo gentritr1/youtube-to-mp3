@@ -27,18 +27,29 @@ const getCommonArgs = () => {
     // Use /tmp for cookies as it's guaranteed writable on almost all cloud hosts
     const cookiesPath = '/tmp/yt_cookies.txt';
 
-    // Add modern user agent and headers to look more like a real browser
-    args.push('--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    // Advanced Stealth: Add modern user agent and matching browser headers
+    args.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
+    args.push('--add-header', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
     args.push('--add-header', 'Accept-Language: en-US,en;q=0.9');
-    args.push('--add-header', 'Sec-Ch-Ua: "Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
-    args.push('--add-header', 'Sec-Ch-Ua-Mobile: ?0');
-    args.push('--add-header', 'Sec-Ch-Ua-Platform: "Windows"');
+    args.push('--add-header', 'Sec-Fetch-Mode: navigate');
+    args.push('--add-header', 'Sec-Fetch-Site: cross-site');
+    args.push('--add-header', 'Sec-Fetch-Dest: document');
+
+    // Switch to iOS player client which is often less restricted
+    args.push('--extractor-args', 'youtube:player_client=ios,web');
+    args.push('--geo-bypass');
+    args.push('--socket-timeout', '30');
 
     // Handle Cookies from Environment Variable (for Render/Deployment)
     if (process.env.YT_COOKIES) {
         try {
-            fs.writeFileSync(cookiesPath, process.env.YT_COOKIES);
-            console.log('Updated /tmp/yt_cookies.txt from environment variable');
+            const cookiesText = process.env.YT_COOKIES.trim();
+            if (!cookiesText.includes('Netscape') && !cookiesText.includes('\t')) {
+                console.warn('[System] WARNING: YT_COOKIES environment variable does not look like a Netscape format cookies.txt file!');
+            }
+
+            fs.writeFileSync(cookiesPath, cookiesText);
+            console.log('Updated /tmp/yt_cookies.txt (Size: ' + cookiesText.length + ' bytes)');
             args.push('--cookies', cookiesPath);
         } catch (e) {
             console.error('Failed to write cookies to /tmp', e);
