@@ -77,9 +77,8 @@ export async function getVideoInfo(url) {
                 '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
-                // Use iOS client globally for Info step as it's the most reliable for metadata currently
-                '--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-                '--extractor-args', 'youtube:player_client=ios',
+                // Use tv_embedded client which is often less restricted on data center IPs
+                '--extractor-args', 'youtube:player_client=tv_embedded',
             ];
 
             // Production (Render): Use Stealth iOS Client to bypass blocks
@@ -166,8 +165,7 @@ export async function convertVideo(taskId, url, format) {
     ];
 
     if (config.IS_PROD) {
-        baseArgs.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
-        baseArgs.push('--extractor-args', 'youtube:player_client=ios');
+        baseArgs.push('--extractor-args', 'youtube:player_client=tv_embedded');
         baseArgs.push('--geo-bypass');
         baseArgs.push('--socket-timeout', '30');
     }

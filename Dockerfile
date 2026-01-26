@@ -3,9 +3,8 @@ FROM node:18-alpine
 # Install system dependencies (Python for yt-dlp, FFmpeg for conversion)
 RUN apk add --no-cache python3 py3-pip ffmpeg curl
 
-# Install yt-dlp binary directly
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
-    chmod a+rx /usr/local/bin/yt-dlp
+# Install yt-dlp via pip for easy updates
+RUN pip3 install --break-system-packages yt-dlp
 
 WORKDIR /app
 
@@ -23,5 +22,5 @@ RUN mkdir -p /app/downloads && chmod 777 /app/downloads
 ENV PORT=3000
 EXPOSE 3000
 
-# Start server
-CMD ["node", "server/index.js"]
+# Update yt-dlp and start server
+CMD yt-dlp -U && node server/index.js
