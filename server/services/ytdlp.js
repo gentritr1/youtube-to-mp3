@@ -77,13 +77,11 @@ export async function getVideoInfo(url) {
                 '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
+                // Use mweb (mobile web) client which works reliably
+                '--extractor-args', 'youtube:player_client=mweb',
+                '--geo-bypass',
+                '--socket-timeout', '30',
             ];
-
-            // Production (Render): Use Stealth iOS Client to bypass blocks
-            if (config.IS_PROD) {
-                args.push('--geo-bypass');
-                args.push('--socket-timeout', '30');
-            }
 
             if (useCookies && process.env.YT_COOKIES) {
                 const cookiesPath = '/tmp/yt_cookies.txt';
@@ -149,9 +147,11 @@ export async function convertVideo(taskId, url, format) {
     if (!task) return;
 
     const safeTitle = sanitizeFilename(task.title);
-    const filename = `${safeTitle}.%(ext)s`;
-    // Define outputTemplate at function scope so it's available everywhere
-    const outputTemplate = path.join(config.DOWNLOADS_DIR, filename);
+    const actualFilename = `${safeTitle}.${format}`;
+    const outputTemplate = path.join(config.DOWNLOADS_DIR, `${safeTitle}.%(ext)s`);
+
+    // Store the filename in the task for later use
+    updateTask(taskId, { filename: actualFilename });
 
     // Initial attempt: Try WITHOUT cookies first to avoid account flagging
     // Only use basic arguments initially
@@ -160,13 +160,11 @@ export async function convertVideo(taskId, url, format) {
         '--no-check-certificates',
         '--force-ipv4',
         '--referer', 'https://www.youtube.com/',
+        // Use mweb (mobile web) client which works reliably for downloads
+        '--extractor-args', 'youtube:player_client=mweb',
+        '--geo-bypass',
+        '--socket-timeout', '30',
     ];
-
-    if (config.IS_PROD) {
-        baseArgs.push('--extractor-args', 'youtube:player_client=tv_embedded');
-        baseArgs.push('--geo-bypass');
-        baseArgs.push('--socket-timeout', '30');
-    }
 
     const formatArgs = format === 'mp3'
         ? [
@@ -258,35 +256,17 @@ export async function convertVideo(taskId, url, format) {
     }
 
     function success() {
-        if (fs.existsSync(outputTemplate.replace('%(ext)s', format))) {
-            // ... existing success logic (file rename/check)
-            // For simplicity in this snippet, we assume outputTemplate resolved to task.filename
-            // In reality, we need to find the file just like before
-            const finalPath = path.join(config.DOWNLOADS_DIR, task.filename);
-            if (fs.existsSync(finalPath)) {
-                updateTask(taskId, {
-                    state: 'completed',
-                    progress: 100,
-                    status: 'Complete!',
-                    downloadUrl: `/api/download/${taskId}/${encodeURIComponent(task.filename)}`
-                });
-            } else {
-                fail('Output file not found after success');
-            }
+        const finalPath = path.join(config.DOWNLOADS_DIR, actualFilename);
+        if (fs.existsSync(finalPath)) {
+            updateTask(taskId, {
+                state: 'completed',
+                progress: 100,
+                status: 'Complete!',
+                filename: actualFilename,
+                downloadUrl: `/api/download/${taskId}/${encodeURIComponent(actualFilename)}`
+            });
         } else {
-            // Fallback helper to find the file if extension check failed
-            // Reuse existing file finding logic
-            const finalPath = path.join(config.DOWNLOADS_DIR, task.filename);
-            if (fs.existsSync(finalPath)) {
-                updateTask(taskId, {
-                    state: 'completed',
-                    progress: 100,
-                    status: 'Complete!',
-                    downloadUrl: `/api/download/${taskId}/${encodeURIComponent(task.filename)}`
-                });
-            } else {
-                fail(`Output file missing: ${task.filename}`);
-            }
+            fail(`Output file missing: ${actualFilename}`);
         }
     }
 
