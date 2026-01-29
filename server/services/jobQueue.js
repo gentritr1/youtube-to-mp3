@@ -167,7 +167,12 @@ export const getJob = async (taskId) => {
         return null;
     }
 
-    return conversionQueue.getJob(taskId);
+    try {
+        return await conversionQueue.getJob(taskId);
+    } catch (error) {
+        console.error(`❌ Failed to get job for task ${taskId}:`, error.message);
+        return null;
+    }
 };
 
 /**
