@@ -106,7 +106,7 @@ npm run test:watch
 - `/style.css` - CSS entry point (imports modules)
 - `/game.css` - Snake game specific styles
 - `/js/snake-game.js` - Encapsulated Snake Game logic
-- `/tests/` - Vitest unit tests
+- `/tests/` - Vitest unit tests (`taskManager.test.js`, `utils.test.js`)
 
 ## 📄 License
 MIT
