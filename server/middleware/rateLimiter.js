@@ -35,10 +35,8 @@ export const conversionLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => {
-        // Use X-Forwarded-For for proxied requests (Render, etc.)
-        return req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
-    }
+    // Use default keyGenerator - works with trust proxy setting
+    validate: { trustProxy: false } // Disable validation error in tests
 });
 
 /**

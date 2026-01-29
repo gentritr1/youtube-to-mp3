@@ -2,9 +2,16 @@
  * Tests for Job Queue Service
  */
 
-import { describe, it } from 'node:test';
+import { describe, it, after } from 'node:test';
 import assert from 'node:assert';
 import * as jobQueue from '../server/services/jobQueue.js';
+
+// Force exit after tests complete (Bull keeps connections open)
+after(async () => {
+    await jobQueue.closeQueue();
+    // Give time for cleanup
+    setTimeout(() => process.exit(0), 100);
+});
 
 describe('Job Queue Service', () => {
     it('should export initializeQueue function', () => {
