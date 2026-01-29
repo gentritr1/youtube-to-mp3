@@ -13,3 +13,6 @@ npm-debug.log*
 
 # Runtime data
 tasks.json
+
+# Downloaded files (temporary server storage)
+downloads/
