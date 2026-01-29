@@ -6,8 +6,10 @@
 3. [Project Structure](#project-structure)
 4. [Component Breakdown](#component-breakdown)
 5. [Data Flow](#data-flow)
-6. [Current Strengths](#current-strengths)
-7. [Improvement Recommendations](#improvement-recommendations)
+6. [Security & Rate Limiting](#security--rate-limiting)
+7. [Persistence & Scalability](#persistence--scalability)
+8. [Testing](#testing)
+9. [Future Improvements](#future-improvements)
 
 ---
 
@@ -16,6 +18,9 @@
 **YT Converter** is a full-stack web application that converts YouTube videos to MP3/MP4 format. It features:
 - A modern, animated frontend with skeleton loaders and orchestrated animations
 - A Node.js/Express backend that wraps `yt-dlp` for video processing
+- **SQLite-based task persistence** that survives server restarts
+- **Rate limiting** to prevent abuse
+- **Optional Redis job queue** for horizontal scaling
 - Task-based async processing with progress polling
 - A built-in Snake game to entertain users during conversion
 
@@ -24,6 +29,9 @@
 |-------|------------|
 | Frontend | Vanilla HTML/CSS/JS (ES6+) |
 | Backend | Node.js + Express |
+| Persistence | SQLite (better-sqlite3) |
+| Queue (optional) | Bull + Redis |
+| Rate Limiting | express-rate-limit |
 | Video Processing | yt-dlp + ffmpeg |
 | Deployment | Docker, Render, Netlify |
 
@@ -51,32 +59,35 @@
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                         server/index.js                          │    │
-│  │                    (Entry Point + Middleware)                    │    │
+│  │                      MIDDLEWARE LAYER                            │    │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │    │
+│  │  │ Rate Limiter │  │    CORS      │  │ Error Handler│           │    │
+│  │  │ (per-route)  │  │              │  │              │           │    │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘           │    │
 │  └─────────────────────────┬───────────────────────────────────────┘    │
 │                            │                                             │
 │  ┌─────────────────────────┴───────────────────────────────────────┐    │
 │  │                         ROUTES (/api/*)                          │    │
 │  ├────────────┬────────────┬────────────┬────────────┬─────────────┤    │
-│  │   /info    │  /convert  │ /progress  │ /download  │   index     │    │
-│  │  (GET)     │   (POST)   │   (GET)    │   (GET)    │  (router)   │    │
+│  │   /info    │  /convert  │ /progress  │ /download  │  /health    │    │
+│  │ 30/min     │  10/hour   │  (no limit)│  20/10min  │  (stats)    │    │
 │  └─────┬──────┴─────┬──────┴─────┬──────┴─────┬──────┴─────────────┘    │
 │        │            │            │            │                          │
 │  ┌─────┴────────────┴────────────┴────────────┴────────────────────┐    │
 │  │                           SERVICES                               │    │
-│  ├──────────────────────────────┬──────────────────────────────────┤    │
-│  │         ytdlp.js             │         taskManager.js           │    │
-│  │  • getVideoInfo()            │  • createTask() / getTask()      │    │
-│  │  • convertVideo()            │  • updateTask() / findExisting() │    │
-│  │  • Retry logic               │  • Persistence (tasks.json)      │    │
-│  └──────────────┬───────────────┴──────────────────────────────────┘    │
-│                 │                                                        │
-│  ┌──────────────┴───────────────────────────────────────────────────┐   │
-│  │                           UTILITIES                               │   │
-│  ├────────────────┬─────────────────────┬───────────────────────────┤   │
-│  │ formatDuration │    parseProgress    │      sanitize.js          │   │
-│  │  (time helper) │  (yt-dlp output)    │  (filename safety)        │   │
-│  └────────────────┴─────────────────────┴───────────────────────────┘   │
+│  ├──────────────────┬────────────────────┬─────────────────────────┤    │
+│  │    ytdlp.js      │ sqliteTaskManager  │     jobQueue.js         │    │
+│  │  • getVideoInfo  │ • SQLite CRUD      │  • Bull + Redis         │    │
+│  │  • convertVideo  │ • WAL mode         │  • Fallback to direct   │    │
+│  │  • Retry logic   │ • Prepared stmts   │  • Graceful shutdown    │    │
+│  └──────────────────┴────────────────────┴─────────────────────────┘    │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │                         DATA LAYER                                │   │
+│  ├──────────────────────────────┬───────────────────────────────────┤   │
+│  │        tasks.db              │         downloads/                 │   │
+│  │   (SQLite + WAL mode)        │    (temp file storage)            │   │
+│  └──────────────────────────────┴───────────────────────────────────┘   │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
                    │
@@ -84,10 +95,10 @@
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         EXTERNAL DEPENDENCIES                            │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                   │
-│  │    yt-dlp    │  │    ffmpeg    │  │   YouTube    │                   │
-│  │  (downloader)│  │  (converter) │  │   (source)   │                   │
-│  └──────────────┘  └──────────────┘  └──────────────┘                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
+│  │    yt-dlp    │  │    ffmpeg    │  │   YouTube    │  │ Redis (opt)  │ │
+│  │  (downloader)│  │  (converter) │  │   (source)   │  │  (job queue) │ │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘ │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -118,29 +129,39 @@ youtube-to-mp3/
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
-│   ├── index.js               # Server entry point
-│   ├── config.js              # Centralized config
+│   ├── index.js               # Server entry point + graceful shutdown
+│   ├── config.js              # Centralized config (rate limits, queue, etc.)
 │   ├── middleware/
-│   │   └── errorHandler.js    # Error middleware
+│   │   ├── errorHandler.js    # Error middleware
+│   │   └── rateLimiter.js     # ✨ Rate limiting (per-route)
 │   ├── routes/
-│   │   ├── index.js           # Route aggregator
-│   │   ├── info.js            # GET /api/info
-│   │   ├── convert.js         # POST /api/convert
+│   │   ├── index.js           # Route aggregator + rate limit bindings
+│   │   ├── info.js            # GET /api/info (30/min)
+│   │   ├── convert.js         # POST /api/convert (10/hour)
 │   │   ├── progress.js        # GET /api/progress/:taskId
 │   │   └── download.js        # GET /api/download/:taskId/:filename
 │   ├── services/
 │   │   ├── ytdlp.js           # yt-dlp wrapper (core logic)
-│   │   └── taskManager.js     # Task CRUD + persistence
+│   │   ├── taskManager.js     # Legacy in-memory tasks
+│   │   ├── sqliteTaskManager.js  # ✨ SQLite persistence
+│   │   └── jobQueue.js        # ✨ Bull + Redis queue
 │   └── utils/
 │       ├── formatDuration.js  # Time formatting
 │       ├── parseProgress.js   # Parse yt-dlp output
 │       └── sanitize.js        # Filename sanitization
 │
+├── 📁 tests/                  # ✨ Test suite
+│   ├── config.test.js         # Config tests (19 tests)
+│   ├── rateLimiter.test.js    # Rate limiter tests (6 tests)
+│   ├── jobQueue.test.js       # Job queue tests (10 tests)
+│   └── sqliteTaskManager.test.js  # SQLite tests
+│
 ├── 📁 downloads/              # Temp file storage (gitignored)
-├── 📄 tasks.json              # Task persistence
+├── 📄 tasks.db                # SQLite database (gitignored)
 ├── 📄 Dockerfile              # Container build
 ├── 📄 package.json            # Dependencies
-└── 📄 README.md               # Documentation
+├── 📄 SYSTEM_DESIGN.md        # This document
+└── 📄 README.md               # User documentation
 ```
 
 ---
@@ -163,14 +184,111 @@ youtube-to-mp3/
 
 | Component | File | Responsibility |
 |-----------|------|----------------|
-| **Express Server** | `server/index.js` | HTTP server, static files, cleanup scheduler |
-| **Config** | `server/config.js` | Centralized environment settings |
+| **Express Server** | `server/index.js` | HTTP server, middleware, graceful shutdown |
+| **Config** | `server/config.js` | Centralized settings (rate limits, queue, paths) |
+| **Rate Limiter** | `middleware/rateLimiter.js` | Per-route rate limiting |
 | **Info Route** | `routes/info.js` | Fetch video metadata via yt-dlp |
 | **Convert Route** | `routes/convert.js` | Start async conversion task |
 | **Progress Route** | `routes/progress.js` | Poll task status |
 | **Download Route** | `routes/download.js` | Serve converted file |
 | **yt-dlp Service** | `services/ytdlp.js` | Wrapper with retry logic |
-| **Task Manager** | `services/taskManager.js` | In-memory + JSON persistence |
+| **SQLite Task Manager** | `services/sqliteTaskManager.js` | Persistent task storage |
+| **Job Queue** | `services/jobQueue.js` | Optional Redis-backed queue |
+
+---
+
+## 🔒 Security & Rate Limiting
+
+### Rate Limits by Endpoint
+
+| Endpoint | Limit | Window | Purpose |
+|----------|-------|--------|---------|
+| All API routes | 100 requests | 15 minutes | General abuse prevention |
+| `/api/info` | 30 requests | 1 minute | Prevent metadata scraping |
+| `/api/convert` | **10 conversions** | **1 hour** | Prevent resource abuse |
+| `/api/download` | 20 downloads | 10 minutes | Prevent DoS |
+| `/health` | No limit | - | Monitoring endpoint |
+
+### Implementation Details
+- Uses `express-rate-limit` package
+- Trust proxy enabled for Render/reverse proxy environments
+- Rate limit headers included in responses (`RateLimit-*`)
+- Custom error messages with retry time
+
+### Health Check Endpoint
+```
+GET /health
+```
+Returns:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-01-29T17:00:00Z",
+  "uptime": 3600,
+  "queue": { "enabled": false, "message": "Redis not connected" },
+  "memory": { "used": "45MB", "total": "80MB" }
+}
+```
+
+---
+
+## 💾 Persistence & Scalability
+
+### SQLite Task Persistence
+
+Tasks are now stored in an SQLite database (`tasks.db`) that survives server restarts.
+
+**Features:**
+- WAL mode for better concurrency
+- Prepared statements for performance
+- Indexed on `video_id`, `format`, `state`
+- Automatic cleanup of old tasks (1 hour TTL)
+
+**Schema:**
+```sql
+CREATE TABLE tasks (
+    id TEXT PRIMARY KEY,
+    video_id TEXT NOT NULL,
+    format TEXT NOT NULL,
+    state TEXT DEFAULT 'processing',
+    progress INTEGER DEFAULT 0,
+    filename TEXT,
+    download_url TEXT,
+    error TEXT,
+    created_at INTEGER,
+    updated_at INTEGER
+);
+```
+
+### Job Queue (Optional)
+
+When Redis is available and `USE_QUEUE=true`:
+- Jobs processed via Bull queue
+- Configurable concurrency (default: 2 parallel jobs)
+- Retry logic with exponential backoff
+- Job progress tracking
+
+**Fallback:** When Redis is unavailable, falls back to direct processing (current behavior).
+
+---
+
+## 🧪 Testing
+
+### Test Suite
+
+Run tests with:
+```bash
+npm run test:node
+```
+
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `config.test.js` | 19 | All config settings |
+| `rateLimiter.test.js` | 6 | Middleware exports, behavior |
+| `jobQueue.test.js` | 10 | Queue API, disabled state, Redis fallback |
+| `sqliteTaskManager.test.js` | 10+ | CRUD, idempotency, cleanup |
+
+**Total: 45+ tests**
 
 ---
 
@@ -185,15 +303,19 @@ youtube-to-mp3/
          ↓
 3. FRONTEND → POST /api/convert { videoId, format, title }
          ↓
-4. BACKEND → Check for existing task (idempotency)
+      ┌─────────────────────────────────────────┐
+      │         RATE LIMIT CHECK (10/hour)       │
+      └─────────────────────────────────────────┘
          ↓
-5. BACKEND → Create task { state: 'processing', progress: 0 }
+4. BACKEND → Check for existing task in SQLite (idempotency)
          ↓
-6. BACKEND → Spawn yt-dlp process (async)
+5. BACKEND → Create task in SQLite { state: 'processing', progress: 0 }
+         ↓
+6. BACKEND → Spawn yt-dlp process (or queue job if Redis available)
          ↓
 7. FRONTEND → Poll GET /api/progress/:taskId (every 1s)
          ↓
-8. BACKEND → Parse yt-dlp stdout → Update task progress
+8. BACKEND → Parse yt-dlp stdout → Update task progress in SQLite
          ↓
 9. BACKEND → On complete: state: 'completed', downloadUrl
          ↓
@@ -204,67 +326,23 @@ youtube-to-mp3/
 12. BACKEND → res.download() → File sent to browser
 ```
 
-### State Transitions
-
-```
-           ┌─────────────────┐
-           │   processing    │
-           └────────┬────────┘
-                    │
-        ┌───────────┴───────────┐
-        ▼                       ▼
-┌──────────────┐        ┌──────────────┐
-│  completed   │        │    error     │
-└──────────────┘        └──────────────┘
-```
-
 ---
 
-## ✅ Current Strengths
+## 🚀 Future Improvements
 
-### 1. **Clean Separation of Concerns**
-- Routes only handle HTTP, services contain business logic
-- CSS is modular (base, components, layout, utils)
-- Config is centralized
-
-### 2. **Idempotency**
-- Duplicate requests for same video/format reuse existing tasks
-- Prevents wasted resources
-
-### 3. **Resilience**
-- Retry logic for yt-dlp (cookies fallback)
-- oEmbed fallback if backend unreachable
-- Graceful error handling
-
-### 4. **User Experience**
-- Skeleton loaders prevent layout shift
-- Orchestrated animations feel premium
-- Snake game reduces perceived wait time
-
-### 5. **Deployability**
-- Docker support
-- Environment-based config
-- Render/Netlify ready
-
----
-
-## 🚀 Improvement Recommendations
-
-### High Priority
-
-| Area | Issue | Recommendation |
-|------|-------|----------------|
-| **Memory** | Tasks stored in-memory, lost on restart | Use Redis or SQLite for task persistence |
-| **Scalability** | Single-threaded Node.js | Add worker threads or use a job queue (Bull/BullMQ) |
-| **Security** | No rate limiting | Add `express-rate-limit` (e.g., 10 conversions/hour/IP) |
-| **File Cleanup** | Files persist for 1 hour | Add on-download cleanup or shorter TTL |
+### Now Implemented ✅
+- [x] SQLite task persistence
+- [x] Rate limiting
+- [x] Job queue infrastructure (Bull)
+- [x] Health check endpoint
+- [x] Graceful shutdown
+- [x] Test suite
 
 ### Medium Priority
 
 | Area | Issue | Recommendation |
 |------|-------|----------------|
 | **Error Tracking** | Console.log only | Add Sentry or LogRocket |
-| **Tests** | Tests folder exists but sparse | Add Jest/Mocha tests for services |
 | **Type Safety** | Plain JavaScript | Consider TypeScript migration |
 | **API Docs** | No documentation | Add OpenAPI/Swagger spec |
 
@@ -278,32 +356,6 @@ youtube-to-mp3/
 | **PWA Support** | Add service worker for offline capability |
 | **Dark/Light Toggle** | User preference for theme |
 
-### Architecture Improvements
-
-```
-Current:                         Recommended:
-┌─────────┐                     ┌─────────┐
-│ Express │                     │ Express │
-│ + Tasks │                     │   API   │
-└────┬────┘                     └────┬────┘
-     │                               │
-     │                          ┌────┴────┐
-     ▼                          ▼         ▼
-┌─────────┐               ┌─────────┐ ┌───────┐
-│ yt-dlp  │               │  Redis  │ │ Queue │
-│ inline  │               │  Cache  │ │ (Bull)│
-└─────────┘               └─────────┘ └───┬───┘
-                                          │
-                                     ┌────┴────┐
-                                     │ Worker  │
-                                     │ Process │
-                                     └────┬────┘
-                                          │
-                                     ┌────┴────┐
-                                     │ yt-dlp  │
-                                     └─────────┘
-```
-
 ---
 
 ## 📊 Metrics to Track
@@ -312,18 +364,29 @@ Current:                         Recommended:
 |--------|-----|
 | Conversion success rate | Detect yt-dlp blocks |
 | Average conversion time | Performance baseline |
-| Concurrent conversions | Capacity planning |
+| Rate limit hits | Abuse detection |
+| Queue depth (if Redis) | Capacity planning |
 | Error types | Identify common failures |
-| Popular video IDs | Caching opportunities |
 
 ---
 
 ## 🎯 Summary
 
-**YT Converter** is a well-structured, production-ready application with clean code architecture and thoughtful UX. The main areas for improvement are around **scalability** (job queues), **observability** (error tracking), and **security** (rate limiting).
+**YT Converter** is a production-ready application with:
 
-The modular CSS and separated backend concerns make it easy to maintain and extend. Great foundation! 🏆
+| Feature | Status |
+|---------|--------|
+| Clean architecture | ✅ |
+| SQLite persistence | ✅ |
+| Rate limiting | ✅ |
+| Job queue (optional) | ✅ |
+| Health monitoring | ✅ |
+| Test coverage | ✅ |
+| Graceful shutdown | ✅ |
+
+The modular design makes it easy to maintain and extend. Ready for production deployment! 🏆
 
 ---
 
-*Generated: 2026-01-29*
+*Updated: 2026-01-29*
+
