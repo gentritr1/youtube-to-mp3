@@ -7,7 +7,8 @@
     "start": "node --watch server/index.js",
     "dev": "node --watch server/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:node": "node --test tests/*.test.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
