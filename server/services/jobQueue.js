@@ -23,10 +23,10 @@ export const initializeQueue = async () => {
     try {
         conversionQueue = new Bull('video-conversion', REDIS_URL, {
             defaultJobOptions: {
-                attempts: 2,
+                attempts: config.QUEUE.MAX_RETRIES,
                 backoff: {
                     type: 'exponential',
-                    delay: 5000
+                    delay: config.QUEUE.RETRY_DELAY_MS
                 },
                 removeOnComplete: 100, // Keep last 100 completed jobs
                 removeOnFail: 50       // Keep last 50 failed jobs
@@ -49,6 +49,15 @@ export const initializeQueue = async () => {
         return true;
     } catch (error) {
         console.warn('⚠️  Redis not available, using direct processing:', error.message);
+        // Clean up any dangling connections
+        if (conversionQueue) {
+            try {
+                await conversionQueue.close();
+            } catch (closeError) {
+                // Ignore close errors
+            }
+            conversionQueue = null;
+        }
         isQueueEnabled = false;
         return false;
     }
@@ -113,8 +122,8 @@ export const registerProcessor = (processorFn) => {
         return;
     }
 
-    // Process jobs with concurrency of 2
-    conversionQueue.process('convert', 2, async (job) => {
+    // Process jobs with configured concurrency
+    conversionQueue.process('convert', config.QUEUE.CONCURRENCY, async (job) => {
         const { taskId, videoId, format, title } = job.data;
 
         // Update job progress

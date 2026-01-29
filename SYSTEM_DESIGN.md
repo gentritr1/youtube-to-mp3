@@ -1,15 +1,15 @@
 # YT Converter - System Design Document
 
 ## 📋 Table of Contents
-1. [Overview](#overview)
-2. [Architecture Diagram](#architecture-diagram)
-3. [Project Structure](#project-structure)
-4. [Component Breakdown](#component-breakdown)
-5. [Data Flow](#data-flow)
-6. [Security & Rate Limiting](#security--rate-limiting)
-7. [Persistence & Scalability](#persistence--scalability)
-8. [Testing](#testing)
-9. [Future Improvements](#future-improvements)
+1. [Overview](#-overview)
+2. [Architecture Diagram](#%EF%B8%8F-architecture-diagram)
+3. [Project Structure](#-project-structure)
+4. [Component Breakdown](#-component-breakdown)
+5. [Data Flow](#-data-flow)
+6. [Security & Rate Limiting](#-security--rate-limiting)
+7. [Persistence & Scalability](#-persistence--scalability)
+8. [Testing](#-testing)
+9. [Future Improvements](#-future-improvements)
 
 ---
 
@@ -25,8 +25,9 @@
 - A built-in Snake game to entertain users during conversion
 
 ### Tech Stack
+
 | Layer | Technology |
-|-------|------------|
+| :--- | :--- |
 | Frontend | Vanilla HTML/CSS/JS (ES6+) |
 | Backend | Node.js + Express |
 | Persistence | SQLite (better-sqlite3) |
@@ -39,7 +40,7 @@
 
 ## 🏗️ Architecture Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                              CLIENT (Browser)                            │
 ├─────────────────────────────────────────────────────────────────────────┤
@@ -106,7 +107,7 @@
 
 ## 📁 Project Structure
 
-```
+```text
 youtube-to-mp3/
 ├── 📄 index.html              # Main HTML (single page)
 ├── 📄 app.js                  # Frontend logic (12KB)
@@ -171,7 +172,7 @@ youtube-to-mp3/
 ### Frontend Components
 
 | Component | File | Responsibility |
-|-----------|------|----------------|
+| :--- | :--- | :--- |
 | **URL Input** | `index.html`, `app.js` | Accepts YouTube URL, validates with regex |
 | **Format Toggle** | `index.html`, `app.js` | MP3/MP4 selection with animated icons |
 | **Preview** | `app.js`, `results.css` | Shows video thumbnail, title, duration |
@@ -183,7 +184,7 @@ youtube-to-mp3/
 ### Backend Components
 
 | Component | File | Responsibility |
-|-----------|------|----------------|
+| :--- | :--- | :--- |
 | **Express Server** | `server/index.js` | HTTP server, middleware, graceful shutdown |
 | **Config** | `server/config.js` | Centralized settings (rate limits, queue, paths) |
 | **Rate Limiter** | `middleware/rateLimiter.js` | Per-route rate limiting |
@@ -202,7 +203,7 @@ youtube-to-mp3/
 ### Rate Limits by Endpoint
 
 | Endpoint | Limit | Window | Purpose |
-|----------|-------|--------|---------|
+| :--- | :--- | :--- | :--- |
 | All API routes | 100 requests | 15 minutes | General abuse prevention |
 | `/api/info` | 30 requests | 1 minute | Prevent metadata scraping |
 | `/api/convert` | **10 conversions** | **1 hour** | Prevent resource abuse |
@@ -216,10 +217,13 @@ youtube-to-mp3/
 - Custom error messages with retry time
 
 ### Health Check Endpoint
-```
+
+```text
 GET /health
 ```
+
 Returns:
+
 ```json
 {
   "status": "healthy",
@@ -245,6 +249,7 @@ Tasks are now stored in an SQLite database (`tasks.db`) that survives server res
 - Automatic cleanup of old tasks (1 hour TTL)
 
 **Schema:**
+
 ```sql
 CREATE TABLE tasks (
     id TEXT PRIMARY KEY,
@@ -277,18 +282,19 @@ When Redis is available and `USE_QUEUE=true`:
 ### Test Suite
 
 Run tests with:
+
 ```bash
 npm run test:node
 ```
 
 | Test File | Tests | Coverage |
-|-----------|-------|----------|
+| :--- | :--- | :--- |
 | `config.test.js` | 19 | All config settings |
 | `rateLimiter.test.js` | 6 | Middleware exports, behavior |
 | `jobQueue.test.js` | 10 | Queue API, disabled state, Redis fallback |
 | `sqliteTaskManager.test.js` | 10+ | CRUD, idempotency, cleanup |
 
-**Total: 45+ tests**
+### Total: 45+ tests
 
 ---
 
@@ -296,7 +302,7 @@ npm run test:node
 
 ### Conversion Flow (Happy Path)
 
-```
+```text
 1. USER → Paste YouTube URL
          ↓
 2. FRONTEND → Validate URL (regex)
@@ -331,6 +337,7 @@ npm run test:node
 ## 🚀 Future Improvements
 
 ### Now Implemented ✅
+
 - [x] SQLite task persistence
 - [x] Rate limiting
 - [x] Job queue infrastructure (Bull)
@@ -341,7 +348,7 @@ npm run test:node
 ### Medium Priority
 
 | Area | Issue | Recommendation |
-|------|-------|----------------|
+| :--- | :--- | :--- |
 | **Error Tracking** | Console.log only | Add Sentry or LogRocket |
 | **Type Safety** | Plain JavaScript | Consider TypeScript migration |
 | **API Docs** | No documentation | Add OpenAPI/Swagger spec |
@@ -349,7 +356,7 @@ npm run test:node
 ### Low Priority / Nice-to-Have
 
 | Feature | Description |
-|---------|-------------|
+| :--- | :--- |
 | **Popular Videos** | Add curated music suggestions by genre |
 | **Audio Preview** | Play a 30s clip before downloading |
 | **Batch Downloads** | Convert multiple videos at once |
@@ -361,7 +368,7 @@ npm run test:node
 ## 📊 Metrics to Track
 
 | Metric | Why |
-|--------|-----|
+| :--- | :--- |
 | Conversion success rate | Detect yt-dlp blocks |
 | Average conversion time | Performance baseline |
 | Rate limit hits | Abuse detection |
@@ -375,7 +382,7 @@ npm run test:node
 **YT Converter** is a production-ready application with:
 
 | Feature | Status |
-|---------|--------|
+| :--- | :--- |
 | Clean architecture | ✅ |
 | SQLite persistence | ✅ |
 | Rate limiting | ✅ |
@@ -389,4 +396,3 @@ The modular design makes it easy to maintain and extend. Ready for production de
 ---
 
 *Updated: 2026-01-29*
-

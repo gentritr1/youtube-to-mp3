@@ -4,14 +4,16 @@
  */
 
 import rateLimit from 'express-rate-limit';
+import { config } from '../config.js';
+
+const { RATE_LIMIT } = config;
 
 /**
  * Standard API rate limiter
- * 100 requests per 15 minutes per IP
  */
 export const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
+    windowMs: RATE_LIMIT.API_WINDOW_MS,
+    max: RATE_LIMIT.API_MAX_REQUESTS,
     message: {
         error: 'Too many requests, please try again later.',
         retryAfter: '15 minutes'
@@ -24,13 +26,12 @@ export const apiLimiter = rateLimit({
 
 /**
  * Strict rate limiter for conversion endpoint
- * 10 conversions per hour per IP
  */
 export const conversionLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10,
+    windowMs: RATE_LIMIT.CONVERSION_WINDOW_MS,
+    max: RATE_LIMIT.CONVERSION_MAX_REQUESTS,
     message: {
-        error: 'Conversion limit reached. You can convert up to 10 videos per hour.',
+        error: `Conversion limit reached. You can convert up to ${RATE_LIMIT.CONVERSION_MAX_REQUESTS} videos per hour.`,
         retryAfter: '1 hour'
     },
     standardHeaders: true,
@@ -41,11 +42,10 @@ export const conversionLimiter = rateLimit({
 
 /**
  * Burst protection for info endpoint
- * 30 requests per minute per IP
  */
 export const infoLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 30,
+    windowMs: RATE_LIMIT.INFO_WINDOW_MS,
+    max: RATE_LIMIT.INFO_MAX_REQUESTS,
     message: {
         error: 'Too many info requests, please slow down.',
         retryAfter: '1 minute'
@@ -56,7 +56,6 @@ export const infoLimiter = rateLimit({
 
 /**
  * Download rate limiter
- * 20 downloads per 10 minutes per IP
  */
 export const downloadLimiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutes

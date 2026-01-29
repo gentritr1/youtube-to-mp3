@@ -7,14 +7,13 @@
     "start": "node --watch server/index.js",
     "dev": "node --watch server/index.js",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "test:node": "node --test tests/*.test.js"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "bull": "^4.16.5",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
+    "cors": "^2.8.6",
+    "express": "^4.20.0",
     "express-rate-limit": "^8.2.1",
     "ioredis": "^5.9.2"
   },

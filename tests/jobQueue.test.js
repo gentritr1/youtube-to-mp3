@@ -2,48 +2,45 @@
  * Tests for Job Queue Service
  */
 
-import { describe, it, after } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, afterAll, expect } from 'vitest';
 import * as jobQueue from '../server/services/jobQueue.js';
 
-// Force exit after tests complete (Bull keeps connections open)
-after(async () => {
+// Clean up after tests
+afterAll(async () => {
     await jobQueue.closeQueue();
-    // Give time for cleanup
-    setTimeout(() => process.exit(0), 100);
 });
 
 describe('Job Queue Service', () => {
     it('should export initializeQueue function', () => {
-        assert.ok(jobQueue.initializeQueue, 'initializeQueue should be exported');
-        assert.strictEqual(typeof jobQueue.initializeQueue, 'function');
+        expect(jobQueue.initializeQueue).toBeDefined();
+        expect(typeof jobQueue.initializeQueue).toBe('function');
     });
 
     it('should export addConversionJob function', () => {
-        assert.ok(jobQueue.addConversionJob, 'addConversionJob should be exported');
-        assert.strictEqual(typeof jobQueue.addConversionJob, 'function');
+        expect(jobQueue.addConversionJob).toBeDefined();
+        expect(typeof jobQueue.addConversionJob).toBe('function');
     });
 
     it('should export getQueueStats function', () => {
-        assert.ok(jobQueue.getQueueStats, 'getQueueStats should be exported');
-        assert.strictEqual(typeof jobQueue.getQueueStats, 'function');
+        expect(jobQueue.getQueueStats).toBeDefined();
+        expect(typeof jobQueue.getQueueStats).toBe('function');
     });
 
     it('should export isEnabled function', () => {
-        assert.ok(jobQueue.isEnabled, 'isEnabled should be exported');
-        assert.strictEqual(typeof jobQueue.isEnabled, 'function');
+        expect(jobQueue.isEnabled).toBeDefined();
+        expect(typeof jobQueue.isEnabled).toBe('function');
     });
 
     it('isEnabled should return false when queue not initialized', () => {
         const enabled = jobQueue.isEnabled();
-        assert.strictEqual(enabled, false, 'Queue should be disabled by default');
+        expect(enabled).toBe(false);
     });
 
     it('getQueueStats should return disabled status when no Redis', async () => {
         const stats = await jobQueue.getQueueStats();
 
-        assert.strictEqual(stats.enabled, false, 'Queue should be disabled');
-        assert.ok(stats.message, 'Should include a message about Redis');
+        expect(stats.enabled).toBe(false);
+        expect(stats.message).toBeDefined();
     });
 
     it('addConversionJob should return null when queue disabled', async () => {
@@ -54,19 +51,19 @@ describe('Job Queue Service', () => {
             'Test Video'
         );
 
-        assert.strictEqual(result, null, 'Should return null when queue disabled');
+        expect(result).toBeNull();
     });
 
     it('should export pauseQueue and resumeQueue functions', () => {
-        assert.ok(jobQueue.pauseQueue, 'pauseQueue should be exported');
-        assert.ok(jobQueue.resumeQueue, 'resumeQueue should be exported');
-        assert.strictEqual(typeof jobQueue.pauseQueue, 'function');
-        assert.strictEqual(typeof jobQueue.resumeQueue, 'function');
+        expect(jobQueue.pauseQueue).toBeDefined();
+        expect(jobQueue.resumeQueue).toBeDefined();
+        expect(typeof jobQueue.pauseQueue).toBe('function');
+        expect(typeof jobQueue.resumeQueue).toBe('function');
     });
 
     it('should export closeQueue function', () => {
-        assert.ok(jobQueue.closeQueue, 'closeQueue should be exported');
-        assert.strictEqual(typeof jobQueue.closeQueue, 'function');
+        expect(jobQueue.closeQueue).toBeDefined();
+        expect(typeof jobQueue.closeQueue).toBe('function');
     });
 });
 
@@ -75,8 +72,7 @@ describe('Job Queue Integration (requires Redis)', () => {
         // This test verifies graceful fallback when Redis is unavailable
         const result = await jobQueue.initializeQueue();
 
-        // If Redis is not available, should return false
-        // If Redis IS available (CI environment), should return true
-        assert.strictEqual(typeof result, 'boolean', 'Should return boolean');
+        // Return type check
+        expect(typeof result).toBe('boolean');
     });
 });

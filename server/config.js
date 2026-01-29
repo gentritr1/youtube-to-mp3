@@ -7,9 +7,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const parsedPort = Number.parseInt(process.env.PORT ?? '', 10);
 
 export const config = {
-    PORT: process.env.PORT || 3000,
+    PORT: Number.isFinite(parsedPort) ? parsedPort : 3000,
     IS_PROD: !!process.env.RENDER || process.env.NODE_ENV === 'production',
 
     // Paths

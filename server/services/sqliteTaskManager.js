@@ -9,7 +9,8 @@ import fs from 'fs';
 import { config } from '../config.js';
 
 // Database file path
-const DB_PATH = path.join(config.ROOT_DIR, 'tasks.db');
+// Database file path
+const DB_PATH = config.DB_PATH || path.join(config.ROOT_DIR, 'tasks.db');
 
 // Initialize database
 const db = new Database(DB_PATH);
@@ -204,8 +205,7 @@ export const closeDatabase = () => {
 };
 
 // Handle process exit
+// Handle process exit
 process.on('exit', () => db.close());
-process.on('SIGINT', () => {
-    db.close();
-    process.exit(0);
-});
+// Remove SIGINT handler that forces exit - let main process handle graceful shutdown
+// process.on('SIGINT', ...);

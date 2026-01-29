@@ -2,8 +2,7 @@
  * Tests for Rate Limiter Middleware
  */
 
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect } from 'vitest';
 import {
     apiLimiter,
     conversionLimiter,
@@ -13,23 +12,23 @@ import {
 
 describe('Rate Limiter Configuration', () => {
     it('should export apiLimiter', () => {
-        assert.ok(apiLimiter, 'apiLimiter should be exported');
-        assert.strictEqual(typeof apiLimiter, 'function', 'apiLimiter should be a function');
+        expect(apiLimiter).toBeDefined();
+        expect(typeof apiLimiter).toBe('function');
     });
 
     it('should export conversionLimiter', () => {
-        assert.ok(conversionLimiter, 'conversionLimiter should be exported');
-        assert.strictEqual(typeof conversionLimiter, 'function', 'conversionLimiter should be a function');
+        expect(conversionLimiter).toBeDefined();
+        expect(typeof conversionLimiter).toBe('function');
     });
 
     it('should export infoLimiter', () => {
-        assert.ok(infoLimiter, 'infoLimiter should be exported');
-        assert.strictEqual(typeof infoLimiter, 'function', 'infoLimiter should be a function');
+        expect(infoLimiter).toBeDefined();
+        expect(typeof infoLimiter).toBe('function');
     });
 
     it('should export downloadLimiter', () => {
-        assert.ok(downloadLimiter, 'downloadLimiter should be exported');
-        assert.strictEqual(typeof downloadLimiter, 'function', 'downloadLimiter should be a function');
+        expect(downloadLimiter).toBeDefined();
+        expect(typeof downloadLimiter).toBe('function');
     });
 });
 
@@ -38,46 +37,55 @@ describe('Rate Limiter Behavior', () => {
         const mockReq = {
             ip: '127.0.0.1',
             path: '/api/test',
-            headers: {}
+            headers: {},
+            app: {
+                get: (key) => {
+                    if (key === 'trust proxy') return false;
+                    return null;
+                }
+            }
         };
         const mockRes = {
             setHeader: () => { },
-            status: () => ({ json: () => { } })
+            status: () => ({ json: () => { } }),
+            on: () => { } // Express response event emitter
         };
         let nextCalled = false;
         const mockNext = () => { nextCalled = true; };
 
         // First request should pass
-        apiLimiter(mockReq, mockRes, mockNext);
+        await apiLimiter(mockReq, mockRes, mockNext);
 
-        // Give time for rate limiter to process
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        assert.ok(nextCalled, 'next() should be called for normal requests');
+        expect(nextCalled).toBe(true);
     });
 
     it('apiLimiter should skip health check endpoint', async () => {
         const mockReq = {
             ip: '127.0.0.1',
             path: '/health',
-            headers: {}
+            headers: {},
+            app: {
+                get: (key) => {
+                    if (key === 'trust proxy') return false;
+                    return null;
+                }
+            }
         };
         const mockRes = {
             setHeader: () => { },
-            status: () => ({ json: () => { } })
+            status: () => ({ json: () => { } }),
+            on: () => { }
         };
         let nextCalled = false;
         const mockNext = () => { nextCalled = true; };
 
-        apiLimiter(mockReq, mockRes, mockNext);
+        await apiLimiter(mockReq, mockRes, mockNext);
 
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        assert.ok(nextCalled, 'Health check should skip rate limiting');
+        expect(nextCalled).toBe(true);
     });
 
-    it('conversionLimiter should use X-Forwarded-For header', () => {
-        // Just verify the limiter has the keyGenerator configured
-        assert.ok(conversionLimiter, 'conversionLimiter should exist');
+    it('conversionLimiter should be configured', () => {
+        expect(conversionLimiter).toBeDefined();
+        expect(typeof conversionLimiter).toBe('function');
     });
 });

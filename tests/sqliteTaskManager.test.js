@@ -2,32 +2,42 @@
  * Tests for SQLite Task Manager
  */
 
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { config } from '../server/config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEST_DB_PATH = path.join(__dirname, 'test_tasks.db');
+const PREV_DB_PATH = config.DB_PATH;
 
-// Set up test database path before importing
-process.env.TEST_DB_PATH = TEST_DB_PATH;
+// Set up test database path in config
+config.DB_PATH = TEST_DB_PATH;
 
-describe('SQLite Task Manager', async () => {
+describe('SQLite Task Manager', () => {
     let taskManager;
 
-    before(async () => {
+    beforeAll(async () => {
         // Clean up any existing test database
         if (fs.existsSync(TEST_DB_PATH)) {
             fs.unlinkSync(TEST_DB_PATH);
+        }
+        if (fs.existsSync(TEST_DB_PATH + '-wal')) {
+            fs.unlinkSync(TEST_DB_PATH + '-wal');
+        }
+        if (fs.existsSync(TEST_DB_PATH + '-shm')) {
+            fs.unlinkSync(TEST_DB_PATH + '-shm');
         }
 
         // Dynamic import to use test database
         taskManager = await import('../server/services/sqliteTaskManager.js');
     });
 
-    after(() => {
+    afterAll(() => {
+        // Restore previous DB path
+        config.DB_PATH = PREV_DB_PATH;
+
         // Clean up test database
         try {
             taskManager.closeDatabase();
@@ -49,40 +59,40 @@ describe('SQLite Task Manager', async () => {
     it('should create a new task', () => {
         const result = taskManager.createTask('test_video_1', 'mp3');
 
-        assert.ok(result.taskId, 'Task ID should be generated');
-        assert.strictEqual(result.state, 'processing');
-        assert.strictEqual(result.progress, 0);
+        expect(result.taskId).toBeDefined();
+        expect(result.state).toBe('processing');
+        expect(result.progress).toBe(0);
     });
 
     it('should get task by ID', () => {
         const created = taskManager.createTask('test_video_2', 'mp4');
         const retrieved = taskManager.getTask(created.taskId);
 
-        assert.ok(retrieved, 'Task should be retrieved');
-        assert.strictEqual(retrieved.taskId, created.taskId);
-        assert.strictEqual(retrieved.videoId, 'test_video_2');
-        assert.strictEqual(retrieved.format, 'mp4');
-        assert.strictEqual(retrieved.state, 'processing');
+        expect(retrieved).toBeDefined();
+        expect(retrieved.taskId).toBe(created.taskId);
+        expect(retrieved.videoId).toBe('test_video_2');
+        expect(retrieved.format).toBe('mp4');
+        expect(retrieved.state).toBe('processing');
     });
 
     it('should return null for non-existent task', () => {
         const result = taskManager.getTask('non_existent_id');
-        assert.strictEqual(result, null);
+        expect(result).toBeNull();
     });
 
     it('should find existing task for video/format combo', () => {
         const created = taskManager.createTask('test_video_3', 'mp3');
         const found = taskManager.findExistingTask('test_video_3', 'mp3');
 
-        assert.ok(found, 'Existing task should be found');
-        assert.strictEqual(found.taskId, created.taskId);
+        expect(found).toBeDefined();
+        expect(found.taskId).toBe(created.taskId);
     });
 
     it('should not find task for different format', () => {
         taskManager.createTask('test_video_4', 'mp3');
         const found = taskManager.findExistingTask('test_video_4', 'mp4');
 
-        assert.strictEqual(found, null, 'Should not find task for different format');
+        expect(found).toBeNull();
     });
 
     it('should update task state', () => {
@@ -95,10 +105,10 @@ describe('SQLite Task Manager', async () => {
             downloadUrl: '/api/download/test'
         });
 
-        assert.strictEqual(updated.state, 'completed');
-        assert.strictEqual(updated.progress, 100);
-        assert.strictEqual(updated.filename, 'test_file.mp3');
-        assert.strictEqual(updated.downloadUrl, '/api/download/test');
+        expect(updated.state).toBe('completed');
+        expect(updated.progress).toBe(100);
+        expect(updated.filename).toBe('test_file.mp3');
+        expect(updated.downloadUrl).toBe('/api/download/test');
     });
 
     it('should update progress efficiently', () => {
@@ -107,15 +117,15 @@ describe('SQLite Task Manager', async () => {
         taskManager.updateProgress(created.taskId, 50);
 
         const retrieved = taskManager.getTask(created.taskId);
-        assert.strictEqual(retrieved.progress, 50);
+        expect(retrieved.progress).toBe(50);
     });
 
     it('should get statistics', () => {
         const stats = taskManager.getStats();
 
-        assert.ok(stats.total >= 0, 'Total should be a number');
-        assert.ok(stats.processing >= 0, 'Processing count should be a number');
-        assert.ok(stats.completed >= 0, 'Completed count should be a number');
+        expect(stats.total).toBeGreaterThanOrEqual(0);
+        expect(stats.processing).toBeGreaterThanOrEqual(0);
+        expect(stats.completed).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle error state', () => {
@@ -126,7 +136,7 @@ describe('SQLite Task Manager', async () => {
             error: 'Test error message'
         });
 
-        assert.strictEqual(updated.state, 'error');
-        assert.strictEqual(updated.error, 'Test error message');
+        expect(updated.state).toBe('error');
+        expect(updated.error).toBe('Test error message');
     });
 });

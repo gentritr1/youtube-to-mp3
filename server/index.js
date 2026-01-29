@@ -17,7 +17,9 @@ import { apiLimiter } from './middleware/rateLimiter.js';
 const app = express();
 
 // Trust proxy for rate limiting behind reverse proxy (Render, etc.)
-app.set('trust proxy', 1);
+if (config.IS_PROD) {
+    app.set('trust proxy', 1);
+}
 
 // Middleware
 app.use(cors());
@@ -56,17 +58,25 @@ try {
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
-    const queueStats = await getQueueStats();
-    res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        queue: queueStats,
-        memory: {
-            used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
-            total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
-        }
-    });
+    try {
+        const queueStats = await getQueueStats();
+        res.json({
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            queue: queueStats,
+            memory: {
+                used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+                total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'unhealthy',
+            timestamp: new Date().toISOString(),
+            error: error.message || 'Health check failed'
+        });
+    }
 });
 
 // API Routes
