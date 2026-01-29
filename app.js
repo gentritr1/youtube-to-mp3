@@ -68,8 +68,11 @@ const showError = (message) => {
  */
 const hideResults = () => {
     elements.preview.classList.add('hidden');
+    elements.preview.classList.remove('loading');
     elements.progressSection.classList.add('hidden');
     elements.downloadSection.classList.add('hidden');
+    // Reset download animation classes
+    elements.downloadSection.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
     elements.errorSection.classList.add('hidden');
     // We DO NOT hide game container here to allow playing across sessions
 };
@@ -265,26 +268,36 @@ const handleSubmit = async (e) => {
     // START THE GAME!
     showGame();
 
+    // Show skeleton preview immediately
+    elements.preview.classList.remove('hidden');
+    elements.preview.classList.add('loading');
+
     try {
         // Fetch video info
         const videoInfo = await fetchVideoInfo(videoId);
         state.videoInfo = videoInfo;
 
-        // Show preview
+        // Populate preview data
         elements.thumbnail.src = videoInfo.thumbnail;
         elements.videoTitle.textContent = videoInfo.title;
         elements.videoDuration.textContent = videoInfo.duration
             ? `${videoInfo.duration} • ${videoInfo.author}`
             : `By ${videoInfo.author}`;
-        elements.preview.classList.remove('hidden');
+
+        // Remove skeleton state with a brief delay for smooth transition
+        setTimeout(() => {
+            elements.preview.classList.remove('loading');
+        }, 100);
 
         // Convert video
         const { url: downloadUrl, filename } = await convertVideo(videoId, state.format, videoInfo.title);
 
-        // Show download section
+        // Hide progress, prepare download section
         elements.progressSection.classList.add('hidden');
         elements.downloadLink.href = downloadUrl;
-        elements.downloadSection.classList.remove('hidden');
+
+        // Start orchestrated download animation
+        await showDownloadAnimation();
 
     } catch (error) {
         hideResults();
@@ -292,6 +305,48 @@ const handleSubmit = async (e) => {
     } finally {
         setLoading(false);
     }
+};
+
+/**
+ * Orchestrated download section animation
+ * 1. Show section & animate border filling left-to-right (2.5s)
+ * 2. Pop in checkmark with draw animation
+ * 3. Fade in "Ready to download!" text
+ * 4. Pop in download button
+ */
+const showDownloadAnimation = () => {
+    return new Promise((resolve) => {
+        const section = elements.downloadSection;
+
+        // Reset all classes first
+        section.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
+        section.classList.remove('hidden');
+
+        // Force browser to register the initial state, then trigger animation
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                // Step 1: Start border sweep animation (2.5s)
+                section.classList.add('animating');
+
+                // Step 2: After border fully fills (2.5s), complete and show icon
+                setTimeout(() => {
+                    section.classList.remove('animating');
+                    section.classList.add('complete', 'show-icon');
+                }, 2500);
+
+                // Step 3: After icon appears (400ms after step 2), show content
+                setTimeout(() => {
+                    section.classList.add('show-content');
+                }, 2900);
+
+                // Step 4: After content (300ms after step 3), show download button
+                setTimeout(() => {
+                    section.classList.add('show-button');
+                    resolve();
+                }, 3200);
+            });
+        });
+    });
 };
 
 /**
