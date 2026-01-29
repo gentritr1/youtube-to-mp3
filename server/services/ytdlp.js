@@ -77,8 +77,6 @@ export async function getVideoInfo(url) {
                 '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
-                // Use tv_embedded client which is often less restricted on data center IPs
-                '--extractor-args', 'youtube:player_client=tv_embedded',
             ];
 
             // Production (Render): Use Stealth iOS Client to bypass blocks
