@@ -10,7 +10,7 @@ import { convertVideo } from '../services/ytdlp.js';
 
 const router = Router();
 
-router.post('/convert', async (req, res) => {
+router.post('/', async (req, res) => {
     const { videoId, format } = req.body;
 
     if (!videoId || !format) {
