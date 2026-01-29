@@ -20,6 +20,21 @@ let isQueueEnabled = false;
  * Returns true if Redis is available, false otherwise
  */
 export const initializeQueue = async () => {
+    // Return existing queue if already connected
+    if (isQueueEnabled && conversionQueue) {
+        return true;
+    }
+
+    // Clean up existing closed/failed queue instance if it exists
+    if (conversionQueue) {
+        try {
+            await conversionQueue.close();
+        } catch (e) {
+            // Ignore close error
+        }
+        conversionQueue = null;
+    }
+
     try {
         conversionQueue = new Bull('video-conversion', REDIS_URL, {
             defaultJobOptions: {
@@ -94,20 +109,27 @@ export const addConversionJob = async (taskId, videoId, format, title) => {
         return null; // Caller should fall back to direct processing
     }
 
-    const job = await conversionQueue.add(
-        'convert',
-        {
-            taskId,
-            videoId,
-            format,
-            title,
-            createdAt: Date.now()
-        },
-        {
-            jobId: taskId, // Use taskId as job ID for easy lookup
-            priority: 1    // Normal priority
-        }
-    );
+    try {
+        const job = await conversionQueue.add(
+            'convert',
+            {
+                taskId,
+                videoId,
+                format,
+                title,
+                createdAt: Date.now()
+            },
+            {
+                jobId: taskId, // Use taskId as job ID for easy lookup
+                priority: 1    // Normal priority
+            }
+        );
+
+        return job;
+    } catch (error) {
+        console.error(`❌ Failed to add job for task ${taskId}:`, error.message);
+        return null;
+    }
 
     return job;
 };
@@ -159,13 +181,37 @@ export const getQueueStats = async () => {
         };
     }
 
-    const [waiting, active, completed, failed, delayed] = await Promise.all([
-        conversionQueue.getWaitingCount(),
-        conversionQueue.getActiveCount(),
-        conversionQueue.getCompletedCount(),
-        conversionQueue.getFailedCount(),
-        conversionQueue.getDelayedCount()
-    ]);
+    try {
+        const [waiting, active, completed, failed, delayed] = await Promise.all([
+            conversionQueue.getWaitingCount(),
+            conversionQueue.getActiveCount(),
+            conversionQueue.getCompletedCount(),
+            conversionQueue.getFailedCount(),
+            conversionQueue.getDelayedCount()
+        ]);
+
+        return {
+            enabled: true,
+            waiting,
+            active,
+            completed,
+            failed,
+            delayed,
+            total: waiting + active + completed + failed + delayed
+        };
+    } catch (error) {
+        console.error('❌ Failed to get queue stats:', error.message);
+        return {
+            enabled: true,
+            message: 'Queue stats unavailable (Redis error)',
+            waiting: 0,
+            active: 0,
+            completed: 0,
+            failed: 0,
+            delayed: 0,
+            total: 0
+        };
+    }
 
     return {
         enabled: true,
@@ -204,6 +250,8 @@ export const resumeQueue = async () => {
 export const closeQueue = async () => {
     if (conversionQueue) {
         await conversionQueue.close();
+        conversionQueue = null;
+        isQueueEnabled = false;
         console.log('🔒 Queue closed');
     }
 };

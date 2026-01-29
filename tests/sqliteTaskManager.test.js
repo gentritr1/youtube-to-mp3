@@ -13,12 +13,16 @@ const TEST_DB_PATH = path.join(__dirname, 'test_tasks.db');
 const PREV_DB_PATH = config.DB_PATH;
 
 // Set up test database path in config
-config.DB_PATH = TEST_DB_PATH;
+// Set up test database path in config
+// config.DB_PATH = TEST_DB_PATH; // Removed global mutation
 
 describe('SQLite Task Manager', () => {
     let taskManager;
 
     beforeAll(async () => {
+        // Set up test database path in config
+        config.DB_PATH = TEST_DB_PATH;
+
         // Clean up any existing test database
         if (fs.existsSync(TEST_DB_PATH)) {
             fs.unlinkSync(TEST_DB_PATH);
