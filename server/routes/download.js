@@ -11,7 +11,7 @@ import { getTask } from '../services/taskManager.js';
 
 const router = Router();
 
-router.get('/download/:taskId/:filename?', (req, res) => {
+router.get('/:taskId/:filename?', (req, res) => {
     const { taskId } = req.params;
     const task = getTask(taskId);
 

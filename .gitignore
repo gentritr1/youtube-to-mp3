@@ -13,6 +13,9 @@ npm-debug.log*
 
 # Runtime data
 tasks.json
+tasks.db
+tasks.db-wal
+tasks.db-shm
 
 # Downloaded files (temporary server storage)
 downloads/

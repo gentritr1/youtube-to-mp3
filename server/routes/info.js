@@ -8,7 +8,7 @@ import { getVideoInfo } from '../services/ytdlp.js';
 
 const router = Router();
 
-router.get('/info', async (req, res) => {
+router.get('/', async (req, res) => {
     const { videoId } = req.query;
 
     if (!videoId) {

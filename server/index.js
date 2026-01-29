@@ -1,6 +1,6 @@
 /**
  * YT Converter Backend Server
- * Modular Express application
+ * Modular Express application with rate limiting and job queue
  */
 
 import express from 'express';
@@ -9,13 +9,22 @@ import fs from 'fs';
 import { config } from './config.js';
 import routes from './routes/index.js';
 import { loadTasks } from './services/taskManager.js';
+import { cleanupOldTasks, closeDatabase } from './services/sqliteTaskManager.js';
+import { initializeQueue, closeQueue, getQueueStats, isEnabled as isQueueEnabled } from './services/jobQueue.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
+
+// Trust proxy for rate limiting behind reverse proxy (Render, etc.)
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Apply rate limiting to all API routes
+app.use('/api', apiLimiter);
 
 // Serve static frontend files
 app.use(express.static(config.ROOT_DIR));
@@ -26,7 +35,7 @@ if (!fs.existsSync(config.DOWNLOADS_DIR)) {
     fs.mkdirSync(config.DOWNLOADS_DIR, { recursive: true });
 }
 
-// Load persisted tasks
+// Load persisted tasks (legacy support)
 loadTasks();
 
 // Dependency Checks
@@ -45,16 +54,32 @@ try {
     console.error('[System] CRITICAL: ffmpeg not found in path!');
 }
 
+// Health check endpoint
+app.get('/health', async (req, res) => {
+    const queueStats = await getQueueStats();
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        queue: queueStats,
+        memory: {
+            used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+            total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
+        }
+    });
+});
+
 // API Routes
 app.use('/api', routes);
 
 // Error handling
 app.use(errorHandler);
 
-// Cleanup old downloads (run every hour)
-setInterval(() => {
+// Cleanup old downloads and tasks (run every hour)
+const runCleanup = () => {
     const now = Date.now();
 
+    // Clean up old files
     fs.readdirSync(config.DOWNLOADS_DIR).forEach(file => {
         // Only clean up mp3/mp4 files we created
         if (!file.endsWith('.mp3') && !file.endsWith('.mp4')) return;
@@ -64,27 +89,73 @@ setInterval(() => {
             const stats = fs.statSync(filePath);
             if (now - stats.mtimeMs > config.FILE_MAX_AGE_MS) {
                 fs.unlinkSync(filePath);
-                console.log('[Cleanup] Removed:', file);
+                console.log('[Cleanup] Removed file:', file);
             }
         } catch (e) {
             // File may have been deleted already
         }
     });
-}, config.CLEANUP_INTERVAL_MS);
 
-// Start server
-app.listen(config.PORT, () => {
-    console.log(`
-╔════════════════════════════════════════════╗
-║  YT Converter Server running on port ${config.PORT}  ║
-╚════════════════════════════════════════════╝
+    // Clean up old tasks from SQLite
+    try {
+        const deletedTasks = cleanupOldTasks();
+        if (deletedTasks > 0) {
+            console.log(`[Cleanup] Removed ${deletedTasks} old tasks from database`);
+        }
+    } catch (e) {
+        console.error('[Cleanup] Error cleaning tasks:', e.message);
+    }
+};
 
-Open: http://localhost:${config.PORT}
+setInterval(runCleanup, config.CLEANUP_INTERVAL_MS);
 
-Requirements:
-  • yt-dlp: brew install yt-dlp
-  • ffmpeg: brew install ffmpeg
+// Initialize and start server
+const startServer = async () => {
+    // Try to initialize job queue (optional, falls back to direct processing)
+    if (config.USE_QUEUE) {
+        await initializeQueue();
+    }
+
+    app.listen(config.PORT, () => {
+        console.log(`
+╔════════════════════════════════════════════════════════════╗
+║     YT Converter Server running on port ${config.PORT}              ║
+╠════════════════════════════════════════════════════════════╣
+║  Open: http://localhost:${config.PORT}                              ║
+╠════════════════════════════════════════════════════════════╣
+║  Features:                                                 ║
+║    ✓ Rate limiting enabled                                 ║
+║    ✓ SQLite task persistence                               ║
+║    ${isQueueEnabled() ? '✓' : '○'} Job queue (Redis): ${isQueueEnabled() ? 'Connected' : 'Not available'}                      ║
+╠════════════════════════════════════════════════════════════╣
+║  Requirements:                                             ║
+║    • yt-dlp: brew install yt-dlp                           ║
+║    • ffmpeg: brew install ffmpeg                           ║
+╚════════════════════════════════════════════════════════════╝
 `);
-});
+    });
+};
+
+// Graceful shutdown
+const shutdown = async (signal) => {
+    console.log(`\n[Server] Received ${signal}, shutting down gracefully...`);
+
+    try {
+        await closeQueue();
+        closeDatabase();
+        console.log('[Server] Cleanup complete, exiting.');
+        process.exit(0);
+    } catch (e) {
+        console.error('[Server] Error during shutdown:', e);
+        process.exit(1);
+    }
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+// Start the server
+startServer();
 
 export default app;
+
