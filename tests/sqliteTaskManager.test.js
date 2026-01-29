@@ -42,9 +42,15 @@ describe('SQLite Task Manager', () => {
         // Restore previous DB path
         config.DB_PATH = PREV_DB_PATH;
 
-        // Clean up test database
+        // Clean up test database connection
         try {
             taskManager.closeDatabase();
+        } catch (e) {
+            // Ignore close errors, proceed to file cleanup
+        }
+
+        // Clean up test files
+        try {
             if (fs.existsSync(TEST_DB_PATH)) {
                 fs.unlinkSync(TEST_DB_PATH);
             }
@@ -56,7 +62,7 @@ describe('SQLite Task Manager', () => {
                 fs.unlinkSync(TEST_DB_PATH + '-shm');
             }
         } catch (e) {
-            // Ignore cleanup errors
+            // Ignore file cleanup errors
         }
     });
 

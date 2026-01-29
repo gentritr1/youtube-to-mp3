@@ -131,7 +131,7 @@ export const addConversionJob = async (taskId, videoId, format, title) => {
         return null;
     }
 
-    return job;
+
 };
 
 /**
@@ -213,15 +213,7 @@ export const getQueueStats = async () => {
         };
     }
 
-    return {
-        enabled: true,
-        waiting,
-        active,
-        completed,
-        failed,
-        delayed,
-        total: waiting + active + completed + failed + delayed
-    };
+
 };
 
 /**
