@@ -187,14 +187,14 @@ youtube-to-mp3/
 | :--- | :--- | :--- |
 | **Express Server** | `server/index.ts` | HTTP server, middleware, graceful shutdown |
 | **Config** | `server/config.ts` | Centralized settings (rate limits, queue, paths) |
-| **Rate Limiter** | `middleware/rateLimiter.ts` | Per-route rate limiting |
-| **Info Route** | `routes/info.ts` | Fetch video metadata via yt-dlp |
-| **Convert Route** | `routes/convert.ts` | Start async conversion task |
-| **Progress Route** | `routes/progress.ts` | Poll task status |
-| **Download Route** | `routes/download.ts` | Serve converted file |
-| **yt-dlp Service** | `services/ytdlp.ts` | Wrapper with retry logic |
-| **SQLite Task Manager** | `services/sqliteTaskManager.ts` | Persistent task storage |
-| **Job Queue** | `services/jobQueue.ts` | Optional Redis-backed queue |
+| **Rate Limiter** | `server/middleware/rateLimiter.ts` | Per-route rate limiting |
+| **Info Route** | `server/routes/info.ts` | Fetch video metadata via yt-dlp |
+| **Convert Route** | `server/routes/convert.ts` | Start async conversion task |
+| **Progress Route** | `server/routes/progress.ts` | Poll task status |
+| **Download Route** | `server/routes/download.ts` | Serve converted file |
+| **yt-dlp Service** | `server/services/ytdlp.ts` | Wrapper with retry logic |
+| **SQLite Task Manager** | `server/services/sqliteTaskManager.ts` | Persistent task storage |
+| **Job Queue** | `server/services/jobQueue.ts` | Optional Redis-backed queue |
 
 ---
 
