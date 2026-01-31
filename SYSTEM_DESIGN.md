@@ -29,7 +29,7 @@
 | Layer | Technology |
 | :--- | :--- |
 | Frontend | Vanilla HTML/CSS/JS (ES6+) |
-| Backend | Node.js + Express |
+| Backend | Node.js + Express (TypeScript) |
 | Persistence | SQLite (better-sqlite3) |
 | Queue (optional) | Bull + Redis |
 | Rate Limiting | express-rate-limit |
@@ -344,13 +344,13 @@ npm run test:node
 - [x] Health check endpoint
 - [x] Graceful shutdown
 - [x] Test suite
+- [x] Backend Type Safety (TypeScript)
 
 ### Medium Priority
 
 | Area | Issue | Recommendation |
 | :--- | :--- | :--- |
 | **Error Tracking** | Console.log only | Add Sentry or LogRocket |
-| **Type Safety** | Plain JavaScript | Consider TypeScript migration |
 | **API Docs** | No documentation | Add OpenAPI/Swagger spec |
 
 ### Low Priority / Nice-to-Have
