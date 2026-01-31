@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { formatDuration } from '../server/utils/formatDuration.js';
-import { parseProgress } from '../server/utils/parseProgress.js';
-import { sanitizeFilename } from '../server/utils/sanitize.js';
+import { formatDuration } from '../server/utils/formatDuration.ts';
+import { parseProgress } from '../server/utils/parseProgress.ts';
+import { sanitizeFilename } from '../server/utils/sanitize.ts';
 
 describe('formatDuration', () => {
     it('formats seconds to MM:SS', () => {

@@ -3,7 +3,7 @@
  * @param {string} title - Raw video title
  * @returns {string} Filesystem-safe filename
  */
-export function sanitizeFilename(title) {
+export function sanitizeFilename(title: string): string {
     // Clean up common YouTube title patterns
     let cleanTitle = (title || 'video')
         // Remove common YouTube suffixes/prefixes
@@ -26,7 +26,7 @@ export function sanitizeFilename(title) {
     // Sanitize for filesystem - keep spaces and dashes for readability
     const safeTitle = cleanTitle
         .replace(/[<>:"/\\|?*✦]/g, '')  // Remove invalid filesystem chars
-        .replace(/[^\x00-\x7F]/g, (char) => {
+        .replace(/[^\x00-\x7F]/g, (char: string) => {
             // Keep common accented chars, remove others
             const commonAccents = 'àáâãäåèéêëìíîïòóôõöùúûüýÿñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝŸÑÇ';
             return commonAccents.includes(char) ? char : '';

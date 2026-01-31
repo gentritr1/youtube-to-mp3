@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { config } from '../server/config.js';
+import { config } from '../server/config.ts';
 
 describe('Server Configuration', () => {
     describe('Basic Config', () => {

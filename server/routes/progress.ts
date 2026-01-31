@@ -3,13 +3,13 @@
  * GET /api/progress/:taskId
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { getTask } from '../services/taskManager.js';
 
 const router = Router();
 
-router.get('/progress/:taskId', (req, res) => {
-    const { taskId } = req.params;
+router.get('/progress/:taskId', (req: Request, res: Response) => {
+    const taskId = req.params.taskId as string;
     const task = getTask(taskId);
 
     if (!task) {

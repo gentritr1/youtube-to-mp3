@@ -10,7 +10,7 @@ import {
     deleteTask,
     findExistingTask,
     getAllTasks
-} from '../server/services/taskManager.js';
+} from '../server/services/taskManager.ts';
 
 describe('TaskManager', () => {
     beforeEach(() => {

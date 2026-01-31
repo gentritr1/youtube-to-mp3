@@ -1,19 +1,15 @@
-/**
- * Task Manager Service
- * Handles task CRUD, persistence, and idempotency
- */
-
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
+import { Task } from '../types.js';
 
 // In-memory task store
-let tasks = new Map();
+let tasks = new Map<string, Task>();
 
 /**
  * Load tasks from disk
  */
-export function loadTasks() {
+export function loadTasks(): void {
     try {
         if (fs.existsSync(config.TASKS_FILE)) {
             const data = fs.readFileSync(config.TASKS_FILE, 'utf8');
@@ -28,7 +24,7 @@ export function loadTasks() {
 /**
  * Save tasks to disk
  */
-export function saveTasks() {
+export function saveTasks(): void {
     try {
         fs.writeFileSync(config.TASKS_FILE, JSON.stringify([...tasks]), 'utf8');
     } catch (error) {
@@ -38,29 +34,23 @@ export function saveTasks() {
 
 /**
  * Get a task by ID
- * @param {string} taskId
- * @returns {object|undefined}
  */
-export function getTask(taskId) {
+export function getTask(taskId: string): Task | undefined {
     return tasks.get(taskId);
 }
 
 /**
  * Create a new task
- * @param {string} taskId 
- * @param {object} taskData 
  */
-export function createTask(taskId, taskData) {
+export function createTask(taskId: string, taskData: Task): void {
     tasks.set(taskId, taskData);
     saveTasks();
 }
 
 /**
  * Update an existing task
- * @param {string} taskId 
- * @param {object} updates 
  */
-export function updateTask(taskId, updates) {
+export function updateTask(taskId: string, updates: Partial<Task>): void {
     const task = tasks.get(taskId);
     if (task) {
         Object.assign(task, updates);
@@ -70,20 +60,16 @@ export function updateTask(taskId, updates) {
 
 /**
  * Delete a task
- * @param {string} taskId 
  */
-export function deleteTask(taskId) {
+export function deleteTask(taskId: string): void {
     tasks.delete(taskId);
     saveTasks();
 }
 
 /**
  * Find existing task for idempotency
- * @param {string} videoId 
- * @param {string} format 
- * @returns {string|null} Existing task ID or null
  */
-export function findExistingTask(videoId, format) {
+export function findExistingTask(videoId: string, format: string): string | null {
     for (const [existingId, task] of tasks.entries()) {
         const isSameRequest = task.videoId === videoId && task.format === format;
 
@@ -95,7 +81,7 @@ export function findExistingTask(videoId, format) {
             }
 
             // Case 2: Completed - Check if file still exists
-            if (task.state === 'completed') {
+            if (task.state === 'completed' && task.filename) {
                 const filePath = path.join(config.DOWNLOADS_DIR, task.filename);
                 if (fs.existsSync(filePath)) {
                     console.log(`[Idempotency] Serving cached file from task ${existingId}`);
@@ -112,8 +98,7 @@ export function findExistingTask(videoId, format) {
 
 /**
  * Get all tasks (for debugging/admin)
- * @returns {Map}
  */
-export function getAllTasks() {
+export function getAllTasks(): Map<string, Task> {
     return tasks;
 }

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, afterAll, expect } from 'vitest';
-import * as jobQueue from '../server/services/jobQueue.js';
+import * as jobQueue from '../server/services/jobQueue.ts';
 
 // Clean up after tests
 afterAll(async () => {

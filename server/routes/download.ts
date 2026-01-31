@@ -3,7 +3,7 @@
  * GET /api/download/:taskId/:filename?
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { config } from '../config.js';
@@ -11,11 +11,11 @@ import { getTask } from '../services/taskManager.js';
 
 const router = Router();
 
-router.get('/:taskId/:filename?', (req, res) => {
-    const { taskId } = req.params;
+router.get('/:taskId/:filename?', (req: Request, res: Response) => {
+    const taskId = req.params.taskId as string;
     const task = getTask(taskId);
 
-    if (!task || task.state !== 'completed') {
+    if (!task || task.state !== 'completed' || !task.filename) {
         return res.status(404).json({ message: 'File not found or still processing' });
     }
 

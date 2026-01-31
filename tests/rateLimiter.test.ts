@@ -8,7 +8,7 @@ import {
     conversionLimiter,
     infoLimiter,
     downloadLimiter
-} from '../server/middleware/rateLimiter.js';
+} from '../server/middleware/rateLimiter.ts';
 
 describe('Rate Limiter Configuration', () => {
     it('should export apiLimiter', () => {

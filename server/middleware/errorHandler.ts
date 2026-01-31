@@ -3,7 +3,13 @@
  * Centralized error handling for all routes
  */
 
-export function errorHandler(err, req, res, next) {
+import { Request, Response, NextFunction } from 'express';
+
+interface CustomError extends Error {
+    statusCode?: number;
+}
+
+export function errorHandler(err: CustomError, req: Request, res: Response, next: NextFunction) {
     console.error('[Error]', err.message);
 
     // Default to 500 Internal Server Error

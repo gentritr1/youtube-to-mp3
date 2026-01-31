@@ -3,15 +3,15 @@
  * POST /api/convert
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { findExistingTask, createTask } from '../services/taskManager.js';
 import { convertVideo } from '../services/ytdlp.js';
 
 const router = Router();
 
-router.post('/', async (req, res) => {
-    const { videoId, format } = req.body;
+router.post('/', async (req: Request, res: Response) => {
+    const { videoId, format, title } = req.body as { videoId: string; format: string; title?: string };
 
     if (!videoId || !format) {
         return res.status(400).json({ message: 'Video ID and format required' });
@@ -29,16 +29,17 @@ router.post('/', async (req, res) => {
 
     const taskId = randomUUID();
     const url = `https://www.youtube.com/watch?v=${videoId}`;
-    const title = req.body.title || 'video';
+    const safeTitle = title || 'video';
 
     // Initialize task
     createTask(taskId, {
+        taskId,
         state: 'processing',
         progress: 0,
         status: 'Starting...',
         videoId,
         format,
-        title,
+        title: safeTitle,
     });
 
     // Start conversion in background

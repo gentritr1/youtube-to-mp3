@@ -3,7 +3,7 @@
  * @param {number} seconds - Duration in seconds
  * @returns {string|null} Formatted duration or null
  */
-export function formatDuration(seconds) {
+export function formatDuration(seconds: number): string | null {
     if (!seconds) return null;
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);

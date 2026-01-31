@@ -6,7 +6,7 @@ import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { config } from '../server/config.js';
+import { config } from '../server/config.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEST_DB_PATH = path.join(__dirname, 'test_tasks.db');
@@ -35,7 +35,7 @@ describe('SQLite Task Manager', () => {
         }
 
         // Dynamic import to use test database
-        taskManager = await import('../server/services/sqliteTaskManager.js');
+        taskManager = await import('../server/services/sqliteTaskManager.ts');
     });
 
     afterAll(() => {

@@ -1,25 +1,27 @@
-/**
- * Job Queue Service
- * Background job processing using Bull (Redis-backed)
- * 
- * Falls back to direct execution if Redis is not available
- */
-
-import Bull from 'bull';
+import Bull, { Job, JobOptions } from 'bull';
 import { config } from '../config.js';
+import { QueueStats } from '../types.js';
 
 // Redis configuration
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
+interface JobData {
+    taskId: string;
+    videoId: string;
+    format: string;
+    title?: string;
+    createdAt: number;
+}
+
 // Queue instance
-let conversionQueue = null;
+let conversionQueue: Bull.Queue<JobData> | null = null;
 let isQueueEnabled = false;
 
 /**
  * Initialize the job queue
  * Returns true if Redis is available, false otherwise
  */
-export const initializeQueue = async () => {
+export const initializeQueue = async (): Promise<boolean> => {
     // Return existing queue if already connected
     if (isQueueEnabled && conversionQueue) {
         return true;
@@ -36,7 +38,7 @@ export const initializeQueue = async () => {
     }
 
     try {
-        conversionQueue = new Bull('video-conversion', REDIS_URL, {
+        conversionQueue = new Bull<JobData>('video-conversion', REDIS_URL, {
             defaultJobOptions: {
                 attempts: config.QUEUE.MAX_RETRIES,
                 backoff: {
@@ -62,7 +64,7 @@ export const initializeQueue = async () => {
         setupQueueEvents();
 
         return true;
-    } catch (error) {
+    } catch (error: any) {
         console.warn('⚠️  Redis not available, using direct processing:', error.message);
         // Clean up any dangling connections
         if (conversionQueue) {
@@ -81,22 +83,22 @@ export const initializeQueue = async () => {
 /**
  * Set up queue event listeners
  */
-const setupQueueEvents = () => {
+const setupQueueEvents = (): void => {
     if (!conversionQueue) return;
 
-    conversionQueue.on('completed', (job, result) => {
+    conversionQueue.on('completed', (job: Job<JobData>, result: any) => {
         console.log(`✅ Job ${job.id} completed for video ${job.data.videoId}`);
     });
 
-    conversionQueue.on('failed', (job, error) => {
+    conversionQueue.on('failed', (job: Job<JobData>, error: Error) => {
         console.error(`❌ Job ${job.id} failed for video ${job.data.videoId}:`, error.message);
     });
 
-    conversionQueue.on('stalled', (job) => {
+    conversionQueue.on('stalled', (job: Job<JobData>) => {
         console.warn(`⚠️  Job ${job.id} stalled`);
     });
 
-    conversionQueue.on('error', (error) => {
+    conversionQueue.on('error', (error: Error) => {
         console.error('Queue error:', error);
     });
 };
@@ -104,7 +106,7 @@ const setupQueueEvents = () => {
 /**
  * Add a conversion job to the queue
  */
-export const addConversionJob = async (taskId, videoId, format, title) => {
+export const addConversionJob = async (taskId: string, videoId: string, format: string, title?: string): Promise<Job<JobData> | null> => {
     if (!isQueueEnabled || !conversionQueue) {
         return null; // Caller should fall back to direct processing
     }
@@ -126,30 +128,28 @@ export const addConversionJob = async (taskId, videoId, format, title) => {
         );
 
         return job;
-    } catch (error) {
+    } catch (error: any) {
         console.error(`❌ Failed to add job for task ${taskId}:`, error.message);
         return null;
     }
-
-
 };
 
 /**
  * Register the job processor
  * This should be called when setting up workers
  */
-export const registerProcessor = (processorFn) => {
+export const registerProcessor = (processorFn: (taskId: string, videoId: string, format: string, title: string | undefined, updateProgress: (p: number) => void) => Promise<void>): void => {
     if (!isQueueEnabled || !conversionQueue) {
         console.warn('Queue not enabled, processor not registered');
         return;
     }
 
     // Process jobs with configured concurrency
-    conversionQueue.process('convert', config.QUEUE.CONCURRENCY, async (job) => {
+    conversionQueue.process('convert', config.QUEUE.CONCURRENCY, async (job: Job<JobData>) => {
         const { taskId, videoId, format, title } = job.data;
 
         // Update job progress
-        const updateProgress = (progress) => {
+        const updateProgress = (progress: number) => {
             job.progress(progress);
         };
 
@@ -162,14 +162,14 @@ export const registerProcessor = (processorFn) => {
 /**
  * Get job by task ID
  */
-export const getJob = async (taskId) => {
+export const getJob = async (taskId: string): Promise<Job<JobData> | null> => {
     if (!isQueueEnabled || !conversionQueue) {
         return null;
     }
 
     try {
         return await conversionQueue.getJob(taskId);
-    } catch (error) {
+    } catch (error: any) {
         console.error(`❌ Failed to get job for task ${taskId}:`, error.message);
         return null;
     }
@@ -178,7 +178,7 @@ export const getJob = async (taskId) => {
 /**
  * Get queue statistics
  */
-export const getQueueStats = async () => {
+export const getQueueStats = async (): Promise<QueueStats> => {
     if (!isQueueEnabled || !conversionQueue) {
         return {
             enabled: false,
@@ -204,7 +204,7 @@ export const getQueueStats = async () => {
             delayed,
             total: waiting + active + completed + failed + delayed
         };
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ Failed to get queue stats:', error.message);
         return {
             enabled: true,
@@ -217,14 +217,12 @@ export const getQueueStats = async () => {
             total: 0
         };
     }
-
-
 };
 
 /**
  * Pause the queue
  */
-export const pauseQueue = async () => {
+export const pauseQueue = async (): Promise<void> => {
     if (conversionQueue) {
         await conversionQueue.pause();
         console.log('⏸️  Queue paused');
@@ -234,7 +232,7 @@ export const pauseQueue = async () => {
 /**
  * Resume the queue
  */
-export const resumeQueue = async () => {
+export const resumeQueue = async (): Promise<void> => {
     if (conversionQueue) {
         await conversionQueue.resume();
         console.log('▶️  Queue resumed');
@@ -244,7 +242,7 @@ export const resumeQueue = async () => {
 /**
  * Clean up and close the queue
  */
-export const closeQueue = async () => {
+export const closeQueue = async (): Promise<void> => {
     if (conversionQueue) {
         await conversionQueue.close();
         conversionQueue = null;
@@ -256,7 +254,7 @@ export const closeQueue = async () => {
 /**
  * Check if queue is enabled
  */
-export const isEnabled = () => isQueueEnabled;
+export const isEnabled = (): boolean => isQueueEnabled;
 
 // Handle process exit
 process.on('SIGTERM', async () => {
