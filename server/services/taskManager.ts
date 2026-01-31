@@ -42,8 +42,28 @@ export function getTask(taskId: string): Task | undefined {
 /**
  * Create a new task
  */
-export function createTask(taskId: string, taskData: Task): void {
-    tasks.set(taskId, taskData);
+export function createTask(taskId: string, taskData: Partial<Task>): void {
+    const defaultTask: Partial<Task> = {
+        taskId,
+        state: 'processing',
+        progress: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+    };
+
+    // Merge defaults with provided data, ensuring taskId matches the argument
+    const fullTask = {
+        ...defaultTask,
+        ...taskData,
+        taskId // Enforce taskId from argument
+    } as Task;
+
+    // Validate required fields
+    if (!fullTask.videoId || !fullTask.format) {
+        console.warn(`[TaskManager] Created task ${taskId} missing videoId or format`);
+    }
+
+    tasks.set(taskId, fullTask);
     saveTasks();
 }
 
