@@ -8,7 +8,12 @@
     "dev": "tsx watch server/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc"
+    "build": "tsc",
+    "docker:build": "docker build -t yt-converter:local .",
+    "docker:test": "npm run docker:build && docker run --rm -p 3000:3000 yt-converter:local",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "preflight": "npm test && npm run build && npm run docker:build"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
