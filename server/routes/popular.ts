@@ -26,7 +26,7 @@ interface GenreData {
     videos: VideoSuggestion[];
 }
 
-// Curated genre data - This would be fetched from YouTube API in production
+// Curated genre data - Using classic, reliable videos that work consistently
 // Updated periodically or cached with Redis
 const GENRES: Record<string, GenreData> = {
     pop: {
@@ -42,25 +42,25 @@ const GENRES: Record<string, GenreData> = {
                 duration: '3:33'
             },
             {
+                videoId: 'djV11Xbc914',
+                title: 'Take On Me',
+                artist: 'a-ha',
+                thumbnail: 'https://img.youtube.com/vi/djV11Xbc914/mqdefault.jpg',
+                duration: '3:50'
+            },
+            {
+                videoId: '9bZkp7q19f0',
+                title: 'Gangnam Style',
+                artist: 'PSY',
+                thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/mqdefault.jpg',
+                duration: '4:13'
+            },
+            {
                 videoId: 'kJQP7kiw5Fk',
                 title: 'Despacito',
                 artist: 'Luis Fonsi ft. Daddy Yankee',
                 thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/mqdefault.jpg',
-                duration: '4:41'
-            },
-            {
-                videoId: 'JGwWNGJdvx8',
-                title: 'Shape of You',
-                artist: 'Ed Sheeran',
-                thumbnail: 'https://img.youtube.com/vi/JGwWNGJdvx8/mqdefault.jpg',
-                duration: '4:24'
-            },
-            {
-                videoId: 'OPf0YbXqDm0',
-                title: 'Uptown Funk',
-                artist: 'Mark Ronson ft. Bruno Mars',
-                thumbnail: 'https://img.youtube.com/vi/OPf0YbXqDm0/mqdefault.jpg',
-                duration: '4:30'
+                duration: '4:42'
             }
         ]
     },
@@ -77,11 +77,18 @@ const GENRES: Record<string, GenreData> = {
                 duration: '3:57'
             },
             {
-                videoId: '2zNSgSzhBfM',
-                title: 'Lose Yourself',
-                artist: 'Eminem',
-                thumbnail: 'https://img.youtube.com/vi/2zNSgSzhBfM/mqdefault.jpg',
-                duration: '5:26'
+                videoId: 'hT_nvWreIhg',
+                title: 'Counting Stars',
+                artist: 'OneRepublic',
+                thumbnail: 'https://img.youtube.com/vi/hT_nvWreIhg/mqdefault.jpg',
+                duration: '4:44'
+            },
+            {
+                videoId: 'fRh_vgS2dFE',
+                title: 'Sorry',
+                artist: 'Justin Bieber',
+                thumbnail: 'https://img.youtube.com/vi/fRh_vgS2dFE/mqdefault.jpg',
+                duration: '3:26'
             },
             {
                 videoId: 'YqeW9_5kURI',
@@ -89,13 +96,6 @@ const GENRES: Record<string, GenreData> = {
                 artist: 'Drake',
                 thumbnail: 'https://img.youtube.com/vi/YqeW9_5kURI/mqdefault.jpg',
                 duration: '5:56'
-            },
-            {
-                videoId: 'hT_nvWreIhg',
-                title: 'Counting Stars',
-                artist: 'OneRepublic',
-                thumbnail: 'https://img.youtube.com/vi/hT_nvWreIhg/mqdefault.jpg',
-                duration: '4:44'
             }
         ]
     },
@@ -119,11 +119,11 @@ const GENRES: Record<string, GenreData> = {
                 duration: '3:19'
             },
             {
-                videoId: 'IxxstCcJlsc',
-                title: 'Titanium',
-                artist: 'David Guetta ft. Sia',
-                thumbnail: 'https://img.youtube.com/vi/IxxstCcJlsc/mqdefault.jpg',
-                duration: '4:05'
+                videoId: 'FTQbiNvZqaY',
+                title: 'Africa',
+                artist: 'Toto',
+                thumbnail: 'https://img.youtube.com/vi/FTQbiNvZqaY/mqdefault.jpg',
+                duration: '4:55'
             },
             {
                 videoId: '60ItHLz5WEA',
@@ -161,26 +161,25 @@ const GENRES: Record<string, GenreData> = {
                 duration: '3:35'
             },
             {
-                videoId: '1w7OgIMMRc4',
-                title: "Sweet Child O' Mine",
-                artist: "Guns N' Roses",
-                thumbnail: 'https://img.youtube.com/vi/1w7OgIMMRc4/mqdefault.jpg',
-                duration: '5:56'
+                videoId: 'kXYiU_JCYtU',
+                title: 'Numb',
+                artist: 'Linkin Park',
+                thumbnail: 'https://img.youtube.com/vi/kXYiU_JCYtU/mqdefault.jpg',
+                duration: '3:07'
             }
         ]
     },
     chill: {
-        name: 'Chill & Lofi',
+        name: 'Chill & Acoustic',
         icon: '☕',
         color: '#2ecc71',
         videos: [
             {
-                videoId: 'jfKfPfyJRdk',
-                title: 'lofi hip hop radio - beats to relax/study to',
-                artist: 'Lofi Girl',
-                thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/mqdefault.jpg',
-                duration: 'LIVE',
-                isLive: true
+                videoId: 'YQHsXMglC9A',
+                title: 'Hello',
+                artist: 'Adele',
+                thumbnail: 'https://img.youtube.com/vi/YQHsXMglC9A/mqdefault.jpg',
+                duration: '6:07'
             },
             {
                 videoId: 'lTRiuFIWV54',
@@ -190,18 +189,18 @@ const GENRES: Record<string, GenreData> = {
                 duration: '4:15'
             },
             {
-                videoId: 'YQHsXMglC9A',
-                title: 'Hello',
-                artist: 'Adele',
-                thumbnail: 'https://img.youtube.com/vi/YQHsXMglC9A/mqdefault.jpg',
-                duration: '6:07'
+                videoId: 'PT2_F-1esPk',
+                title: 'All of Me',
+                artist: 'John Legend',
+                thumbnail: 'https://img.youtube.com/vi/PT2_F-1esPk/mqdefault.jpg',
+                duration: '4:30'
             },
             {
-                videoId: 'CvBfHwUxHIk',
-                title: 'Blinding Lights',
-                artist: 'The Weeknd',
-                thumbnail: 'https://img.youtube.com/vi/CvBfHwUxHIk/mqdefault.jpg',
-                duration: '4:22'
+                videoId: 'pB-5XG-DbAA',
+                title: 'All Star',
+                artist: 'Smash Mouth',
+                thumbnail: 'https://img.youtube.com/vi/pB-5XG-DbAA/mqdefault.jpg',
+                duration: '3:21'
             }
         ]
     }

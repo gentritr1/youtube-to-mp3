@@ -151,8 +151,24 @@ router.post('/', async (req: Request, res: Response) => {
                 previewPath
             ]);
 
-            // Pipe yt-dlp output to ffmpeg input
-            ytdlp.stdout?.pipe(ffmpeg.stdin!);
+            // Handle EPIPE errors on ffmpeg stdin to prevent crashes
+            ffmpeg.stdin?.on('error', (err: NodeJS.ErrnoException) => {
+                if (err.code === 'EPIPE' || err.code === 'ERR_STREAM_DESTROYED') {
+                    // Ignore EPIPE - this happens when ffmpeg closes before we finish writing
+                    console.log('[Preview] ffmpeg stdin closed early (EPIPE) - expected when yt-dlp fails');
+                } else {
+                    console.error('[Preview] ffmpeg stdin error:', err.message);
+                }
+            });
+
+            // Pipe yt-dlp output to ffmpeg input with error handling
+            ytdlp.stdout?.on('error', (err: NodeJS.ErrnoException) => {
+                if (err.code !== 'EPIPE') {
+                    console.error('[Preview] yt-dlp stdout error:', err.message);
+                }
+            });
+
+            ytdlp.stdout?.pipe(ffmpeg.stdin!, { end: true });
 
             let ytdlpError = '';
             let ffmpegError = '';

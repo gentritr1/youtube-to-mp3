@@ -3,22 +3,39 @@
    ======================================== */
 .container {
     width: 100%;
-    max-width: 480px;
+    max-width: 900px;
+    /* Wider to accommodate popular section */
     margin: 0 auto;
     padding: 2rem 1rem;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-items: center;
     gap: 2rem;
 }
 
 .header {
     text-align: center;
+    width: 100%;
+    max-width: 480px;
+    /* Keep header narrow */
+}
+
+.converter-card {
+    max-width: 480px;
+    /* Keep card narrow */
+    width: 100%;
+}
+
+/* Popular section can expand to full container width */
+.popular-videos-container {
+    width: 100%;
 }
 
 .footer {
     text-align: center;
+    width: 100%;
+    max-width: 480px;
 }
 
 .footer p {
