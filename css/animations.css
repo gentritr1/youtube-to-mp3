@@ -246,7 +246,6 @@ body::after {
     }
 
     /* Hang at peak (freeze-time moment) */
-    25%,
     35% {
         transform: translateY(-24px) scaleY(1.0) scaleX(1.0);
     }
