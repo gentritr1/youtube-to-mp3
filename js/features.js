@@ -507,9 +507,16 @@ const FeaturesModule = (() => {
     const seekPreview = (e) => {
         if (!state.previewAudio) return;
 
+        const duration = state.previewAudio.duration;
+        if (!Number.isFinite(duration) || duration <= 0) return;
+
         const rect = elements.previewProgressBar.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        state.previewAudio.currentTime = percent * state.previewAudio.duration;
+        let percent = (e.clientX - rect.left) / rect.width;
+
+        // Clamp to [0, 1]
+        percent = Math.max(0, Math.min(1, percent));
+
+        state.previewAudio.currentTime = percent * duration;
     };
 
     /**
@@ -518,11 +525,26 @@ const FeaturesModule = (() => {
     const updatePreviewProgress = () => {
         if (!state.previewAudio) return;
 
-        const percent = (state.previewAudio.currentTime / state.previewAudio.duration) * 100;
+        const currentTime = state.previewAudio.currentTime;
+        const duration = state.previewAudio.duration;
+
+        // Guard against NaN/infinite duration
+        if (!Number.isFinite(duration) || duration <= 0) {
+            elements.previewProgressFill.style.width = '0%';
+            elements.waveformProgress.style.width = '0%';
+            elements.waveformPlayhead.style.left = '0%';
+            elements.previewTimeCurrent.textContent = '0:00';
+            return;
+        }
+
+        let percent = (currentTime / duration) * 100;
+        // Clamp for CSS
+        percent = Math.max(0, Math.min(100, percent));
+
         elements.previewProgressFill.style.width = `${percent}%`;
         elements.waveformProgress.style.width = `${percent}%`;
         elements.waveformPlayhead.style.left = `${percent}%`;
-        elements.previewTimeCurrent.textContent = formatTime(state.previewAudio.currentTime);
+        elements.previewTimeCurrent.textContent = formatTime(currentTime);
     };
 
     /**
