@@ -58,10 +58,12 @@ const FeaturesModule = (() => {
      */
     const createDOM = () => {
         const converterCard = document.querySelector('.converter-card');
+        const popularContainer = document.getElementById('popular-videos-container');
+
         if (!converterCard) return;
 
-        // Create Popular Videos section
-        const popularSection = document.createElement('section');
+        // Create Popular Videos section (goes OUTSIDE the card)
+        const popularSection = document.createElement('div');
         popularSection.className = 'popular-section';
         popularSection.id = 'popular-section';
         popularSection.innerHTML = `
@@ -70,12 +72,13 @@ const FeaturesModule = (() => {
                     <span class="popular-title-icon">🔥</span>
                     Popular Music
                 </h2>
+                <p class="popular-subtitle">Click to preview or convert</p>
             </div>
             <div class="genre-tabs" id="genre-tabs"></div>
             <div class="video-carousel" id="video-carousel"></div>
         `;
 
-        // Create Preview Player section
+        // Create Preview Player section (stays INSIDE the card)
         const previewPlayer = document.createElement('div');
         previewPlayer.className = 'preview-player';
         previewPlayer.id = 'preview-player';
@@ -135,14 +138,20 @@ const FeaturesModule = (() => {
             </div>
         `;
 
-        // Insert after the form but before progress/download sections
+        // Insert preview player INSIDE the card (after form)
         const form = converterCard.querySelector('#converter-form');
         if (form) {
             form.after(previewPlayer);
-            previewPlayer.after(popularSection);
         } else {
             converterCard.appendChild(previewPlayer);
-            converterCard.appendChild(popularSection);
+        }
+
+        // Insert popular section OUTSIDE the card (into dedicated container)
+        if (popularContainer) {
+            popularContainer.appendChild(popularSection);
+        } else {
+            // Fallback: insert after the converter card
+            converterCard.after(popularSection);
         }
 
         // Cache elements
