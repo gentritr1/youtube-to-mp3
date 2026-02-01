@@ -131,6 +131,7 @@ youtube-to-mp3/
 │
 ├── 📁 js/                     # Frontend modules
 │   ├── snake-game.js          # Full snake game (38KB!)
+│   ├── features.js            # Popular videos & audio preview module
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
@@ -184,6 +185,8 @@ youtube-to-mp3/
 | **Progress Bar** | `app.js`, `results.css` | Real-time conversion progress |
 | **Download Section** | `app.js`, `results.css` | Orchestrated success animation |
 | **Snake Game** | `snake-game.js` | Entertainment during wait |
+| **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
+| **Audio Preview** | `features.js`, `features.css` | 30-second audio preview with waveform |
 
 ### Backend Components
 
@@ -357,12 +360,17 @@ npm run test:node
 | **Error Tracking** | Console.log only | Add Sentry or LogRocket |
 | **API Docs** | No documentation | Add OpenAPI/Swagger spec |
 
+### Implemented ✅
+
+| Feature | Description |
+| :--- | :--- |
+| **Popular Videos** | Curated music suggestions by genre with carousel UI |
+| **Audio Preview** | 30s audio preview with waveform, robust error handling, and graceful state management |
+
 ### Low Priority / Nice-to-Have
 
 | Feature | Description |
 | :--- | :--- |
-| **Popular Videos** | Add curated music suggestions by genre |
-| **Audio Preview** | Play a 30s clip before downloading |
 | **Batch Downloads** | Convert multiple videos at once |
 | **PWA Support** | Add service worker for offline capability |
 | **Dark/Light Toggle** | User preference for theme |
@@ -399,4 +407,4 @@ The modular design makes it easy to maintain and extend. Ready for production de
 
 ---
 
-*Updated: 2026-01-29*
+*Updated: 2026-02-01*

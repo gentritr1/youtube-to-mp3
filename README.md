@@ -6,6 +6,8 @@ A clean, modern, and minimal YouTube media converter built with Node.js and Vani
 
 - **Zen Atmosphere**: Ambient pulsing background gradients (Emerald & Violet), subtle noise textures, and fluid fade-in animations for a premium user experience.
 - **Optimized Workflow**: Real-time conversion feedback (Progress Bar) and instant download notifications prioritized above the game for zero friction.
+- **Popular Music Discovery**: Curated music suggestions organized by genre (Pop, Hip-Hop, Rock, Electronic, etc.) with one-click conversion.
+- **Audio Preview**: 30-second audio previews with waveform visualization before downloading - includes robust error handling and graceful playback state management.
 - **Mobile Support**: Fully responsive design with touch controls for the game (Swipe to move, Double-tap to switch).
 - **Snake Game (Enhanced Edition)**: A modular, feature-rich snake game with:
   - **Dynamic Power-ups**: Golden (3x growth), Speed, Ghost (no collision), and Split.
@@ -77,6 +79,7 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 - **Modular CSS Architecture**: Organized style modules (`/css/components`, `/css/layout`, `/css/animations`) for maintainability.
 - **Premium Animations**: Physics-based SVG animations (Walking Note, Spinning Reel) for a polished user experience.
 - **Modular Game Engine**: The Snake Game is self-contained in `js/snake-game.js`.
+- **Features Module**: Popular videos carousel and audio preview player in `js/features.js` with robust error handling, promise-based playback control, and graceful state management.
 - **Polling System**: Async task-based polling for progress without layout shifts.
 - **Input Locking**: Prevents state conflicts during conversion (idempotency on UI).
 
@@ -119,12 +122,14 @@ npm run preflight
 
 - `/server/` - Modular backend (routes, services, utils, middleware)
 - `/css/` - Modular styling architecture (base, layout, components, animations)
+  - `/css/components/features.css` - Popular videos & audio preview styles
 - `/index.html` - Optimized semantic layout with prioritized download area
 - `/app.js` - Frontend service layer handling API calls and game lifecycle
 - `/style.css` - CSS entry point (imports modules)
 - `/game.css` - Snake game specific styles
 - `/js/snake-game.js` - Encapsulated Snake Game logic
-- `/tests/` - Vitest unit tests (`taskManager.test.js`, `utils.test.js`)
+- `/js/features.js` - Popular videos carousel & audio preview module
+- `/tests/` - Vitest unit tests
 
 ## 📄 License
 MIT
