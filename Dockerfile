@@ -1,10 +1,10 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Install system dependencies (Python for yt-dlp, FFmpeg for conversion)
 RUN apk add --no-cache python3 py3-pip ffmpeg curl build-base
 
 # Install yt-dlp via pip for easy updates
-RUN pip3 install --break-system-packages yt-dlp
+RUN pip3 install --break-system-packages --root-user-action=ignore yt-dlp
 
 WORKDIR /app
 
