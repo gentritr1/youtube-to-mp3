@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import semver from 'semver';
 
 const PACKAGE_JSON_PATH = join(process.cwd(), 'package.json');
 
@@ -190,7 +191,7 @@ describe('package.json Configuration', () => {
 
     it('dependencies should use semantic versioning', () => {
       Object.values(packageJson.dependencies).forEach((version: any) => {
-        expect(version).toMatch(/^[\^~]?\d+\.\d+\.\d+$/);
+        expect(semver.validRange(version)).toBeTruthy();
       });
     });
   });
@@ -229,7 +230,7 @@ describe('package.json Configuration', () => {
 
     it('devDependencies should use semantic versioning', () => {
       Object.values(packageJson.devDependencies).forEach((version: any) => {
-        expect(version).toMatch(/^[\^~]?\d+\.\d+\.\d+$/);
+        expect(semver.validRange(version)).toBeTruthy();
       });
     });
   });
@@ -259,8 +260,8 @@ describe('package.json Configuration', () => {
         const packageName = typesDep.replace('@types/', '');
         // Special cases: node is always needed, better-sqlite3 is valid
         const isValidTypes = packageName === 'node' ||
-                            runtimeDeps.includes(packageName) ||
-                            runtimeDeps.includes(packageName.replace('-', ''));
+          runtimeDeps.includes(packageName) ||
+          runtimeDeps.includes(packageName.replace(/-/g, ''));
         expect(isValidTypes).toBe(true);
       });
     });

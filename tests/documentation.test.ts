@@ -22,15 +22,26 @@ describe('Documentation Files', () => {
   beforeAll(() => {
     if (existsSync(README_PATH)) {
       readme = readFileSync(README_PATH, 'utf-8');
+    } else {
+      throw new Error(`README.md not found at ${README_PATH}`);
     }
+
     if (existsSync(SYSTEM_DESIGN_PATH)) {
       systemDesign = readFileSync(SYSTEM_DESIGN_PATH, 'utf-8');
+    } else {
+      throw new Error(`SYSTEM_DESIGN.md not found at ${SYSTEM_DESIGN_PATH}`);
     }
+
     if (existsSync(WORKFLOW_PATH)) {
       workflow = readFileSync(WORKFLOW_PATH, 'utf-8');
+    } else {
+      throw new Error(`Workflow file not found at ${WORKFLOW_PATH}`);
     }
+
     if (existsSync(PACKAGE_JSON_PATH)) {
       packageJson = JSON.parse(readFileSync(PACKAGE_JSON_PATH, 'utf-8'));
+    } else {
+      throw new Error(`package.json not found at ${PACKAGE_JSON_PATH}`);
     }
   });
 
@@ -248,7 +259,7 @@ describe('Documentation Files', () => {
     it('Docker scripts mentioned in docs should exist in package.json', () => {
       const dockerScripts = ['docker:build', 'docker:test', 'docker:up', 'docker:down'];
       dockerScripts.forEach(script => {
-        if (readme.includes(script) || workflow.includes(script)) {
+        if ((readme?.includes(script)) || (workflow?.includes(script))) {
           expect(packageJson.scripts[script]).toBeDefined();
         }
       });
@@ -257,7 +268,7 @@ describe('Documentation Files', () => {
     it('test scripts mentioned in docs should exist in package.json', () => {
       const testScripts = ['test', 'test:watch'];
       testScripts.forEach(script => {
-        if (readme.includes(script) || workflow.includes(script)) {
+        if ((readme?.includes(script)) || (workflow?.includes(script))) {
           expect(packageJson.scripts[script]).toBeDefined();
         }
       });
@@ -380,7 +391,7 @@ describe('Documentation Files', () => {
       // Check for common broken link patterns
       expect(allDocs).not.toContain('](]');
       expect(allDocs).not.toContain('[](');
-      expect(allDocs).not.toMatch(/\]\([^\)]*\s[^\)]*\)/); // No spaces in URLs
+      expect(allDocs).not.toMatch(/\]\(\s*[^)\s]*\s+[^)"\s]*\)/); // No spaces in URLs (but allow titles)
     });
 
     it('documentation should not have TODO markers', () => {

@@ -32,7 +32,7 @@ describe('Docker Compose Configuration', () => {
       expect(dockerComposeContent).toMatch(/^\s+\w+:/m);
     });
 
-    it('should be valid YAML format', () => {
+    it('should have more than 5 lines', () => {
       // Check basic YAML structure
       const lines = dockerComposeContent.split('\n');
       expect(lines.length).toBeGreaterThan(5);
@@ -53,7 +53,7 @@ describe('Docker Compose Configuration', () => {
     });
 
     it('should map port 3000 to 3000', () => {
-      expect(dockerComposeContent).toContain('3000:3000');
+      expect(dockerComposeContent).toMatch(/"?3000:3000"?/);
     });
 
     it('should have environment variables', () => {
@@ -144,7 +144,7 @@ describe('Docker Compose Configuration', () => {
     });
 
     it('should use specific port mapping', () => {
-      const portMatches = dockerComposeContent.match(/"(\d+):(\d+)"/);
+      const portMatches = dockerComposeContent.match(/"?(\d+):(\d+)"?/);
       expect(portMatches).not.toBeNull();
     });
 

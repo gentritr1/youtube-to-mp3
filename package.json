@@ -25,6 +25,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.1.0",
     "nodemon": "^3.1.11",
+    "semver": "^7.7.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
