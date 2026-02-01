@@ -350,6 +350,14 @@ const FeaturesModule = (() => {
     const showPreview = async (video) => {
         if (state.isPreviewLoading) return;
 
+        // Stop/Reset any existing preview immediately
+        if (state.previewAudio) {
+            state.previewAudio.pause();
+            state.previewAudio = null;
+        }
+        state.isPreviewPlaying = false;
+        elements.previewPlayBtn.classList.remove('playing');
+
         // Check if live stream
         if (video.isLive || video.duration === 'LIVE') {
             alert('Preview is not available for live streams. You can still convert the video.');
@@ -371,6 +379,7 @@ const FeaturesModule = (() => {
         // Reset loading text to default
         if (elements.previewLoadingText) {
             elements.previewLoadingText.textContent = 'Generating preview...';
+
         }
 
         try {
@@ -402,11 +411,7 @@ const FeaturesModule = (() => {
             }
 
             // Create audio element
-            if (state.previewAudio) {
-                state.previewAudio.pause();
-                state.previewAudio = null;
-            }
-
+            // Note: Previous audio was already reset at function start
             state.previewAudio = new Audio(data.previewUrl);
 
             state.previewAudio.addEventListener('error', (e) => {
