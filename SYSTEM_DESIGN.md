@@ -77,7 +77,7 @@
 │  ┌─────┴────────────┴────────────┴────────────┴────────────────────┐    │
 │  │                           SERVICES                               │    │
 │  ├──────────────────┬────────────────────┬─────────────────────────┤    │
-│  │    ytdlp.js      │ sqliteTaskManager  │     jobQueue.js         │    │
+│  │    ytdlp.ts      │ sqliteTaskManager  │     jobQueue.ts         │    │
 │  │  • getVideoInfo  │ • SQLite CRUD      │  • Bull + Redis         │    │
 │  │  • convertVideo  │ • WAL mode         │  • Fallback to direct   │    │
 │  │  • Retry logic   │ • Prepared stmts   │  • Graceful shutdown    │    │
@@ -130,32 +130,32 @@ youtube-to-mp3/
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
-│   ├── index.js               # Server entry point + graceful shutdown
-│   ├── config.js              # Centralized config (rate limits, queue, etc.)
+│   ├── index.ts               # Server entry point + graceful shutdown
+│   ├── config.ts              # Centralized config (rate limits, queue, etc.)
 │   ├── middleware/
-│   │   ├── errorHandler.js    # Error middleware
-│   │   └── rateLimiter.js     # ✨ Rate limiting (per-route)
+│   │   ├── errorHandler.ts    # Error middleware
+│   │   └── rateLimiter.ts     # ✨ Rate limiting (per-route)
 │   ├── routes/
-│   │   ├── index.js           # Route aggregator + rate limit bindings
-│   │   ├── info.js            # GET /api/info (30/min)
-│   │   ├── convert.js         # POST /api/convert (10/hour)
-│   │   ├── progress.js        # GET /api/progress/:taskId
-│   │   └── download.js        # GET /api/download/:taskId/:filename
+│   │   ├── index.ts           # Route aggregator + rate limit bindings
+│   │   ├── info.ts            # GET /api/info (30/min)
+│   │   ├── convert.ts         # POST /api/convert (10/hour)
+│   │   ├── progress.ts        # GET /api/progress/:taskId
+│   │   ├── download.ts        # GET /api/download/:taskId/:filename
 │   ├── services/
-│   │   ├── ytdlp.js           # yt-dlp wrapper (core logic)
-│   │   ├── taskManager.js     # Legacy in-memory tasks
-│   │   ├── sqliteTaskManager.js  # ✨ SQLite persistence
-│   │   └── jobQueue.js        # ✨ Bull + Redis queue
+│   │   ├── ytdlp.ts           # yt-dlp wrapper (core logic)
+│   │   ├── taskManager.ts     # Legacy in-memory tasks
+│   │   ├── sqliteTaskManager.ts  # ✨ SQLite persistence
+│   │   └── jobQueue.ts        # ✨ Bull + Redis queue
 │   └── utils/
-│       ├── formatDuration.js  # Time formatting
-│       ├── parseProgress.js   # Parse yt-dlp output
-│       └── sanitize.js        # Filename sanitization
+│       ├── formatDuration.ts  # Time formatting
+│       ├── parseProgress.ts   # Parse yt-dlp output
+│       └── sanitize.ts        # Filename sanitization
 │
 ├── 📁 tests/                  # ✨ Test suite
-│   ├── config.test.js         # Config tests (19 tests)
-│   ├── rateLimiter.test.js    # Rate limiter tests (6 tests)
-│   ├── jobQueue.test.js       # Job queue tests (10 tests)
-│   └── sqliteTaskManager.test.js  # SQLite tests
+│   ├── config.test.ts         # Config tests (19 tests)
+│   ├── rateLimiter.test.ts    # Rate limiter tests (6 tests)
+│   ├── jobQueue.test.ts       # Job queue tests (10 tests)
+│   └── sqliteTaskManager.test.ts  # SQLite tests
 │
 ├── 📁 downloads/              # Temp file storage (gitignored)
 ├── 📄 tasks.db                # SQLite database (gitignored)
@@ -185,16 +185,16 @@ youtube-to-mp3/
 
 | Component | File | Responsibility |
 | :--- | :--- | :--- |
-| **Express Server** | `server/index.js` | HTTP server, middleware, graceful shutdown |
-| **Config** | `server/config.js` | Centralized settings (rate limits, queue, paths) |
-| **Rate Limiter** | `middleware/rateLimiter.js` | Per-route rate limiting |
-| **Info Route** | `routes/info.js` | Fetch video metadata via yt-dlp |
-| **Convert Route** | `routes/convert.js` | Start async conversion task |
-| **Progress Route** | `routes/progress.js` | Poll task status |
-| **Download Route** | `routes/download.js` | Serve converted file |
-| **yt-dlp Service** | `services/ytdlp.js` | Wrapper with retry logic |
-| **SQLite Task Manager** | `services/sqliteTaskManager.js` | Persistent task storage |
-| **Job Queue** | `services/jobQueue.js` | Optional Redis-backed queue |
+| **Express Server** | `server/index.ts` | HTTP server, middleware, graceful shutdown |
+| **Config** | `server/config.ts` | Centralized settings (rate limits, queue, paths) |
+| **Rate Limiter** | `server/middleware/rateLimiter.ts` | Per-route rate limiting |
+| **Info Route** | `server/routes/info.ts` | Fetch video metadata via yt-dlp |
+| **Convert Route** | `server/routes/convert.ts` | Start async conversion task |
+| **Progress Route** | `server/routes/progress.ts` | Poll task status |
+| **Download Route** | `server/routes/download.ts` | Serve converted file |
+| **yt-dlp Service** | `server/services/ytdlp.ts` | Wrapper with retry logic |
+| **SQLite Task Manager** | `server/services/sqliteTaskManager.ts` | Persistent task storage |
+| **Job Queue** | `server/services/jobQueue.ts` | Optional Redis-backed queue |
 
 ---
 
@@ -289,10 +289,10 @@ npm run test:node
 
 | Test File | Tests | Coverage |
 | :--- | :--- | :--- |
-| `config.test.js` | 19 | All config settings |
-| `rateLimiter.test.js` | 6 | Middleware exports, behavior |
-| `jobQueue.test.js` | 10 | Queue API, disabled state, Redis fallback |
-| `sqliteTaskManager.test.js` | 10+ | CRUD, idempotency, cleanup |
+| `config.test.ts` | 19 | All config settings |
+| `rateLimiter.test.ts` | 6 | Middleware exports, behavior |
+| `jobQueue.test.ts` | 10 | Queue API, disabled state, Redis fallback |
+| `sqliteTaskManager.test.ts` | 10+ | CRUD, idempotency, cleanup |
 
 ### Total: 45+ tests
 

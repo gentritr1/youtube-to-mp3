@@ -26,7 +26,7 @@ export function sanitizeFilename(title: string): string {
     // Sanitize for filesystem - keep spaces and dashes for readability
     const safeTitle = cleanTitle
         .replace(/[<>:"/\\|?*✦]/g, '')  // Remove invalid filesystem chars
-        .replace(/[^\x00-\x7F]/g, (char: string) => {
+        .replace(/[^\p{ASCII}]/gu, (char: string) => {
             // Keep common accented chars, remove others
             const commonAccents = 'àáâãäåèéêëìíîïòóôõöùúûüýÿñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝŸÑÇ';
             return commonAccents.includes(char) ? char : '';
