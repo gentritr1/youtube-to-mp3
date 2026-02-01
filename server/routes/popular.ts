@@ -16,6 +16,7 @@ interface VideoSuggestion {
     artist: string;
     thumbnail: string;
     duration: string;
+    isLive?: boolean; // Flag for live streams (preview not supported)
 }
 
 interface GenreData {
@@ -178,7 +179,8 @@ const GENRES: Record<string, GenreData> = {
                 title: 'lofi hip hop radio - beats to relax/study to',
                 artist: 'Lofi Girl',
                 thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/mqdefault.jpg',
-                duration: 'LIVE'
+                duration: 'LIVE',
+                isLive: true
             },
             {
                 videoId: 'lTRiuFIWV54',

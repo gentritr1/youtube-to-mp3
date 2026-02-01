@@ -101,6 +101,6 @@ Allow users to play a 30-second preview of the audio before committing to a full
 ---
 
 ## Related Files
-- `src/routes/` - API endpoints (to be created)
-- `public/js/` - Frontend components (to be created)
-- `css/` - Styling (to be extended)
+- `server/routes/` - API endpoints (popular.ts, preview.ts)
+- `js/` - Frontend components (features.js)
+- `css/` - Styling (components/features.css)

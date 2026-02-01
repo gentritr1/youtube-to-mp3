@@ -5,7 +5,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { spawn } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
@@ -17,7 +17,32 @@ const previewCache = new Map<string, { path: string; createdAt: number }>();
 const PREVIEW_DURATION = 30; // seconds
 const PREVIEW_START_OFFSET = 30; // Start 30 seconds into the song (skip intros)
 const PREVIEW_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
+const PREVIEW_TIMEOUT_MS = 60 * 1000; // 60 seconds timeout for preview generation
 const PREVIEWS_DIR = path.join(config.DOWNLOADS_DIR, 'previews');
+
+// Safe video ID pattern (YouTube video IDs are alphanumeric with - and _)
+const SAFE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{1,20}$/;
+
+/**
+ * Validate and sanitize video ID to prevent path traversal attacks
+ */
+const validateVideoId = (videoId: unknown): string | null => {
+    if (typeof videoId !== 'string') {
+        return null;
+    }
+
+    // Reject path traversal attempts
+    if (videoId.includes('..') || videoId.includes('/') || videoId.includes('\\')) {
+        return null;
+    }
+
+    // Only allow safe characters
+    if (!SAFE_VIDEO_ID_PATTERN.test(videoId)) {
+        return null;
+    }
+
+    return videoId;
+};
 
 // Ensure previews directory exists
 if (!fs.existsSync(PREVIEWS_DIR)) {
@@ -26,12 +51,14 @@ if (!fs.existsSync(PREVIEWS_DIR)) {
 
 // Generate audio preview
 router.post('/', async (req: Request, res: Response) => {
-    const { videoId } = req.body;
+    const rawVideoId = req.body?.videoId;
 
+    // Validate and sanitize videoId
+    const videoId = validateVideoId(rawVideoId);
     if (!videoId) {
         return res.status(400).json({
             success: false,
-            message: 'Video ID required'
+            message: 'Invalid video ID. Must be alphanumeric with dashes/underscores only.'
         });
     }
 
@@ -50,21 +77,70 @@ router.post('/', async (req: Request, res: Response) => {
         }
     }
 
-    const previewPath = path.join(PREVIEWS_DIR, `${videoId}_preview.mp3`);
+    // Use path.join with validated videoId for safe path construction
+    const safeFilename = `${videoId}_preview.mp3`;
+    const previewPath = path.join(PREVIEWS_DIR, safeFilename);
     const url = `https://www.youtube.com/watch?v=${videoId}`;
 
     try {
         // Use yt-dlp to extract audio and ffmpeg to create 30s preview
         // This pipes directly without creating full file
         await new Promise<void>((resolve, reject) => {
-            const ytdlp = spawn('yt-dlp', [
+            let ytdlp: ChildProcess | null = null;
+            let ffmpeg: ChildProcess | null = null;
+            let timeoutId: NodeJS.Timeout | null = null;
+            let isSettled = false;
+
+            /**
+             * Cleanup function to kill processes and clear timeout
+             */
+            const cleanup = () => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+                if (ytdlp && !ytdlp.killed) {
+                    ytdlp.kill('SIGTERM');
+                }
+                if (ffmpeg) {
+                    try {
+                        ffmpeg.stdin?.end();
+                    } catch (e) {
+                        // Ignore stdin end errors
+                    }
+                    if (!ffmpeg.killed) {
+                        ffmpeg.kill('SIGTERM');
+                    }
+                }
+            };
+
+            /**
+             * Settle the promise (resolve or reject) only once
+             */
+            const settle = (error?: Error) => {
+                if (isSettled) return;
+                isSettled = true;
+                cleanup();
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            };
+
+            // Start timeout timer
+            timeoutId = setTimeout(() => {
+                settle(new Error('Preview generation timed out after 60 seconds'));
+            }, PREVIEW_TIMEOUT_MS);
+
+            ytdlp = spawn('yt-dlp', [
                 '-f', 'bestaudio[ext=m4a]/bestaudio/best',
                 '--no-playlist',
                 '-o', '-', // Output to stdout
                 url
             ]);
 
-            const ffmpeg = spawn('ffmpeg', [
+            ffmpeg = spawn('ffmpeg', [
                 '-y',
                 '-i', 'pipe:0', // Input from stdin
                 '-ss', String(PREVIEW_START_OFFSET), // Skip intro
@@ -76,39 +152,46 @@ router.post('/', async (req: Request, res: Response) => {
             ]);
 
             // Pipe yt-dlp output to ffmpeg input
-            ytdlp.stdout.pipe(ffmpeg.stdin);
+            ytdlp.stdout?.pipe(ffmpeg.stdin!);
 
             let ytdlpError = '';
             let ffmpegError = '';
 
-            ytdlp.stderr.on('data', (data) => {
+            ytdlp.stderr?.on('data', (data) => {
                 ytdlpError += data.toString();
             });
 
-            ffmpeg.stderr.on('data', (data) => {
+            ffmpeg.stderr?.on('data', (data) => {
                 ffmpegError += data.toString();
             });
 
             ytdlp.on('error', (err) => {
-                reject(new Error(`yt-dlp error: ${err.message}`));
+                settle(new Error(`yt-dlp error: ${err.message}`));
             });
 
             ffmpeg.on('close', (code) => {
                 if (code === 0) {
-                    resolve();
+                    settle();
                 } else {
-                    reject(new Error(`FFmpeg exited with code ${code}: ${ffmpegError}`));
+                    settle(new Error(`FFmpeg exited with code ${code}: ${ffmpegError.slice(0, 500)}`));
                 }
             });
 
             ffmpeg.on('error', (err) => {
-                reject(new Error(`FFmpeg error: ${err.message}`));
+                settle(new Error(`FFmpeg error: ${err.message}`));
             });
 
-            // Handle yt-dlp exit
+            // Handle yt-dlp exit - this is important for error propagation
             ytdlp.on('close', (code) => {
                 if (code !== 0) {
-                    ffmpeg.stdin.end();
+                    // End ffmpeg stdin cleanly
+                    try {
+                        ffmpeg?.stdin?.end();
+                    } catch (e) {
+                        // Ignore
+                    }
+                    // Reject with yt-dlp error
+                    settle(new Error(`yt-dlp exited with code ${code}: ${ytdlpError.slice(0, 500)}`));
                 }
             });
         });
@@ -138,7 +221,16 @@ router.post('/', async (req: Request, res: Response) => {
 
 // Stream preview audio
 router.get('/:videoId', async (req: Request, res: Response) => {
-    const videoId = req.params.videoId as string;
+    const rawVideoId = req.params.videoId;
+
+    // Validate and sanitize videoId
+    const videoId = validateVideoId(rawVideoId);
+    if (!videoId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid video ID'
+        });
+    }
 
     const cached = previewCache.get(videoId);
     if (!cached || !fs.existsSync(cached.path)) {
@@ -149,19 +241,50 @@ router.get('/:videoId', async (req: Request, res: Response) => {
     }
 
     const stat = fs.statSync(cached.path);
+    const fileSize = stat.size;
     const range = req.headers.range;
 
     if (range) {
-        // Support range requests for seeking
-        const parts = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        // Parse range header
+        const rangeMatch = range.match(/bytes=(\d*)-(\d*)/);
+        if (!rangeMatch) {
+            // Malformed range header
+            res.writeHead(416, {
+                'Content-Range': `bytes */${fileSize}`
+            });
+            return res.end();
+        }
+
+        // Parse start and end
+        let start = rangeMatch[1] ? parseInt(rangeMatch[1], 10) : 0;
+        let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : fileSize - 1;
+
+        // Validate parsed values are finite and non-negative
+        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < 0) {
+            res.writeHead(416, {
+                'Content-Range': `bytes */${fileSize}`
+            });
+            return res.end();
+        }
+
+        // Clamp values within valid range
+        start = Math.max(0, Math.min(start, fileSize - 1));
+        end = Math.max(start, Math.min(end, fileSize - 1));
+
+        // Validate start <= end
+        if (start > end) {
+            res.writeHead(416, {
+                'Content-Range': `bytes */${fileSize}`
+            });
+            return res.end();
+        }
+
         const chunkSize = end - start + 1;
 
         const stream = fs.createReadStream(cached.path, { start, end });
 
         res.writeHead(206, {
-            'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
             'Accept-Ranges': 'bytes',
             'Content-Length': chunkSize,
             'Content-Type': 'audio/mpeg'
@@ -170,8 +293,9 @@ router.get('/:videoId', async (req: Request, res: Response) => {
         stream.pipe(res);
     } else {
         res.writeHead(200, {
-            'Content-Length': stat.size,
-            'Content-Type': 'audio/mpeg'
+            'Content-Length': fileSize,
+            'Content-Type': 'audio/mpeg',
+            'Accept-Ranges': 'bytes'
         });
 
         fs.createReadStream(cached.path).pipe(res);

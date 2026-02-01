@@ -18,6 +18,33 @@ const FeaturesModule = (() => {
     let elements = {};
 
     /**
+     * HTML escape helper to prevent XSS
+     * @param {string} str - String to escape
+     * @returns {string} HTML-safe string
+     */
+    const escapeHtml = (str) => {
+        if (typeof str !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    };
+
+    /**
+     * Escape HTML for use in attributes (more strict)
+     * @param {string} str - String to escape
+     * @returns {string} Attribute-safe string
+     */
+    const escapeAttr = (str) => {
+        if (typeof str !== 'string') return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    };
+
+    /**
      * Initialize the features module
      */
     const init = async () => {
@@ -55,7 +82,7 @@ const FeaturesModule = (() => {
         previewPlayer.innerHTML = `
             <div class="preview-loading" id="preview-loading" style="display: none;">
                 <div class="preview-loading-spinner"></div>
-                <span>Generating preview...</span>
+                <span class="preview-loading-text">Generating preview...</span>
             </div>
             <div class="preview-content" id="preview-content">
                 <div class="preview-header">
@@ -125,6 +152,7 @@ const FeaturesModule = (() => {
             videoCarousel: document.getElementById('video-carousel'),
             previewPlayer,
             previewLoading: document.getElementById('preview-loading'),
+            previewLoadingText: document.querySelector('#preview-loading .preview-loading-text'),
             previewContent: document.getElementById('preview-content'),
             previewThumb: document.getElementById('preview-thumb'),
             previewTitle: document.getElementById('preview-title'),
@@ -159,21 +187,31 @@ const FeaturesModule = (() => {
     const loadGenres = async () => {
         try {
             const response = await fetch('/api/popular');
+
+            // Check HTTP status before parsing JSON
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+            }
+
             const data = await response.json();
 
             if (data.success && data.genres) {
                 state.genres = data.genres;
                 renderGenreTabs();
                 renderVideoCarousel(state.activeGenre);
+            } else {
+                throw new Error(data.message || 'Invalid response from server');
             }
         } catch (error) {
             console.error('[Features] Failed to load genres:', error);
-            // Show placeholder or retry option
-            elements.videoCarousel.innerHTML = `
-                <div style="padding: 2rem; text-align: center; color: var(--muted-foreground);">
-                    Unable to load suggestions. <button onclick="FeaturesModule.reload()" style="color: var(--foreground); text-decoration: underline; background: none; border: none; cursor: pointer;">Retry</button>
-                </div>
-            `;
+            // Show placeholder or retry option (safe - no user input interpolated)
+            if (elements.videoCarousel) {
+                elements.videoCarousel.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: var(--muted-foreground);">
+                        Unable to load suggestions. <button onclick="FeaturesModule.reload()" style="color: var(--foreground); text-decoration: underline; background: none; border: none; cursor: pointer;">Retry</button>
+                    </div>
+                `;
+            }
         }
     };
 
@@ -186,11 +224,11 @@ const FeaturesModule = (() => {
         elements.genreTabs.innerHTML = state.genres.map(genre => `
             <button 
                 class="genre-tab ${genre.id === state.activeGenre ? 'active' : ''}" 
-                data-genre="${genre.id}"
-                style="${genre.id === state.activeGenre ? `background: ${genre.color}; border-color: ${genre.color};` : ''}"
+                data-genre="${escapeAttr(genre.id)}"
+                style="${genre.id === state.activeGenre ? `background: ${escapeAttr(genre.color)}; border-color: ${escapeAttr(genre.color)};` : ''}"
             >
-                <span class="genre-tab-icon">${genre.icon}</span>
-                ${genre.name}
+                <span class="genre-tab-icon">${escapeHtml(genre.icon)}</span>
+                ${escapeHtml(genre.name)}
             </button>
         `).join('');
 
@@ -235,11 +273,14 @@ const FeaturesModule = (() => {
         const genre = state.genres.find(g => g.id === genreId);
         if (!genre) return;
 
+        // Check if video is a live stream (preview not supported)
+        const isLive = (video) => video.isLive || video.duration === 'LIVE';
+
         elements.videoCarousel.innerHTML = genre.videos.map(video => `
-            <article class="video-card" data-video-id="${video.videoId}">
+            <article class="video-card" data-video-id="${escapeAttr(video.videoId)}" ${isLive(video) ? 'data-is-live="true"' : ''}>
                 <div class="video-card-thumbnail">
-                    <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
-                    <span class="video-card-duration">${video.duration}</span>
+                    <img src="${escapeAttr(video.thumbnail)}" alt="${escapeAttr(video.title)}" loading="lazy">
+                    <span class="video-card-duration">${escapeHtml(video.duration)}</span>
                     <div class="video-card-overlay">
                         <div class="video-card-play">
                             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -248,7 +289,7 @@ const FeaturesModule = (() => {
                         </div>
                     </div>
                     <div class="video-card-actions">
-                        <button class="video-action-btn" data-action="preview" title="Preview">
+                        <button class="video-action-btn${isLive(video) ? ' disabled' : ''}" data-action="preview" title="${isLive(video) ? 'Preview unavailable for live streams' : 'Preview'}" ${isLive(video) ? 'disabled' : ''}>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
                                 <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
@@ -264,8 +305,8 @@ const FeaturesModule = (() => {
                     </div>
                 </div>
                 <div class="video-card-info">
-                    <h3 class="video-card-title">${video.title}</h3>
-                    <p class="video-card-artist">${video.artist}</p>
+                    <h3 class="video-card-title">${escapeHtml(video.title)}</h3>
+                    <p class="video-card-artist">${escapeHtml(video.artist)}</p>
                 </div>
             </article>
         `).join('');
@@ -274,12 +315,16 @@ const FeaturesModule = (() => {
         elements.videoCarousel.querySelectorAll('.video-card').forEach(card => {
             const videoId = card.dataset.videoId;
             const video = genre.videos.find(v => v.videoId === videoId);
+            const videoIsLive = card.dataset.isLive === 'true';
 
-            // Preview button
-            card.querySelector('[data-action="preview"]')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showPreview(video);
-            });
+            // Preview button (disabled for live streams)
+            const previewBtn = card.querySelector('[data-action="preview"]');
+            if (previewBtn && !videoIsLive) {
+                previewBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showPreview(video);
+                });
+            }
 
             // Convert button
             card.querySelector('[data-action="convert"]')?.addEventListener('click', (e) => {
@@ -287,9 +332,14 @@ const FeaturesModule = (() => {
                 convertVideo(video);
             });
 
-            // Card click - show preview
+            // Card click - show preview (unless live stream)
             card.addEventListener('click', () => {
-                showPreview(video);
+                if (!videoIsLive) {
+                    showPreview(video);
+                } else {
+                    // For live streams, go straight to convert
+                    convertVideo(video);
+                }
             });
         });
     };
@@ -300,7 +350,13 @@ const FeaturesModule = (() => {
     const showPreview = async (video) => {
         if (state.isPreviewLoading) return;
 
-        // Update UI with video info
+        // Check if live stream
+        if (video.isLive || video.duration === 'LIVE') {
+            alert('Preview is not available for live streams. You can still convert the video.');
+            return;
+        }
+
+        // Update UI with video info (using textContent for safety)
         elements.previewPlayer.classList.add('active');
         elements.previewThumb.src = video.thumbnail;
         elements.previewTitle.textContent = video.title;
@@ -311,6 +367,11 @@ const FeaturesModule = (() => {
         state.isPreviewLoading = true;
         elements.previewLoading.style.display = 'flex';
         elements.previewContent.style.display = 'none';
+
+        // Reset loading text to default
+        if (elements.previewLoadingText) {
+            elements.previewLoadingText.textContent = 'Generating preview...';
+        }
 
         try {
             // Request preview generation
@@ -350,9 +411,11 @@ const FeaturesModule = (() => {
 
         } catch (error) {
             console.error('[Preview] Error:', error);
-            elements.previewLoading.innerHTML = `
-                <span style="color: var(--destructive);">⚠️ ${error.message}</span>
-            `;
+            // Use textContent to prevent XSS - no innerHTML with user/error data
+            if (elements.previewLoadingText) {
+                elements.previewLoadingText.textContent = '⚠️ ' + (error.message || 'Failed to generate preview');
+                elements.previewLoadingText.style.color = 'var(--destructive)';
+            }
         } finally {
             state.isPreviewLoading = false;
         }
@@ -370,6 +433,11 @@ const FeaturesModule = (() => {
         state.previewVideoId = null;
         elements.previewPlayer.classList.remove('active');
         elements.previewPlayBtn.classList.remove('playing');
+
+        // Reset loading text styles
+        if (elements.previewLoadingText) {
+            elements.previewLoadingText.style.color = '';
+        }
     };
 
     /**
