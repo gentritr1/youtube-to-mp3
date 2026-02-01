@@ -408,7 +408,30 @@ const FeaturesModule = (() => {
             }
 
             state.previewAudio = new Audio(data.previewUrl);
+
+            state.previewAudio.addEventListener('error', (e) => {
+                console.error('[Preview] Audio load/play error:', e);
+
+                // Stop/Cleanup
+                if (state.previewAudio) {
+                    state.previewAudio.pause();
+                    state.previewAudio = null;
+                }
+                state.isPreviewPlaying = false;
+                elements.previewPlayBtn.classList.remove('playing');
+
+                // Hide content and show error
+                elements.previewContent.style.display = 'none';
+                elements.previewLoading.style.display = 'flex';
+
+                if (elements.previewLoadingText) {
+                    elements.previewLoadingText.textContent = '⚠️ Failed to load audio preview';
+                    elements.previewLoadingText.style.color = 'var(--destructive)';
+                }
+            });
+
             state.previewAudio.addEventListener('loadedmetadata', () => {
+                if (!state.previewAudio) return;
                 elements.previewTimeTotal.textContent = formatTime(state.previewAudio.duration);
                 drawWaveform();
             });
