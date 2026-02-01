@@ -465,9 +465,16 @@ const FeaturesModule = (() => {
             state.isPreviewPlaying = false;
             elements.previewPlayBtn.classList.remove('playing');
         } else {
-            state.previewAudio.play();
-            state.isPreviewPlaying = true;
-            elements.previewPlayBtn.classList.add('playing');
+            state.previewAudio.play()
+                .then(() => {
+                    state.isPreviewPlaying = true;
+                    elements.previewPlayBtn.classList.add('playing');
+                })
+                .catch((error) => {
+                    console.error('[Features] Playback failed:', error);
+                    state.isPreviewPlaying = false;
+                    elements.previewPlayBtn.classList.remove('playing');
+                });
         }
     };
 
