@@ -151,3 +151,113 @@ body::after {
         transform: rotate(360deg);
     }
 }
+
+/* Logo Chase Animation - Icon (Car) drives through, fades out, reappears at start */
+@keyframes carDrive {
+
+    /* Start at rest */
+    0% {
+        transform: translateX(-40px) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    /* Start accelerating */
+    8% {
+        transform: translateX(-30px) scale(1.05) rotate(0deg);
+        opacity: 1;
+    }
+
+    /* Driving through the text - steady speed */
+    20% {
+        transform: translateX(0px) scale(1.1) rotate(0deg);
+        opacity: 1;
+    }
+
+    35% {
+        transform: translateX(60px) scale(1.1) rotate(0deg);
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateX(120px) scale(1.1) rotate(0deg);
+        opacity: 1;
+    }
+
+    /* Reached the end - slow down */
+    60% {
+        transform: translateX(150px) scale(1.05) rotate(0deg);
+        opacity: 1;
+    }
+
+    /* Pause at the end and start fading out */
+    65% {
+        transform: translateX(160px) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    /* Fade out */
+    70% {
+        transform: translateX(160px) scale(0.8) rotate(0deg);
+        opacity: 0;
+    }
+
+    /* Invisible - teleport back to start */
+    71%,
+    85% {
+        transform: translateX(-40px) scale(0.8) rotate(0deg);
+        opacity: 0;
+    }
+
+    /* Fade back in at the start */
+    90% {
+        transform: translateX(-40px) scale(0.9) rotate(0deg);
+        opacity: 0.5;
+    }
+
+    95% {
+        transform: translateX(-40px) scale(0.95) rotate(0deg);
+        opacity: 0.8;
+    }
+
+    /* Ready for next cycle */
+    100% {
+        transform: translateX(-40px) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Letter Jump Animation - Ultra smooth: car hits, letter jumps up, hangs, falls smoothly */
+@keyframes letterJump {
+
+    /* Waiting - car hasn't reached this letter yet */
+    0%,
+    15% {
+        transform: translateY(0) scaleY(1) scaleX(1);
+    }
+
+    /* Car hits! Quick squash */
+    17% {
+        transform: translateY(0) scaleY(0.88) scaleX(1.08);
+    }
+
+    /* Jump up smoothly */
+    25% {
+        transform: translateY(-24px) scaleY(1.0) scaleX(1.0);
+    }
+
+    /* Hang at peak (freeze-time moment) */
+    35% {
+        transform: translateY(-24px) scaleY(1.0) scaleX(1.0);
+    }
+
+    /* Smooth continuous fall down - no intermediate stops */
+    50% {
+        transform: translateY(0) scaleY(0.94) scaleX(1.03);
+    }
+
+    /* Back to normal */
+    55%,
+    100% {
+        transform: translateY(0) scaleY(1) scaleX(1);
+    }
+}
