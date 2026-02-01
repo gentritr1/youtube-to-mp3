@@ -381,6 +381,20 @@ const FeaturesModule = (() => {
                 body: JSON.stringify({ videoId: video.videoId })
             });
 
+            // Check HTTP status before parsing JSON
+            if (!response.ok) {
+                let errorMsg = `Server error: ${response.status} ${response.statusText}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData && errorData.message) {
+                        errorMsg = errorData.message;
+                    }
+                } catch (e) {
+                    // Ignore JSON parse error on error response
+                }
+                throw new Error(errorMsg);
+            }
+
             const data = await response.json();
 
             if (!data.success) {
