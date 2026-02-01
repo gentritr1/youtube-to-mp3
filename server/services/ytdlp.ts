@@ -10,13 +10,14 @@ import { config } from '../config.js';
 import { formatDuration } from '../utils/formatDuration.js';
 import { parseProgress } from '../utils/parseProgress.js';
 import { sanitizeFilename } from '../utils/sanitize.js';
-import { getTask, updateTask, saveTasks } from './taskManager.js';
+import { getTask, updateTask } from './taskManager.js';
+import { VideoInfo } from '../types.js';
 
 
 /**
  * Helper to get common yt-dlp arguments
  */
-const getCommonArgs = () => {
+const getCommonArgs = (): string[] => {
     const args = [
         '--no-warnings',
         '--no-check-certificates',
@@ -64,11 +65,9 @@ const getCommonArgs = () => {
 
 /**
  * Get video info using yt-dlp
- * @param {string} url - YouTube URL
- * @returns {Promise<object>} Video metadata
  */
-export async function getVideoInfo(url) {
-    const runInfoWithArgs = (useCookies) => {
+export async function getVideoInfo(url: string): Promise<VideoInfo> {
+    const runInfoWithArgs = (useCookies: boolean): Promise<VideoInfo> => {
         return new Promise((resolve, reject) => {
             // Base args
             const args = [
@@ -125,9 +124,9 @@ export async function getVideoInfo(url) {
     // Attempt 1: No Cookies (Anonymous)
     try {
         return await runInfoWithArgs(false);
-    } catch (err) {
+    } catch (err: any) {
         // Attempt 2: Retry with Cookies if available
-        if (process.env.YT_COOKIES && (err.message.includes('Sign in') || err.message.includes('bot'))) {
+        if (process.env.YT_COOKIES && (err.message?.includes('Sign in') || err.message?.includes('bot'))) {
             console.log('[Info] Failed anonymously, retrying with cookies...');
             return await runInfoWithArgs(true);
         }
@@ -138,15 +137,12 @@ export async function getVideoInfo(url) {
 
 /**
  * Convert video using yt-dlp
- * @param {string} taskId - Task identifier
- * @param {string} url - YouTube URL
- * @param {string} format - 'mp3' or 'mp4'
  */
-export async function convertVideo(taskId, url, format) {
+export async function convertVideo(taskId: string, url: string, format: string): Promise<void> {
     const task = getTask(taskId);
     if (!task) return;
 
-    const safeTitle = sanitizeFilename(task.title);
+    const safeTitle = sanitizeFilename(task.title || '');
     const actualFilename = `${safeTitle}.${format}`;
     const outputTemplate = path.join(config.DOWNLOADS_DIR, `${safeTitle}.%(ext)s`);
 
@@ -187,7 +183,7 @@ export async function convertVideo(taskId, url, format) {
         ];
 
     // Function to run yt-dlp with specific options
-    const runYtDlp = (useCookies) => {
+    const runYtDlp = (useCookies: boolean): Promise<void> => {
         return new Promise((resolve, reject) => {
             const currentArgs = [...baseArgs];
 
@@ -235,8 +231,8 @@ export async function convertVideo(taskId, url, format) {
         console.log(`[Convert] Starting Task ${taskId} (No Cookies)`);
         await runYtDlp(false);
         success();
-    } catch (err1) {
-        const errorMsg = err1.message;
+    } catch (err1: any) {
+        const errorMsg = err1.message || 'Unknown error';
 
         // Check if we need to retry with cookies
         if (errorMsg.includes('Sign in') || errorMsg.includes('bot') || errorMsg.includes('confirm your age')) {
@@ -246,8 +242,8 @@ export async function convertVideo(taskId, url, format) {
             try {
                 await runYtDlp(true);
                 success();
-            } catch (err2) {
-                fail(err2.message);
+            } catch (err2: any) {
+                fail(err2.message || 'Retry failed');
             }
         } else {
             // Other error (format, network, etc) - fail immediately
@@ -270,7 +266,7 @@ export async function convertVideo(taskId, url, format) {
         }
     }
 
-    function fail(msg) {
+    function fail(msg: string) {
         console.error(`yt-dlp failed: ${msg}`);
         updateTask(taskId, {
             state: 'error',

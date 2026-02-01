@@ -57,7 +57,7 @@ try {
 }
 
 // Health check endpoint
-app.get('/health', async (req, res) => {
+app.get('/health', async (req: express.Request, res: express.Response) => {
     try {
         const queueStats = await getQueueStats();
         res.json({
@@ -70,7 +70,7 @@ app.get('/health', async (req, res) => {
                 total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({
             status: 'unhealthy',
             timestamp: new Date().toISOString(),
@@ -112,7 +112,7 @@ const runCleanup = () => {
         if (deletedTasks > 0) {
             console.log(`[Cleanup] Removed ${deletedTasks} old tasks from database`);
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error('[Cleanup] Error cleaning tasks:', e.message);
     }
 };
@@ -147,7 +147,7 @@ const startServer = async () => {
 };
 
 // Graceful shutdown
-const shutdown = async (signal) => {
+const shutdown = async (signal: string) => {
     console.log(`\n[Server] Received ${signal}, shutting down gracefully...`);
 
     try {

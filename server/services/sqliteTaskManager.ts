@@ -1,14 +1,9 @@
-/**
- * SQLite Task Manager
- * Persistent task storage using SQLite database
- */
-
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { config } from '../config.js';
+import { Task } from '../types.js';
 
-// Database file path
 // Database file path
 const DB_PATH = config.DB_PATH || path.join(config.ROOT_DIR, 'tasks.db');
 
@@ -83,17 +78,30 @@ const statements = {
     `)
 };
 
+interface TaskRow {
+    id: string;
+    video_id: string;
+    format: string;
+    state: Task['state'];
+    progress: number;
+    filename: string | null;
+    download_url: string | null;
+    error: string | null;
+    created_at: number;
+    updated_at: number;
+}
+
 /**
  * Generate unique task ID
  */
-const generateTaskId = () => {
+const generateTaskId = (): string => {
     return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
 /**
  * Create a new task
  */
-export const createTask = (videoId, format) => {
+export const createTask = (videoId: string, format: string): Partial<Task> => {
     const taskId = generateTaskId();
 
     statements.insert.run(taskId, videoId, format);
@@ -108,8 +116,8 @@ export const createTask = (videoId, format) => {
 /**
  * Get task by ID
  */
-export const getTask = (taskId) => {
-    const row = statements.getById.get(taskId);
+export const getTask = (taskId: string): Task | null => {
+    const row = statements.getById.get(taskId) as TaskRow | undefined;
 
     if (!row) return null;
 
@@ -119,9 +127,9 @@ export const getTask = (taskId) => {
         format: row.format,
         state: row.state,
         progress: row.progress,
-        filename: row.filename,
-        downloadUrl: row.download_url,
-        error: row.error,
+        filename: row.filename || undefined,
+        downloadUrl: row.download_url || undefined,
+        error: row.error || undefined,
         createdAt: row.created_at * 1000,
         updatedAt: row.updated_at * 1000
     };
@@ -130,8 +138,8 @@ export const getTask = (taskId) => {
 /**
  * Find existing task for video/format combo (idempotency)
  */
-export const findExistingTask = (videoId, format) => {
-    const row = statements.findExisting.get(videoId, format);
+export const findExistingTask = (videoId: string, format: string): Task | null => {
+    const row = statements.findExisting.get(videoId, format) as TaskRow | undefined;
 
     if (!row) return null;
 
@@ -150,24 +158,24 @@ export const findExistingTask = (videoId, format) => {
         format: row.format,
         state: row.state,
         progress: row.progress,
-        filename: row.filename,
-        downloadUrl: row.download_url,
-        error: row.error
+        filename: row.filename || undefined,
+        downloadUrl: row.download_url || undefined,
+        error: row.error || undefined
     };
 };
 
 /**
  * Update task state
  */
-export const updateTask = (taskId, updates) => {
+export const updateTask = (taskId: string, updates: Partial<Task>): Task | null => {
     const current = getTask(taskId);
     if (!current) return null;
 
     const state = updates.state || current.state;
     const progress = updates.progress ?? current.progress;
-    const filename = updates.filename || current.filename;
-    const downloadUrl = updates.downloadUrl || current.downloadUrl;
-    const error = updates.error || current.error;
+    const filename = updates.filename || current.filename || null;
+    const downloadUrl = updates.downloadUrl || current.downloadUrl || null;
+    const error = updates.error || current.error || null;
 
     statements.update.run(state, progress, filename, downloadUrl, error, taskId);
 
@@ -177,14 +185,14 @@ export const updateTask = (taskId, updates) => {
 /**
  * Update just the progress (optimized)
  */
-export const updateProgress = (taskId, progress) => {
+export const updateProgress = (taskId: string, progress: number): void => {
     statements.updateProgress.run(progress, taskId);
 };
 
 /**
  * Cleanup old tasks
  */
-export const cleanupOldTasks = (maxAgeMs = config.FILE_MAX_AGE_MS) => {
+export const cleanupOldTasks = (maxAgeMs: number = config.FILE_MAX_AGE_MS): number => {
     const cutoff = Math.floor((Date.now() - maxAgeMs) / 1000);
     const result = statements.cleanup.run(cutoff);
     return result.changes;
@@ -193,19 +201,16 @@ export const cleanupOldTasks = (maxAgeMs = config.FILE_MAX_AGE_MS) => {
 /**
  * Get task statistics
  */
-export const getStats = () => {
+export const getStats = (): any => {
     return statements.getStats.get();
 };
 
 /**
  * Close database connection (for clean shutdown)
  */
-export const closeDatabase = () => {
+export const closeDatabase = (): void => {
     db.close();
 };
 
 // Handle process exit
-// Handle process exit
 process.on('exit', () => db.close());
-// Remove SIGINT handler that forces exit - let main process handle graceful shutdown
-// process.on('SIGINT', ...);
