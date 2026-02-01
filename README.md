@@ -97,6 +97,24 @@ Watch mode for development:
 npm run test:watch
 ```
 
+## 🐳 Docker Development
+
+Build and test in Docker locally before deploying:
+
+```bash
+# Build Docker image
+npm run docker:build
+
+# Build and run container
+npm run docker:test
+
+# Or use docker compose
+npm run docker:up
+
+# Full preflight check (test + build + docker)
+npm run preflight
+```
+
 ## 📁 File Structure
 
 - `/server/` - Modular backend (routes, services, utils, middleware)

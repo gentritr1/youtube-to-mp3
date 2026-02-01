@@ -36,6 +36,10 @@
 | Video Processing | yt-dlp + ffmpeg |
 | Deployment | Docker, Render, Netlify |
 
+### Deployment Considerations
+- **Dockerfile Updates**: Whenever a new feature is added, especially one involving new system dependencies or build steps, ONLY the Dockerfile must be updated to reflect these changes.
+- **Dependencies**: Ensure all new npm packages or system libraries (e.g., via `apt-get` or `apk`) are included in the container build.
+
 ---
 
 ## 🏗️ Architecture Diagram
