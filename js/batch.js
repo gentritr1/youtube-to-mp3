@@ -5,13 +5,17 @@
  * Features smooth animations and progress tracking.
  */
 
+// Configuration
+const API_URL = '';
+
 // Batch state
 const batchState = {
     enabled: false,
     items: [], // { videoId, format, title, url }
     maxItems: 10,
     currentBatchId: null,
-    isProcessing: false
+    isProcessing: false,
+    isClearing: false
 };
 
 // Constants
@@ -205,6 +209,10 @@ function toggleBatchMode() {
  * Add a video to the batch
  */
 function addToBatch(videoId, format, title, url) {
+    if (batchState.isClearing) {
+        return false;
+    }
+
     if (batchState.items.length >= batchState.maxItems) {
         showBatchError(`Maximum ${batchState.maxItems} videos allowed`);
         return false;
@@ -293,8 +301,15 @@ function removeFromBatch(itemId) {
 /**
  * Clear all items from batch
  */
+/**
+ * Clear all items from batch
+ */
 function clearBatch() {
+    if (batchState.items.length === 0) return;
+
+    batchState.isClearing = true;
     const items = batchElements.list.querySelectorAll('.batch-item');
+
     items.forEach((li, index) => {
         setTimeout(() => {
             li.classList.add('removing');
@@ -304,6 +319,7 @@ function clearBatch() {
     setTimeout(() => {
         batchElements.list.innerHTML = '';
         batchState.items = [];
+        batchState.isClearing = false;
         updateBatchUI();
     }, items.length * 50 + 300);
 }
@@ -363,8 +379,11 @@ async function startBatchConversion() {
     `).join('');
 
     try {
+        // Construct URL safely
+        const baseUrl = API_URL.replace(/\/$/, '');
+
         // Call batch convert API
-        const response = await fetch('/api/batch-convert', {
+        const response = await fetch(`${baseUrl}/api/batch-convert`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items })
@@ -393,8 +412,18 @@ async function startBatchConversion() {
  * @param {number} retryCount - Current retry count for error handling
  */
 async function pollBatchProgress(batchId, retryCount = 0) {
+    // Stop if batch ID has changed (new batch started or cleared)
+    if (batchId !== batchState.currentBatchId) {
+        console.log('[Batch] Polling aborted: Batch ID mismatch');
+        return;
+    }
+
     try {
-        const response = await fetch(`/api/batch-progress/${batchId}`);
+        const baseUrl = API_URL.replace(/\/$/, '');
+        const response = await fetch(`${baseUrl}/api/batch-progress/${batchId}`);
+
+        // Check for mismatch again after async fetch
+        if (batchId !== batchState.currentBatchId) return;
 
         if (!response.ok) {
             throw new Error(`Server returned ${response.status}`);
@@ -431,13 +460,18 @@ async function pollBatchProgress(batchId, retryCount = 0) {
 
         // Check if done
         if (progress.state === 'completed' || progress.state === 'partial') {
-            showBatchResults(progress);
+            if (batchId === batchState.currentBatchId) {
+                showBatchResults(progress);
+            }
         } else {
             // Continue polling (reset retry count on success)
             setTimeout(() => pollBatchProgress(batchId, 0), 1000);
         }
 
     } catch (error) {
+        // Check for mismatch before retry
+        if (batchId !== batchState.currentBatchId) return;
+
         console.error('[Batch] Poll error:', error);
 
         if (retryCount < MAX_POLL_RETRIES) {
@@ -521,8 +555,9 @@ function showBatchResults(progress) {
  */
 function resetBatch() {
     batchState.items = [];
-    batchState.currentBatchId = null;
+    batchState.currentBatchId = null; // This invalidates in-flight polls
     batchState.isProcessing = false;
+    batchState.isClearing = false;
 
     batchElements.list.innerHTML = '';
     batchElements.progressList.innerHTML = '';
@@ -542,6 +577,7 @@ function resetBatch() {
  */
 function resetBatchProgress() {
     batchState.isProcessing = false;
+    batchState.currentBatchId = null; // Stop polling
     batchElements.progressSection.classList.add('hidden');
     batchElements.container.classList.remove('hidden');
 }
