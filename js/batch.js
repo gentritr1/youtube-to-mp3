@@ -6,7 +6,8 @@
  */
 
 // Configuration
-const API_URL = '';
+// Use global API_URL if defined, otherwise default to relative path
+const getApiUrl = () => window.API_URL || '';
 
 // Batch state
 const batchState = {
@@ -63,7 +64,19 @@ function createBatchUI() {
             <span class="batch-count hidden">0</span>
         </button>
     `;
-    formatToggle.after(batchToggle);
+
+    // Safely insert toggle
+    if (formatToggle) {
+        formatToggle.after(batchToggle);
+    } else {
+        // Fallback: append to form before submit button
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            form.insertBefore(batchToggle, submitBtn);
+        } else {
+            form.appendChild(batchToggle);
+        }
+    }
 
     // Create batch list container (after form, before preview)
     const batchContainer = document.createElement('div');
@@ -209,7 +222,8 @@ function toggleBatchMode() {
  * Add a video to the batch
  */
 function addToBatch(videoId, format, title, url) {
-    if (batchState.isClearing) {
+    // Block adds if clearing OR processing
+    if (batchState.isClearing || batchState.isProcessing) {
         return false;
     }
 
@@ -380,7 +394,7 @@ async function startBatchConversion() {
 
     try {
         // Construct URL safely
-        const baseUrl = API_URL.replace(/\/$/, '');
+        const baseUrl = getApiUrl().replace(/\/$/, '');
 
         // Call batch convert API
         const response = await fetch(`${baseUrl}/api/batch-convert`, {
@@ -419,7 +433,7 @@ async function pollBatchProgress(batchId, retryCount = 0) {
     }
 
     try {
-        const baseUrl = API_URL.replace(/\/$/, '');
+        const baseUrl = getApiUrl().replace(/\/$/, '');
         const response = await fetch(`${baseUrl}/api/batch-progress/${batchId}`);
 
         // Check for mismatch again after async fetch
@@ -503,6 +517,19 @@ function showBatchResults(progress) {
         const originalItem = batchState.items[index];
 
         if (item.state === 'completed' && item.downloadUrl) {
+            // Validate and sanitize URL
+            let safeUrl = '#';
+            try {
+                // Ensure existing relative URLs are treated correctly if needed, 
+                // but mostly we want to verify the protocol
+                const urlObj = new URL(item.downloadUrl, window.location.origin);
+                if (['http:', 'https:'].includes(urlObj.protocol)) {
+                    safeUrl = urlObj.href;
+                }
+            } catch (e) {
+                console.warn('[Batch] Invalid download URL:', item.downloadUrl);
+            }
+
             return `
                 <li class="batch-download-item completed">
                     <div class="download-item-info">
@@ -512,7 +539,7 @@ function showBatchResults(progress) {
                         </svg>
                         <span>${escapeHtml(item.title || originalItem?.title || 'Video')}</span>
                     </div>
-                    <a href="${item.downloadUrl}" class="download-item-btn" download>
+                    <a href="${safeUrl}" class="download-item-btn" download rel="noopener noreferrer">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
