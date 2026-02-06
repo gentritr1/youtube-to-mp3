@@ -10,6 +10,8 @@ import progressRoute from './progress.js';
 import downloadRoute from './download.js';
 import popularRoute from './popular.js';
 import previewRoute from './preview.js';
+import batchConvertRoute from './batchConvert.js';
+import batchProgressRoute from './batchProgress.js';
 import { conversionLimiter, infoLimiter, downloadLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
@@ -23,8 +25,13 @@ router.use('/download', downloadLimiter, downloadRoute);
 router.use('/popular', infoLimiter, popularRoute);
 router.use('/preview', conversionLimiter, previewRoute);
 
+// Batch downloads - uses conversion limiter since it creates tasks
+router.use('/batch-convert', conversionLimiter, batchConvertRoute);
+router.use('/batch-progress', batchProgressRoute);
+
 // Progress doesn't need strict rate limiting (polling)
 router.use(progressRoute);
 
 export default router;
+
 
