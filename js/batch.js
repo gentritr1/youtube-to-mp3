@@ -501,7 +501,7 @@ function showBatchResults(progress) {
                         </svg>
                         <span>${escapeHtml(item.title || originalItem?.title || 'Video')}</span>
                     </div>
-                    <span class="download-item-error">${item.error || 'Failed'}</span>
+                    <span class="download-item-error">${escapeHtml(item.error || 'Failed')}</span>
                 </li>
             `;
         }
