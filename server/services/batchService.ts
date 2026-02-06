@@ -12,7 +12,7 @@
 
 import { randomUUID } from 'crypto';
 import { BatchItem, BatchJob, BatchProgress, Task } from '../types.js';
-import { createTask as createSingleTask, getTask } from './taskManager.js';
+import { createTask as createSingleTask, getTask, updateTask } from './taskManager.js';
 import { convertVideo } from './ytdlp.js';
 
 // Constants
@@ -79,8 +79,16 @@ export const createBatch = (items: BatchItem[]): BatchJob => {
             title: safeTitle,
         });
 
-        // Start conversion in background (non-blocking)
-        convertVideo(taskId, url, item.format);
+        // Start conversion in background (non-blocking) with error handling
+        convertVideo(taskId, url, item.format).catch((err: Error) => {
+            console.error(`[BatchService] Conversion failed for ${taskId} (${item.videoId}):`, err.message);
+            // Update task to error state
+            updateTask(taskId, {
+                state: 'error',
+                progress: 0,
+                error: err.message || 'Conversion failed'
+            });
+        });
 
         return {
             ...item,
@@ -230,7 +238,16 @@ export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
         title: safeTitle,
     });
 
-    convertVideo(taskId, url, item.format);
+    // Start conversion in background with error handling
+    convertVideo(taskId, url, item.format).catch((err: Error) => {
+        console.error(`[BatchService] Conversion failed for ${taskId} (${item.videoId}):`, err.message);
+        // Update task to error state
+        updateTask(taskId, {
+            state: 'error',
+            progress: 0,
+            error: err.message || 'Conversion failed'
+        });
+    });
 
     // Add to batch
     const newItem: BatchItem = {

@@ -14,6 +14,9 @@ const batchState = {
     isProcessing: false
 };
 
+// Constants
+const MAX_POLL_RETRIES = 5;
+
 // DOM Elements (created dynamically)
 let batchElements = null;
 
@@ -268,15 +271,20 @@ function createBatchItemElement(item) {
  * Remove a video from the batch
  */
 function removeFromBatch(itemId) {
-    const index = batchState.items.findIndex(item => item.id === itemId);
-    if (index === -1) return;
+    // Check if item exists before starting animation
+    const exists = batchState.items.some(item => item.id === itemId);
+    if (!exists) return;
 
     const li = batchElements.list.querySelector(`[data-id="${itemId}"]`);
     if (li) {
         li.classList.add('removing');
         li.addEventListener('animationend', () => {
+            // Fresh lookup after animation to avoid stale index race condition
+            const freshIndex = batchState.items.findIndex(item => item.id === itemId);
+            if (freshIndex !== -1) {
+                batchState.items.splice(freshIndex, 1);
+            }
             li.remove();
-            batchState.items.splice(index, 1);
             updateBatchUI();
         }, { once: true });
     }
@@ -381,10 +389,17 @@ async function startBatchConversion() {
 
 /**
  * Poll batch progress from server
+ * @param {string} batchId - The batch ID to poll
+ * @param {number} retryCount - Current retry count for error handling
  */
-async function pollBatchProgress(batchId) {
+async function pollBatchProgress(batchId, retryCount = 0) {
     try {
         const response = await fetch(`/api/batch-progress/${batchId}`);
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
         const progress = await response.json();
 
         // Update overall progress
@@ -418,13 +433,24 @@ async function pollBatchProgress(batchId) {
         if (progress.state === 'completed' || progress.state === 'partial') {
             showBatchResults(progress);
         } else {
-            // Continue polling
-            setTimeout(() => pollBatchProgress(batchId), 1000);
+            // Continue polling (reset retry count on success)
+            setTimeout(() => pollBatchProgress(batchId, 0), 1000);
         }
 
     } catch (error) {
         console.error('[Batch] Poll error:', error);
-        setTimeout(() => pollBatchProgress(batchId), 2000);
+
+        if (retryCount < MAX_POLL_RETRIES) {
+            // Retry with exponential backoff
+            const delay = Math.min(2000 * Math.pow(1.5, retryCount), 10000);
+            console.log(`[Batch] Retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_POLL_RETRIES})`);
+            setTimeout(() => pollBatchProgress(batchId, retryCount + 1), delay);
+        } else {
+            // Max retries reached - stop polling and show error
+            console.error(`[Batch] Max retries (${MAX_POLL_RETRIES}) reached, stopping poll`);
+            showBatchError('Connection lost. Please check your network and try again.');
+            resetBatchProgress();
+        }
     }
 }
 
