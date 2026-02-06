@@ -31,3 +31,44 @@ export interface VideoInfo {
     author: string;
     duration: string | null;
 }
+
+/**
+ * Batch Download Types
+ */
+export interface BatchItem {
+    videoId: string;
+    format: 'mp3' | 'mp4';
+    title?: string;
+    taskId?: string;  // Assigned when batch is created
+}
+
+export interface BatchJob {
+    batchId: string;
+    items: BatchItem[];
+    state: 'processing' | 'completed' | 'partial' | 'error';
+    totalItems: number;
+    completedItems: number;
+    failedItems: number;
+    processingItems: number;
+    createdAt: number;
+    updatedAt: number;
+}
+
+export interface BatchProgress {
+    batchId: string;
+    state: BatchJob['state'];
+    overallProgress: number;
+    totalItems: number;
+    completedItems: number;
+    failedItems: number;
+    processingItems: number;
+    items: Array<{
+        videoId: string;
+        taskId: string;
+        state: Task['state'];
+        progress: number;
+        title?: string;
+        downloadUrl?: string;
+        error?: string;
+    }>;
+}

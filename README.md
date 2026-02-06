@@ -6,6 +6,7 @@ A clean, modern, and minimal YouTube media converter built with Node.js and Vani
 
 - **Zen Atmosphere**: Ambient pulsing background gradients (Emerald & Violet), subtle noise textures, and fluid fade-in animations for a premium user experience.
 - **Optimized Workflow**: Real-time conversion feedback (Progress Bar) and instant download notifications prioritized above the game for zero friction.
+- **Batch Downloads**: Convert up to 10 videos at once with a smooth animated queue UI, progress tracking for each video, and bulk download links.
 - **Popular Music Discovery**: Curated music suggestions organized by genre (Pop, Hip-Hop, Rock, Electronic, etc.) with one-click conversion.
 - **Audio Preview**: 30-second audio previews with waveform visualization before downloading - includes robust error handling and graceful playback state management.
 - **Mobile Support**: Fully responsive design with touch controls for the game (Swipe to move, Double-tap to switch).
@@ -55,23 +56,26 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 ### Backend (Express & Node.js)
 ```
 /server
-├── index.js              # Entry point: Express app setup
-├── config.js             # Centralized constants (paths, timeouts)
+├── index.ts              # Entry point: Express app setup
+├── config.ts             # Centralized constants (paths, timeouts)
 ├── routes/
-│   ├── index.js          # Route aggregator
-│   ├── info.js           # GET /api/info
-│   ├── convert.js        # POST /api/convert (with idempotency)
-│   ├── progress.js       # GET /api/progress/:taskId
-│   └── download.js       # GET /api/download/:taskId/:filename
+│   ├── index.ts          # Route aggregator
+│   ├── info.ts           # GET /api/info
+│   ├── convert.ts        # POST /api/convert (with idempotency)
+│   ├── progress.ts       # GET /api/progress/:taskId
+│   ├── download.ts       # GET /api/download/:taskId/:filename
+│   ├── batchConvert.ts   # POST /api/batch-convert (batch operations)
+│   └── batchProgress.ts  # GET /api/batch-progress/:batchId
 ├── services/
-│   ├── ytdlp.js          # yt-dlp wrapper (getVideoInfo, convertVideo)
-│   └── taskManager.js    # Task CRUD, persistence, idempotency
+│   ├── ytdlp.ts          # yt-dlp wrapper (getVideoInfo, convertVideo)
+│   ├── taskManager.ts    # Task CRUD, persistence, idempotency
+│   └── batchService.ts   # Batch download orchestration (max 10 videos)
 ├── utils/
-│   ├── parseProgress.js  # Parse yt-dlp output
-│   ├── sanitize.js       # Filename sanitization
-│   └── formatDuration.js # Duration formatting
+│   ├── parseProgress.ts  # Parse yt-dlp output
+│   ├── sanitize.ts       # Filename sanitization
+│   └── formatDuration.ts # Duration formatting
 └── middleware/
-    └── errorHandler.js   # Centralized error handling
+    └── errorHandler.ts   # Centralized error handling
 ```
 
 ### Frontend
@@ -85,7 +89,8 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 
 ### Key Features
 - **Idempotency**: Same video + format = reuse existing task (no duplicate processing).
-- **Persistence**: Tasks survive server restarts via `tasks.json`.
+- **Persistence**: Tasks survive server restarts via SQLite database.
+- **Batch Conversions**: Queue up to 10 videos and convert them all with a single click.
 - **Testability**: Utilities and services are unit-testable in isolation.
 
 ## 🧪 Testing
@@ -123,13 +128,15 @@ npm run preflight
 - `/server/` - Modular backend (routes, services, utils, middleware)
 - `/css/` - Modular styling architecture (base, layout, components, animations)
   - `/css/components/features.css` - Popular videos & audio preview styles
+  - `/css/components/batch.css` - Batch downloads queue & progress styles
 - `/index.html` - Optimized semantic layout with prioritized download area
 - `/app.js` - Frontend service layer handling API calls and game lifecycle
 - `/style.css` - CSS entry point (imports modules)
 - `/game.css` - Snake game specific styles
 - `/js/snake-game.js` - Encapsulated Snake Game logic
 - `/js/features.js` - Popular videos carousel & audio preview module
-- `/tests/` - Vitest unit tests
+- `/js/batch.js` - Batch downloads queue management & progress tracking
+- `/tests/` - Vitest unit tests (259+ tests)
 
 ## 📄 License
 MIT

@@ -262,6 +262,34 @@ const handleSubmit = async (e) => {
         return;
     }
 
+    // Check if batch mode is enabled
+    if (window.batchDownloads && window.batchDownloads.isEnabled()) {
+        // Batch mode: fetch info and add to batch
+        setLoading(true);
+
+        try {
+            const videoInfo = await fetchVideoInfo(videoId);
+            const added = window.batchDownloads.add(
+                videoId,
+                state.format,
+                videoInfo.title,
+                url
+            );
+
+            if (added) {
+                // Clear input for next URL
+                elements.urlInput.value = '';
+                elements.urlInput.focus();
+            }
+        } catch (error) {
+            showError(error.message || 'Could not fetch video info');
+        } finally {
+            setLoading(false);
+        }
+        return;
+    }
+
+    // Single video mode: original behavior
     hideResults();
     setLoading(true);
 
