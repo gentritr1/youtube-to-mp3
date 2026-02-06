@@ -146,11 +146,14 @@ youtube-to-mp3/
 │   │   ├── convert.ts         # POST /api/convert (10/hour)
 │   │   ├── progress.ts        # GET /api/progress/:taskId
 │   │   ├── download.ts        # GET /api/download/:taskId/:filename
+│   │   ├── batchConvert.ts    # ✨ POST /api/batch-convert (batch downloads)
+│   │   ├── batchProgress.ts   # ✨ GET /api/batch-progress/:batchId
 │   ├── services/
 │   │   ├── ytdlp.ts           # yt-dlp wrapper (core logic)
 │   │   ├── taskManager.ts     # Legacy in-memory tasks
 │   │   ├── sqliteTaskManager.ts  # ✨ SQLite persistence
-│   │   └── jobQueue.ts        # ✨ Bull + Redis queue
+│   │   ├── jobQueue.ts        # ✨ Bull + Redis queue
+│   │   └── batchService.ts    # ✨ Batch download orchestration
 │   └── utils/
 │       ├── formatDuration.ts  # Time formatting
 │       ├── parseProgress.ts   # Parse yt-dlp output
@@ -160,7 +163,8 @@ youtube-to-mp3/
 │   ├── config.test.ts         # Config tests (19 tests)
 │   ├── rateLimiter.test.ts    # Rate limiter tests (6 tests)
 │   ├── jobQueue.test.ts       # Job queue tests (10 tests)
-│   └── sqliteTaskManager.test.ts  # SQLite tests
+│   ├── sqliteTaskManager.test.ts  # SQLite tests
+│   └── batchService.test.ts   # ✨ Batch service tests (18 tests)
 │
 ├── 📁 downloads/              # Temp file storage (gitignored)
 ├── 📄 tasks.db                # SQLite database (gitignored)
@@ -187,6 +191,7 @@ youtube-to-mp3/
 | **Snake Game** | `snake-game.js` | Entertainment during wait |
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
 | **Audio Preview** | `features.js`, `features.css` | 30-second audio preview with waveform |
+| **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components
 
@@ -199,9 +204,12 @@ youtube-to-mp3/
 | **Convert Route** | `server/routes/convert.ts` | Start async conversion task |
 | **Progress Route** | `server/routes/progress.ts` | Poll task status |
 | **Download Route** | `server/routes/download.ts` | Serve converted file |
+| **Batch Convert Route** | `server/routes/batchConvert.ts` | Create batch with multiple videos |
+| **Batch Progress Route** | `server/routes/batchProgress.ts` | Poll batch status |
 | **yt-dlp Service** | `server/services/ytdlp.ts` | Wrapper with retry logic |
 | **SQLite Task Manager** | `server/services/sqliteTaskManager.ts` | Persistent task storage |
 | **Job Queue** | `server/services/jobQueue.ts` | Optional Redis-backed queue |
+| **Batch Service** | `server/services/batchService.ts` | Batch download orchestration |
 
 ---
 
@@ -366,12 +374,12 @@ npm run test:node
 | :--- | :--- |
 | **Popular Videos** | Curated music suggestions by genre with carousel UI |
 | **Audio Preview** | 30s audio preview with waveform, robust error handling, and graceful state management |
+| **Batch Downloads** | Convert up to 10 videos at once with aggregated progress tracking |
 
 ### Low Priority / Nice-to-Have
 
 | Feature | Description |
 | :--- | :--- |
-| **Batch Downloads** | Convert multiple videos at once |
 | **PWA Support** | Add service worker for offline capability |
 | **Dark/Light Toggle** | User preference for theme |
 
@@ -402,9 +410,10 @@ npm run test:node
 | Health monitoring | ✅ |
 | Test coverage | ✅ |
 | Graceful shutdown | ✅ |
+| Batch downloads | ✅ |
 
 The modular design makes it easy to maintain and extend. Ready for production deployment! 🏆
 
 ---
 
-*Updated: 2026-02-01*
+*Updated: 2026-02-06*
