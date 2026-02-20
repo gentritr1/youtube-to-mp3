@@ -11,6 +11,16 @@ export interface Task {
     error?: string;
     createdAt?: number;
     updatedAt?: number;
+    audioStats?: AudioStats;
+}
+
+export interface AudioStats {
+    bitrate: number;
+    sampleRate: number;
+    lufs: number;
+    peakDb: number;
+    duration: number;
+    fileSize: number;
 }
 
 export interface QueueStats {

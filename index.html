@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="css/components/conversion-animations.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/features.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/batch.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/components/nerd-stats.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="game.css" media="print" onload="this.media='all'">
 </head>
 
@@ -246,6 +247,43 @@
 
 
         </section>
+
+        <!-- Nerd Stats Panel (outside card for wider layout) -->
+        <div id="nerd-stats" class="nerd-stats hidden">
+            <button type="button" class="nerd-stats-toggle" id="nerd-stats-toggle" aria-expanded="false">
+                <span class="nerd-stats-label">📊 Nerd Stats</span>
+                <svg class="nerd-stats-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+            <div class="nerd-stats-grid" id="nerd-stats-grid">
+                <div class="stat-chip" style="--index: 0">
+                    <span class="stat-value" id="stat-bitrate">—</span>
+                    <span class="stat-label">Bitrate</span>
+                </div>
+                <div class="stat-chip" style="--index: 1">
+                    <span class="stat-value" id="stat-sample-rate">—</span>
+                    <span class="stat-label">Sample Rate</span>
+                </div>
+                <div class="stat-chip" style="--index: 2">
+                    <span class="stat-value" id="stat-lufs">—</span>
+                    <span class="stat-label">Loudness</span>
+                </div>
+                <div class="stat-chip" style="--index: 3">
+                    <span class="stat-value" id="stat-peak">—</span>
+                    <span class="stat-label">Peak dB</span>
+                </div>
+                <div class="stat-chip" style="--index: 4">
+                    <span class="stat-value" id="stat-duration">—</span>
+                    <span class="stat-label">Duration</span>
+                </div>
+                <div class="stat-chip" style="--index: 5">
+                    <span class="stat-value" id="stat-filesize">—</span>
+                    <span class="stat-label">File Size</span>
+                </div>
+            </div>
+        </div>
 
         <!-- Popular Videos Section (Outside the card for better space usage) -->
         <section id="popular-videos-container" class="popular-videos-container">
