@@ -98,6 +98,13 @@ const conversionAnimations = {
 
     start(container) {
         const anim = this.getRandom();
+
+        // Respect users' prefers-reduced-motion setting
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            container.innerHTML = `<div class="anim-label">${anim.label}</div>`;
+            return anim.name;
+        }
+
         container.innerHTML = anim.html + `<div class="anim-label">${anim.label}</div>`;
         return anim.name;
     },

@@ -35,7 +35,7 @@
         radial-gradient(circle at center, transparent 34px, rgba(255, 255, 255, 0.02) 35px, transparent 36px),
         radial-gradient(circle at center, hsl(240 3.7% 10%) 0%, hsl(240 3.7% 8%) 100%);
     border: 2px solid rgba(255, 255, 255, 0.08);
-    animation: vinylSpin 2s linear infinite;
+    animation: spin 2s linear infinite;
     box-shadow:
         0 0 0 3px rgba(255, 255, 255, 0.03),
         0 4px 15px rgba(0, 0, 0, 0.3);
@@ -44,14 +44,13 @@
 /* Label in the center */
 .vinyl-label {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: calc(50% - 14px);
+    left: calc(50% - 14px);
     width: 28px;
     height: 28px;
     border-radius: 50%;
     background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 28%) 100%);
-    animation: vinylSpin 2s linear infinite;
+    animation: spin 2s linear infinite;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -75,7 +74,7 @@
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.15));
     border-radius: 2px;
     transform-origin: top right;
-    animation: tonearmBob 4s ease-in-out infinite;
+    animation: tonearm-bob 4s ease-in-out infinite;
 }
 
 .vinyl-arm::after {
@@ -89,7 +88,7 @@
     border-radius: 50%;
 }
 
-@keyframes vinylSpin {
+@keyframes spin {
     from {
         transform: rotate(0deg);
     }
@@ -99,7 +98,7 @@
     }
 }
 
-@keyframes tonearmBob {
+@keyframes tonearm-bob {
 
     0%,
     100% {
@@ -186,11 +185,11 @@
 }
 
 .reel-left {
-    animation: reelSpinFast 1s linear infinite;
+    animation: spin 1s linear infinite;
 }
 
 .reel-right {
-    animation: reelSpinSlow 1.8s linear infinite;
+    animation: spin 1.8s linear infinite;
 }
 
 /* Tape window */
@@ -218,30 +217,10 @@
             rgba(139, 92, 246, 0.8) 50%,
             rgba(139, 92, 246, 0.5) 80%,
             transparent 100%);
-    animation: tapeMove 2s linear infinite;
+    animation: tape-move 2s linear infinite;
 }
 
-@keyframes reelSpinFast {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes reelSpinSlow {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes tapeMove {
+@keyframes tape-move {
     0% {
         transform: translateX(-30%);
     }
@@ -268,7 +247,7 @@
     border-radius: 4px 4px 2px 2px;
     background: linear-gradient(to top, hsl(142 76% 36%), hsl(142 76% 50%));
     transform-origin: bottom center;
-    animation: eqBounce var(--eq-speed, 0.8s) ease-in-out infinite alternate;
+    animation: eq-bounce var(--eq-speed, 0.8s) ease-in-out infinite alternate;
     animation-delay: var(--eq-delay, 0s);
     min-height: 6px;
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
@@ -321,7 +300,7 @@
     background: linear-gradient(to top, hsl(142 76% 30%), hsl(142 76% 42%));
 }
 
-@keyframes eqBounce {
+@keyframes eq-bounce {
     0% {
         height: 8px;
     }
@@ -384,7 +363,7 @@
     stroke-linecap: round;
     stroke-dasharray: 300;
     stroke-dashoffset: 300;
-    animation: waveformDraw 2.5s ease-in-out infinite;
+    animation: waveform-draw 2.5s ease-in-out infinite;
     filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.3));
 }
 
@@ -403,12 +382,12 @@
     stroke-linecap: round;
     stroke-dasharray: 300;
     stroke-dashoffset: 300;
-    animation: waveformDraw 2.5s ease-in-out infinite;
+    animation: waveform-draw 2.5s ease-in-out infinite;
     opacity: 0.15;
     filter: blur(4px);
 }
 
-@keyframes waveformDraw {
+@keyframes waveform-draw {
     0% {
         stroke-dashoffset: 300;
     }
