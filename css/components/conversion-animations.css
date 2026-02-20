@@ -54,6 +54,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transform-origin: center;
 }
 
 .vinyl-label::after {
@@ -95,6 +96,21 @@
 
     to {
         transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .vinyl-record,
+    .vinyl-label,
+    .vinyl-arm,
+    .reel-left,
+    .reel-right,
+    .cassette-tape,
+    .eq-bar,
+    .waveform-line,
+    .waveform-glow {
+        animation: none !important;
     }
 }
 
@@ -249,7 +265,7 @@
     transform-origin: bottom center;
     animation: eq-bounce var(--eq-speed, 0.8s) ease-in-out infinite alternate;
     animation-delay: var(--eq-delay, 0s);
-    min-height: 6px;
+    height: var(--eq-max, 55px);
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
 }
 
@@ -302,11 +318,11 @@
 
 @keyframes eq-bounce {
     0% {
-        height: 8px;
+        transform: scaleY(0.15);
     }
 
     100% {
-        height: var(--eq-max, 55px);
+        transform: scaleY(1);
     }
 }
 

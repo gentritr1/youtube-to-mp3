@@ -97,6 +97,8 @@ const conversionAnimations = {
     },
 
     start(container) {
+        if (!container) return null;
+
         const anim = this.getRandom();
 
         // Respect users' prefers-reduced-motion setting
@@ -110,6 +112,7 @@ const conversionAnimations = {
     },
 
     stop(container) {
+        if (!container) return;
         container.innerHTML = '';
     }
 };
