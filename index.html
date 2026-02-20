@@ -25,6 +25,7 @@
 
     <!-- Deferred CSS (Not needed for initial render) -->
     <link rel="stylesheet" href="css/components/results.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/components/conversion-animations.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/features.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/batch.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="game.css" media="print" onload="this.media='all'">
@@ -130,6 +131,9 @@
 
             <!-- Progress Section (hidden by default) -->
             <div id="progress-section" class="progress-section hidden">
+                <div id="conversion-animation" class="conversion-animation">
+                    <!-- Animation content injected by JS -->
+                </div>
                 <div class="progress-bar">
                     <div id="progress-fill" class="progress-fill"></div>
                 </div>
