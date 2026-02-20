@@ -83,7 +83,7 @@ const conversionAnimations = {
             name: 'waveform',
             label: '🌊 Drawing waveform...',
             html: `<div class="anim-waveform">
-                <svg class="waveform-svg" viewBox="0 0 140 60">
+                <svg class="waveform-svg" viewBox="0 0 140 60" aria-hidden="true" focusable="false">
                     <path class="waveform-line-bg" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
                     <path class="waveform-glow" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
                     <path class="waveform-line" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
@@ -389,9 +389,17 @@ const handleSubmit = async (e) => {
         // Now show preview with data (no skeleton needed — data is ready)
         elements.thumbnail.src = videoInfo.thumbnail;
         elements.videoTitle.textContent = videoInfo.title;
-        elements.videoDuration.textContent = videoInfo.duration
-            ? `${videoInfo.duration} • ${videoInfo.author}`
-            : `By ${videoInfo.author}`;
+
+        // Safely format duration and author to avoid "By undefined"
+        if (videoInfo.duration && videoInfo.author) {
+            elements.videoDuration.textContent = `${videoInfo.duration} • ${videoInfo.author}`;
+        } else if (videoInfo.duration) {
+            elements.videoDuration.textContent = videoInfo.duration;
+        } else if (videoInfo.author) {
+            elements.videoDuration.textContent = `By ${videoInfo.author}`;
+        } else {
+            elements.videoDuration.textContent = 'Unknown';
+        }
         elements.preview.classList.remove('hidden', 'loading');
 
         // Convert video
