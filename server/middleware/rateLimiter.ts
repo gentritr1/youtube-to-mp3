@@ -9,6 +9,13 @@ import { config } from '../config.js';
 const { RATE_LIMIT } = config;
 
 /**
+ * Helper to skip rate limits on localhost or in development mode
+ */
+const skipOnLocalhost = (req: any) => {
+    return !config.IS_PROD || req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1';
+};
+
+/**
  * Standard API rate limiter
  */
 export const apiLimiter = rateLimit({
@@ -20,8 +27,8 @@ export const apiLimiter = rateLimit({
     },
     standardHeaders: true, // Return rate limit info in headers
     legacyHeaders: false,
-    // Skip rate limiting for health checks
-    skip: (req) => req.path === '/health'
+    // Skip rate limiting for health checks and localhost
+    skip: (req) => req.path === '/health' || skipOnLocalhost(req)
 });
 
 /**
@@ -37,7 +44,8 @@ export const conversionLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     // Use default keyGenerator - works with trust proxy setting
-    validate: { trustProxy: false } // Disable validation error in tests
+    validate: { trustProxy: false }, // Disable validation error in tests
+    skip: skipOnLocalhost
 });
 
 /**
@@ -51,7 +59,8 @@ export const infoLimiter = rateLimit({
         retryAfter: '1 minute'
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skip: skipOnLocalhost
 });
 
 /**
@@ -65,5 +74,6 @@ export const downloadLimiter = rateLimit({
         retryAfter: '10 minutes'
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skip: skipOnLocalhost
 });

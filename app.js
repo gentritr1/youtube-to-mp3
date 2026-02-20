@@ -26,6 +26,7 @@ const elements = {
     downloadLink: document.getElementById('download-link'),
     errorSection: document.getElementById('error-section'),
     errorMessage: document.getElementById('error-message'),
+    conversionAnimation: document.getElementById('conversion-animation'),
 };
 
 // State
@@ -37,6 +38,74 @@ const state = {
 
 // YouTube URL regex patterns
 const YT_REGEX = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
+/**
+ * Conversion Animations - Fun music-themed loading animations
+ * Randomly selects one of 4 animations each conversion
+ */
+const conversionAnimations = {
+    animations: [
+        {
+            name: 'vinyl',
+            label: '🎵 Spinning vinyl...',
+            html: `<div class="anim-vinyl">
+                <div class="vinyl-record"></div>
+                <div class="vinyl-label"></div>
+                <div class="vinyl-arm"></div>
+            </div>`
+        },
+        {
+            name: 'cassette',
+            label: '📼 Loading tape...',
+            html: `<div class="anim-cassette">
+                <div class="cassette-label"></div>
+                <div class="cassette-reel reel-left"></div>
+                <div class="cassette-reel reel-right"></div>
+                <div class="cassette-window">
+                    <div class="cassette-tape"></div>
+                </div>
+            </div>`
+        },
+        {
+            name: 'equalizer',
+            label: '🎛️ Mixing audio...',
+            html: `<div class="anim-equalizer">
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+            </div>`
+        },
+        {
+            name: 'waveform',
+            label: '🌊 Drawing waveform...',
+            html: `<div class="anim-waveform">
+                <svg class="waveform-svg" viewBox="0 0 140 60">
+                    <path class="waveform-line-bg" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
+                    <path class="waveform-glow" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
+                    <path class="waveform-line" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
+                </svg>
+            </div>`
+        }
+    ],
+
+    getRandom() {
+        return this.animations[Math.floor(Math.random() * this.animations.length)];
+    },
+
+    start(container) {
+        const anim = this.getRandom();
+        container.innerHTML = anim.html + `<div class="anim-label">${anim.label}</div>`;
+        return anim.name;
+    },
+
+    stop(container) {
+        container.innerHTML = '';
+    }
+};
 
 /**
  * Extract video ID from YouTube URL
@@ -74,6 +143,8 @@ const hideResults = () => {
     // Reset download animation classes
     elements.downloadSection.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
     elements.errorSection.classList.add('hidden');
+    // Stop any running conversion animation
+    conversionAnimations.stop(elements.conversionAnimation);
     // We DO NOT hide game container here to allow playing across sessions
 };
 
@@ -136,7 +207,6 @@ const fetchVideoInfo = async (videoId) => {
  * Convert video via backend
  */
 const convertVideo = async (videoId, format, title) => {
-    elements.progressSection.classList.remove('hidden');
     updateProgress(10, 'Starting conversion...');
 
     try {
@@ -293,34 +363,32 @@ const handleSubmit = async (e) => {
     hideResults();
     setLoading(true);
 
+    // Show progress section with fun animation immediately
+    elements.progressSection.classList.remove('hidden');
+    conversionAnimations.start(elements.conversionAnimation);
+    updateProgress(0, 'Fetching video info...');
+
     // START THE GAME!
     showGame();
-
-    // Show skeleton preview immediately
-    elements.preview.classList.remove('hidden');
-    elements.preview.classList.add('loading');
 
     try {
         // Fetch video info
         const videoInfo = await fetchVideoInfo(videoId);
         state.videoInfo = videoInfo;
 
-        // Populate preview data
+        // Now show preview with data (no skeleton needed — data is ready)
         elements.thumbnail.src = videoInfo.thumbnail;
         elements.videoTitle.textContent = videoInfo.title;
         elements.videoDuration.textContent = videoInfo.duration
             ? `${videoInfo.duration} • ${videoInfo.author}`
             : `By ${videoInfo.author}`;
-
-        // Remove skeleton state with a brief delay for smooth transition
-        setTimeout(() => {
-            elements.preview.classList.remove('loading');
-        }, 100);
+        elements.preview.classList.remove('hidden', 'loading');
 
         // Convert video
         const { url: downloadUrl, filename } = await convertVideo(videoId, state.format, videoInfo.title);
 
-        // Hide progress, prepare download section
+        // Stop conversion animation and hide progress
+        conversionAnimations.stop(elements.conversionAnimation);
         elements.progressSection.classList.add('hidden');
         elements.downloadLink.href = downloadUrl;
 
