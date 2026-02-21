@@ -21,11 +21,11 @@
     border: 1px solid hsl(225 10% 13%);
     padding: 1.5rem;
     opacity: 0;
-    animation: sectionFadeIn 0.5s ease forwards;
+    animation: section-fade-in 0.5s ease forwards;
     animation-delay: 0.2s;
 }
 
-@keyframes sectionFadeIn {
+@keyframes section-fade-in {
     from {
         opacity: 0;
         transform: translateY(8px);
@@ -336,10 +336,10 @@
 
 .preview-player.active {
     display: block;
-    animation: previewSlideIn 0.3s ease;
+    animation: preview-slide-in 0.3s ease;
 }
 
-@keyframes previewSlideIn {
+@keyframes preview-slide-in {
     from {
         opacity: 0;
         transform: translateY(-6px);
@@ -590,10 +590,10 @@
     border: 2px solid hsl(225 10% 16%);
     border-top-color: var(--foreground);
     border-radius: 50%;
-    animation: spinPreview 0.7s linear infinite;
+    animation: spin-preview 0.7s linear infinite;
 }
 
-@keyframes spinPreview {
+@keyframes spin-preview {
     to {
         transform: rotate(360deg);
     }

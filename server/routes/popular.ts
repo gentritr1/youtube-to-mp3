@@ -32,7 +32,7 @@ const GENRES: Record<string, GenreData> = {
     pop: {
         name: 'Pop Hits',
         icon: '🎤',
-        color: '#10b981',
+        color: '#f43f5e',
         videos: [
             {
                 videoId: 'dQw4w9WgXcQ',

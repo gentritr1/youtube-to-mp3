@@ -160,6 +160,10 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
+    .nerd-stats-toggle[aria-expanded="true"]+.nerd-stats-grid {
+        max-height: 280px;
+    }
+
     .stat-chip:nth-child(2n)::after {
         display: none;
     }

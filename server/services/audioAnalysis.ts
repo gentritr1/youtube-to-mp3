@@ -8,25 +8,6 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
             return reject(new Error('File not found'));
         }
 
-        const args = [
-            '-v', 'error',
-            '-f', 'lavfi',
-            '-i', `amovie='${filePath.replace(/'/g, "'\\''")}':loop=0,ebur128=peak=true`,
-            '-show_entries', 'format=bit_rate,duration:stream=sample_rate',
-            '-of', 'json',
-            filePath
-        ];
-
-        // We run ffprobe with two inputs:
-        // 1. the file itself to get bit_rate, duration, sample_rate
-        // 2. a lavfi filter graph using ebur128 to get loudness and peak
-
-        // Wait, ebur128 is slow for a whole file. Instead, it might be better to just grab the standard metadata if we want it fast. But `ebur128` gives actual LUFS. Let's see if we can just get basic metadata using a quick ffprobe, and if ebur128 is too slow, we can just grab maximum volume or skip it.
-        // Actually, let's keep it simple and accurate.
-
-        // Let's do a multi-pass or just grab standard format info
-        // To grab all at once with ffprobe is hard because ebur128 needs audio processing.
-        // Let's first just grab standard info. 
         // We will run ffprobe once for metadata
         const argsJson = [
             '-v', 'quiet',
@@ -37,11 +18,13 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
         ];
 
         let metadataOutput = '';
+        let stderrOutput = '';
         const proc1 = spawn('ffprobe', argsJson);
         proc1.stdout.on('data', data => metadataOutput += data.toString());
+        proc1.stderr.on('data', data => stderrOutput += data.toString());
         proc1.on('close', async (code) => {
             if (code !== 0) {
-                return reject(new Error('ffprobe metadata analysis failed'));
+                return reject(new Error('ffprobe metadata analysis failed: ' + stderrOutput));
             }
             try {
                 const metadata = JSON.parse(metadataOutput);
@@ -65,8 +48,15 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
                 const proc2 = spawn('ffmpeg', ffmpegArgs);
                 proc2.stderr.on('data', data => eburOutput += data.toString());
                 proc2.on('close', (code2) => {
+                    if (code2 !== 0) {
+                        console.warn('ffmpeg ebur128 failed', code2, eburOutput);
+                        return reject(new Error('ffmpeg analysis failed: ' + eburOutput));
+                    }
+
                     let lufs = 0;
                     let peakDb = 0;
+                    let foundI = false;
+                    let foundPeak = false;
 
                     // Parse eburOutput
                     // Look for:
@@ -78,12 +68,17 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
                     for (const line of lines) {
                         if (line.includes('I:') && line.includes('LUFS')) {
                             const lMatch = line.match(/I:\s+([-\d.]+)\s+LUFS/);
-                            if (lMatch) lufs = parseFloat(lMatch[1]);
+                            if (lMatch) { lufs = parseFloat(lMatch[1]); foundI = true; }
                         }
                         if (line.includes('Peak:') && line.includes('dBFS')) {
                             const pMatch = line.match(/Peak:\s+([-\d.]+)\s+dBFS/);
-                            if (pMatch) peakDb = parseFloat(pMatch[1]);
+                            if (pMatch) { peakDb = parseFloat(pMatch[1]); foundPeak = true; }
                         }
+                    }
+
+                    if (!foundI || !foundPeak) {
+                        console.warn('ffmpeg ebur128 missing output or parse failed');
+                        return reject(new Error('missing LUFS/peak metadata'));
                     }
 
                     resolve({

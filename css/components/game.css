@@ -22,7 +22,7 @@
         0 24px 48px -12px rgba(0, 0, 0, 0.5),
         0 0 0 1px hsl(225 10% 12% / 0.6),
         inset 0 1px 0 hsl(225 10% 20% / 0.3);
-    animation: gamePanelSlideIn 0.45s var(--transition-smooth);
+    animation: game-panel-slide-in 0.45s var(--transition-smooth);
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -35,7 +35,7 @@
     display: none;
 }
 
-@keyframes gamePanelSlideIn {
+@keyframes game-panel-slide-in {
     from {
         opacity: 0;
         transform: translateY(24px) scale(0.95);
@@ -214,14 +214,14 @@
     padding: 0.2rem 0.5rem;
     border-radius: 5px;
     border: 1px solid hsl(38 60% 30%);
-    animation: comboPulse 0.4s ease-out;
+    animation: combo-pulse 0.4s ease-out;
 }
 
 .combo-display.active {
     display: flex;
 }
 
-@keyframes comboPulse {
+@keyframes combo-pulse {
     0% {
         transform: scale(1.15);
         opacity: 0.5;
@@ -245,7 +245,7 @@
     padding: 0.2rem 0.5rem;
     border-radius: 5px;
     border: 1px solid hsl(347 50% 32%);
-    animation: splitPulse 1.5s ease-in-out infinite;
+    animation: split-pulse 1.5s ease-in-out infinite;
 }
 
 .split-indicator.active {
@@ -262,7 +262,7 @@
     color: hsl(347 77% 72%);
 }
 
-@keyframes splitPulse {
+@keyframes split-pulse {
 
     0%,
     100% {
@@ -283,7 +283,7 @@
     font-weight: 600;
     padding: 0.2rem 0.5rem;
     border-radius: 5px;
-    animation: powerupGlow 1s ease-in-out infinite alternate;
+    animation: powerup-glow 1s ease-in-out infinite alternate;
 }
 
 .powerup-indicator.active {
@@ -308,13 +308,13 @@
     border: 1px solid hsl(347 50% 32%);
 }
 
-@keyframes powerupGlow {
+@keyframes powerup-glow {
     from {
-        box-shadow: 0 0 4px currentColor;
+        box-shadow: 0 0 4px currentcolor;
     }
 
     to {
-        box-shadow: 0 0 12px currentColor;
+        box-shadow: 0 0 12px currentcolor;
     }
 }
 
@@ -337,6 +337,7 @@ canvas {
 
 canvas:focus {
     border-color: hsl(225 10% 20%);
+    box-shadow: 0 0 0 2px hsl(225 18% 4%), 0 0 0 4px hsl(225 10% 40%);
     outline: none;
 }
 

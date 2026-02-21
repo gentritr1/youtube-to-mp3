@@ -66,4 +66,74 @@ describe('Audio Analysis Service', () => {
             peakDb: -1.2
         });
     });
+
+    it('should reject with ffprobe stderr on non-zero exit', async () => {
+        (fs.existsSync as any).mockReturnValue(true);
+
+        const mockProc1 = new EventEmitter() as any;
+        mockProc1.stdout = new EventEmitter();
+        mockProc1.stderr = new EventEmitter();
+
+        (child_process.spawn as any).mockImplementation((command: string) => {
+            if (command === 'ffprobe') return mockProc1;
+        });
+
+        const analysisPromise = analyzeAudio('mock/file.mp3');
+
+        mockProc1.stderr.emit('data', 'some ffprobe error');
+        mockProc1.emit('close', 1);
+
+        await expect(analysisPromise).rejects.toThrow('ffprobe metadata analysis failed: some ffprobe error');
+    });
+
+    it('should reject when ffprobe returns invalid JSON', async () => {
+        (fs.existsSync as any).mockReturnValue(true);
+
+        const mockProc1 = new EventEmitter() as any;
+        mockProc1.stdout = new EventEmitter();
+        mockProc1.stderr = new EventEmitter();
+
+        (child_process.spawn as any).mockImplementation((command: string) => {
+            if (command === 'ffprobe') return mockProc1;
+        });
+
+        const analysisPromise = analyzeAudio('mock/file.mp3');
+
+        mockProc1.stdout.emit('data', 'invalid JSON');
+        mockProc1.emit('close', 0);
+
+        await expect(analysisPromise).rejects.toThrow(SyntaxError);
+    });
+
+    it('should reject when ffmpeg misses LUFS/peak values', async () => {
+        (fs.existsSync as any).mockReturnValue(true);
+        (fs.statSync as any).mockReturnValue({ size: 4800000 });
+
+        const mockProc1 = new EventEmitter() as any;
+        mockProc1.stdout = new EventEmitter();
+        mockProc1.stderr = new EventEmitter();
+
+        const mockProc2 = new EventEmitter() as any;
+        mockProc2.stdout = new EventEmitter();
+        mockProc2.stderr = new EventEmitter();
+
+        (child_process.spawn as any).mockImplementation((command: string) => {
+            if (command === 'ffprobe') return mockProc1;
+            if (command === 'ffmpeg') return mockProc2;
+        });
+
+        const analysisPromise = analyzeAudio('mock/file.mp3');
+
+        const mockFfprobeOutput = JSON.stringify({
+            format: { bit_rate: "320000", duration: "120.5" },
+            streams: [{ codec_type: "audio", sample_rate: "44100" }]
+        });
+        mockProc1.stdout.emit('data', mockFfprobeOutput);
+        mockProc1.emit('close', 0);
+
+        mockProc2.stderr.emit('data', 'Missing LUFS output');
+        mockProc2.emit('close', 0);
+
+        await expect(analysisPromise).rejects.toThrow('missing LUFS/peak metadata');
+    });
 });

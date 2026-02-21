@@ -45,6 +45,10 @@ const state = {
     videoInfo: null,
 };
 
+// Module-level timers
+let nerdStatsTimeout = null;
+let statsIntervalId = null;
+
 // YouTube URL regex patterns
 const YT_REGEX = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
@@ -164,6 +168,17 @@ const hideResults = () => {
     elements.errorSection.classList.add('hidden');
     // Stop any running conversion animation
     conversionAnimations.stop(elements.conversionAnimation);
+
+    // Clear background timers
+    if (nerdStatsTimeout) {
+        clearTimeout(nerdStatsTimeout);
+        nerdStatsTimeout = null;
+    }
+    if (statsIntervalId) {
+        clearInterval(statsIntervalId);
+        statsIntervalId = null;
+    }
+
     // Reset nerd stats
     elements.nerdStats.classList.add('hidden');
     elements.nerdStatsToggle.setAttribute('aria-expanded', 'false');
@@ -196,13 +211,26 @@ const updateProgress = (percent, text) => {
  * Nerd Stats formatting helpers
  */
 const formatBitrate = (bps) => {
+    if (!Number.isFinite(bps) || bps == null) return 'N/A';
     const kbps = Math.round(bps / 1000);
     return `${kbps} kbps`;
 };
-const formatSampleRate = (hz) => `${(hz / 1000).toFixed(1)} kHz`;
-const formatLufs = (lufs) => `${lufs.toFixed(1)} LUFS`;
-const formatPeak = (db) => `${db.toFixed(1)} dBTP`;
-const formatFileSize = (bytes) => bytes > 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${(bytes / 1e3).toFixed(0)} KB`;
+const formatSampleRate = (hz) => {
+    if (!Number.isFinite(hz) || hz == null) return 'N/A';
+    return `${(hz / 1000).toFixed(1)} kHz`;
+};
+const formatLufs = (lufs) => {
+    if (!Number.isFinite(lufs) || lufs == null) return 'N/A';
+    return `${lufs.toFixed(1)} LUFS`;
+};
+const formatPeak = (db) => {
+    if (!Number.isFinite(db) || db == null) return 'N/A';
+    return `${db.toFixed(1)} dBTP`;
+};
+const formatFileSize = (bytes) => {
+    if (!Number.isFinite(bytes) || bytes == null) return 'N/A';
+    return bytes > 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${(bytes / 1e3).toFixed(0)} KB`;
+};
 
 const populateNerdStats = (stats) => {
     if (!stats) return;
@@ -302,17 +330,21 @@ const pollProgress = async (taskId) => {
                 populateNerdStats(data.audioStats);
             } else {
                 // Fire a background poll loop to get stats after UI is unblocked
+                if (statsIntervalId) clearInterval(statsIntervalId);
                 let statsAttempts = 0;
-                const statsInterval = setInterval(async () => {
-                    if (statsAttempts > 10) { clearInterval(statsInterval); return; }
+                statsIntervalId = setInterval(async () => {
+                    if (statsAttempts > 10) { clearInterval(statsIntervalId); statsIntervalId = null; return; }
                     try {
                         const r = await fetch(`${API_URL}/api/progress/${taskId}`);
                         const d = await r.json();
                         if (d.audioStats) {
                             populateNerdStats(d.audioStats);
-                            clearInterval(statsInterval);
+                            clearInterval(statsIntervalId);
+                            statsIntervalId = null;
                         }
-                    } catch (e) { }
+                    } catch (e) {
+                        console.debug("background polling error", e);
+                    }
                     statsAttempts++;
                 }, 1000);
             }
@@ -520,8 +552,9 @@ const showDownloadAnimation = () => {
                 }, 3200);
 
                 // Step 5: Show nerd stats toggle bar
-                setTimeout(() => {
+                nerdStatsTimeout = setTimeout(() => {
                     elements.nerdStats.classList.remove('hidden');
+                    nerdStatsTimeout = null;
                 }, 3500);
             });
         });

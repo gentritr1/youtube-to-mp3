@@ -26,4 +26,4 @@ ENV PORT=3000
 EXPOSE 3000
 
 # Update yt-dlp and start server
-CMD pip3 install --upgrade --break-system-packages --root-user-action=ignore yt-dlp && node dist/index.js
+CMD pip3 install --upgrade --break-system-packages --root-user-action=ignore yt-dlp || true; node dist/index.js

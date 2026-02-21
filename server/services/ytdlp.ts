@@ -11,7 +11,7 @@ import { formatDuration } from '../utils/formatDuration.js';
 import { parseProgress } from '../utils/parseProgress.js';
 import { sanitizeFilename } from '../utils/sanitize.js';
 import { getTask, updateTask } from './taskManager.js';
-import { VideoInfo } from '../types.js';
+import { VideoInfo, AudioStats } from '../types.js';
 import { analyzeAudio } from './audioAnalysis.js';
 
 
@@ -263,7 +263,7 @@ export async function convertVideo(taskId: string, url: string, format: string):
                 downloadUrl: `/api/download/${taskId}/${encodeURIComponent(actualFilename)}`
             });
             // Fire-and-forget audio analysis
-            analyzeAudio(finalPath).then((stats: any) => {
+            analyzeAudio(finalPath).then((stats: AudioStats) => {
                 updateTask(taskId, { audioStats: stats });
             }).catch((err: any) => {
                 console.warn(`[AudioAnalysis] Failed for ${taskId}:`, err.message);
