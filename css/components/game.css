@@ -322,7 +322,7 @@
 /* ========================================
    Canvas
    ======================================== */
-canvas {
+.game-container canvas {
     background: hsl(225 18% 4%);
     border: 1px solid hsl(225 10% 13%);
     border-radius: var(--radius);
@@ -335,13 +335,13 @@ canvas {
     height: auto;
 }
 
-canvas:focus {
+.game-container canvas:focus {
     border-color: hsl(225 10% 20%);
     box-shadow: 0 0 0 2px hsl(225 18% 4%), 0 0 0 4px hsl(225 10% 40%);
     outline: none;
 }
 
-canvas.playing {
+.game-container canvas.playing {
     box-shadow:
         0 2px 20px rgba(0, 0, 0, 0.4),
         0 0 30px hsl(160 84% 39% / 0.06),

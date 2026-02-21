@@ -211,24 +211,24 @@ const updateProgress = (percent, text) => {
  * Nerd Stats formatting helpers
  */
 const formatBitrate = (bps) => {
-    if (!Number.isFinite(bps) || bps == null) return 'N/A';
+    if (!Number.isFinite(bps)) return 'N/A';
     const kbps = Math.round(bps / 1000);
     return `${kbps} kbps`;
 };
 const formatSampleRate = (hz) => {
-    if (!Number.isFinite(hz) || hz == null) return 'N/A';
+    if (!Number.isFinite(hz)) return 'N/A';
     return `${(hz / 1000).toFixed(1)} kHz`;
 };
 const formatLufs = (lufs) => {
-    if (!Number.isFinite(lufs) || lufs == null) return 'N/A';
+    if (!Number.isFinite(lufs)) return 'N/A';
     return `${lufs.toFixed(1)} LUFS`;
 };
 const formatPeak = (db) => {
-    if (!Number.isFinite(db) || db == null) return 'N/A';
+    if (!Number.isFinite(db)) return 'N/A';
     return `${db.toFixed(1)} dBTP`;
 };
 const formatFileSize = (bytes) => {
-    if (!Number.isFinite(bytes) || bytes == null) return 'N/A';
+    if (!Number.isFinite(bytes)) return 'N/A';
     return bytes > 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${(bytes / 1e3).toFixed(0)} KB`;
 };
 
@@ -241,9 +241,13 @@ const populateNerdStats = (stats) => {
 
     // Format duration nicely (e.g. 3:42)
     const d = stats.duration;
-    const mins = Math.floor(d / 60);
-    const secs = Math.floor(d % 60).toString().padStart(2, '0');
-    elements.statDuration.textContent = `${mins}:${secs}`;
+    if (Number.isFinite(d)) {
+        const mins = Math.floor(d / 60);
+        const secs = Math.floor(d % 60).toString().padStart(2, '0');
+        elements.statDuration.textContent = `${mins}:${secs}`;
+    } else {
+        elements.statDuration.textContent = 'N/A';
+    }
 
     elements.statFilesize.textContent = formatFileSize(stats.fileSize);
 };
@@ -552,6 +556,9 @@ const showDownloadAnimation = () => {
                 }, 3200);
 
                 // Step 5: Show nerd stats toggle bar
+                if (nerdStatsTimeout) {
+                    clearTimeout(nerdStatsTimeout);
+                }
                 nerdStatsTimeout = setTimeout(() => {
                     elements.nerdStats.classList.remove('hidden');
                     nerdStatsTimeout = null;
@@ -616,10 +623,12 @@ if (gameMinimizeBtn) {
 elements.form.addEventListener('submit', handleSubmit);
 elements.pasteBtn.addEventListener('click', handlePaste);
 elements.urlInput.addEventListener('input', handleUrlInput);
-elements.nerdStatsToggle.addEventListener('click', () => {
-    const isExpanded = elements.nerdStatsToggle.getAttribute('aria-expanded') === 'true';
-    elements.nerdStatsToggle.setAttribute('aria-expanded', !isExpanded);
-});
+if (elements.nerdStatsToggle) {
+    elements.nerdStatsToggle.addEventListener('click', () => {
+        const isExpanded = elements.nerdStatsToggle.getAttribute('aria-expanded') === 'true';
+        elements.nerdStatsToggle.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+    });
+}
 
 // Fix: Use explicit click handlers for format buttons, Removed mousedown preventDefault to fix click issues
 elements.formatBtns.forEach(btn => {
