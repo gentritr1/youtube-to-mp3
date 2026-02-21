@@ -234,7 +234,7 @@ const FeaturesModule = (() => {
             <button 
                 class="genre-tab ${genre.id === state.activeGenre ? 'active' : ''}" 
                 data-genre="${escapeAttr(genre.id)}"
-                style="${genre.id === state.activeGenre ? `background: ${escapeAttr(genre.color)}; border-color: ${escapeAttr(genre.color)};` : ''}"
+                style="${genre.id === state.activeGenre ? `background: ${escapeAttr(genre.color)};` : ''}"
             >
                 <span class="genre-tab-icon">${escapeHtml(genre.icon)}</span>
                 ${escapeHtml(genre.name)}
@@ -263,10 +263,8 @@ const FeaturesModule = (() => {
             tab.classList.toggle('active', isActive);
             if (isActive && genre) {
                 tab.style.background = genre.color;
-                tab.style.borderColor = genre.color;
             } else {
                 tab.style.background = '';
-                tab.style.borderColor = '';
             }
         });
 

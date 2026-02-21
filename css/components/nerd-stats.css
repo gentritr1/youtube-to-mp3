@@ -1,0 +1,174 @@
+/* ========================================
+   Nerd Stats Panel
+   Full-width expandable stats strip
+   ======================================== */
+
+.nerd-stats {
+    width: 100%;
+    max-width: 900px;
+    animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.nerd-stats.hidden {
+    display: none;
+}
+
+/* ---- Toggle button ---- */
+.nerd-stats-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: hsl(225 14% 7%);
+    border: 1px solid hsl(225 10% 13%);
+    border-radius: var(--radius-lg);
+    color: var(--muted-foreground);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.6875rem 1.125rem;
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        border-color var(--transition-fast);
+    letter-spacing: -0.01em;
+}
+
+.nerd-stats-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.nerd-stats-toggle:hover {
+    background-color: hsl(225 12% 10%);
+    color: var(--foreground);
+    border-color: hsl(225 10% 18%);
+}
+
+.nerd-stats-chevron {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    flex-shrink: 0;
+    color: var(--muted-foreground);
+}
+
+.nerd-stats-toggle[aria-expanded="true"] .nerd-stats-chevron {
+    transform: rotate(180deg);
+}
+
+/* Expanded toggle — connects to grid */
+.nerd-stats-toggle[aria-expanded="true"] {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom-color: transparent;
+    color: var(--foreground);
+}
+
+/* ---- Stats grid ---- */
+.nerd-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    background: hsl(225 14% 7%);
+    border: 1px solid hsl(225 10% 13%);
+    border-top: none;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    transition: max-height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+}
+
+.nerd-stats-toggle[aria-expanded="true"]+.nerd-stats-grid {
+    max-height: 200px;
+}
+
+/* ---- Stat chips ---- */
+.stat-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.125rem 0.5rem;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+        opacity 0.3s ease calc(var(--index) * 40ms),
+        transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.2) calc(var(--index) * 40ms),
+        background-color var(--transition-fast);
+    position: relative;
+}
+
+.stat-chip:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background-color: hsl(225 10% 14%);
+}
+
+.nerd-stats-toggle[aria-expanded="true"]+.nerd-stats-grid .stat-chip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.stat-chip:hover {
+    background-color: hsl(225 12% 10%);
+}
+
+/* Value */
+.stat-chip .stat-value {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--foreground);
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+}
+
+/* Label */
+.stat-chip .stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+}
+
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+    .nerd-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat-chip:nth-child(3)::after {
+        display: none;
+    }
+
+    .stat-chip:nth-child(n+4) {
+        border-top: 1px solid hsl(225 10% 13%);
+    }
+}
+
+@media (max-width: 380px) {
+    .nerd-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .nerd-stats-toggle[aria-expanded="true"]+.nerd-stats-grid {
+        max-height: 280px;
+    }
+
+    .stat-chip:nth-child(2n)::after {
+        display: none;
+    }
+
+    .stat-chip:nth-child(n+3) {
+        border-top: 1px solid hsl(225 10% 13%);
+    }
+}

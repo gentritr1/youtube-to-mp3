@@ -27,6 +27,15 @@ const elements = {
     errorSection: document.getElementById('error-section'),
     errorMessage: document.getElementById('error-message'),
     conversionAnimation: document.getElementById('conversion-animation'),
+    nerdStats: document.getElementById('nerd-stats'),
+    nerdStatsToggle: document.getElementById('nerd-stats-toggle'),
+    nerdStatsGrid: document.getElementById('nerd-stats-grid'),
+    statBitrate: document.getElementById('stat-bitrate'),
+    statSampleRate: document.getElementById('stat-sample-rate'),
+    statLufs: document.getElementById('stat-lufs'),
+    statPeak: document.getElementById('stat-peak'),
+    statDuration: document.getElementById('stat-duration'),
+    statFilesize: document.getElementById('stat-filesize'),
 };
 
 // State
@@ -35,6 +44,10 @@ const state = {
     isLoading: false,
     videoInfo: null,
 };
+
+// Module-level timers
+let nerdStatsTimeout = null;
+let statsIntervalId = null;
 
 // YouTube URL regex patterns
 const YT_REGEX = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
@@ -155,6 +168,20 @@ const hideResults = () => {
     elements.errorSection.classList.add('hidden');
     // Stop any running conversion animation
     conversionAnimations.stop(elements.conversionAnimation);
+
+    // Clear background timers
+    if (nerdStatsTimeout) {
+        clearTimeout(nerdStatsTimeout);
+        nerdStatsTimeout = null;
+    }
+    if (statsIntervalId) {
+        clearInterval(statsIntervalId);
+        statsIntervalId = null;
+    }
+
+    // Reset nerd stats
+    elements.nerdStats.classList.add('hidden');
+    elements.nerdStatsToggle.setAttribute('aria-expanded', 'false');
     // We DO NOT hide game container here to allow playing across sessions
 };
 
@@ -178,6 +205,51 @@ const setLoading = (loading) => {
 const updateProgress = (percent, text) => {
     elements.progressFill.style.width = `${percent}%`;
     elements.progressText.textContent = text;
+};
+
+/**
+ * Nerd Stats formatting helpers
+ */
+const formatBitrate = (bps) => {
+    if (!Number.isFinite(bps)) return 'N/A';
+    const kbps = Math.round(bps / 1000);
+    return `${kbps} kbps`;
+};
+const formatSampleRate = (hz) => {
+    if (!Number.isFinite(hz)) return 'N/A';
+    return `${(hz / 1000).toFixed(1)} kHz`;
+};
+const formatLufs = (lufs) => {
+    if (!Number.isFinite(lufs)) return 'N/A';
+    return `${lufs.toFixed(1)} LUFS`;
+};
+const formatPeak = (db) => {
+    if (!Number.isFinite(db)) return 'N/A';
+    return `${db.toFixed(1)} dBTP`;
+};
+const formatFileSize = (bytes) => {
+    if (!Number.isFinite(bytes)) return 'N/A';
+    return bytes > 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${(bytes / 1e3).toFixed(0)} KB`;
+};
+
+const populateNerdStats = (stats) => {
+    if (!stats) return;
+    elements.statBitrate.textContent = formatBitrate(stats.bitrate);
+    elements.statSampleRate.textContent = formatSampleRate(stats.sampleRate);
+    elements.statLufs.textContent = formatLufs(stats.lufs);
+    elements.statPeak.textContent = formatPeak(stats.peakDb);
+
+    // Format duration nicely (e.g. 3:42)
+    const d = stats.duration;
+    if (Number.isFinite(d)) {
+        const mins = Math.floor(d / 60);
+        const secs = Math.floor(d % 60).toString().padStart(2, '0');
+        elements.statDuration.textContent = `${mins}:${secs}`;
+    } else {
+        elements.statDuration.textContent = 'N/A';
+    }
+
+    elements.statFilesize.textContent = formatFileSize(stats.fileSize);
 };
 
 /**
@@ -257,6 +329,30 @@ const pollProgress = async (taskId) => {
         updateProgress(data.progress, data.status);
 
         if (data.state === 'completed') {
+            // Populate stats if present
+            if (data.audioStats) {
+                populateNerdStats(data.audioStats);
+            } else {
+                // Fire a background poll loop to get stats after UI is unblocked
+                if (statsIntervalId) clearInterval(statsIntervalId);
+                let statsAttempts = 0;
+                statsIntervalId = setInterval(async () => {
+                    if (statsAttempts > 10) { clearInterval(statsIntervalId); statsIntervalId = null; return; }
+                    try {
+                        const r = await fetch(`${API_URL}/api/progress/${taskId}`);
+                        const d = await r.json();
+                        if (d.audioStats) {
+                            populateNerdStats(d.audioStats);
+                            clearInterval(statsIntervalId);
+                            statsIntervalId = null;
+                        }
+                    } catch (e) {
+                        console.debug("background polling error", e);
+                    }
+                    statsAttempts++;
+                }, 1000);
+            }
+
             // Ensure download URL is absolute if it starts with /
             const url = data.downloadUrl.startsWith('/')
                 ? `${API_URL}${data.downloadUrl}`
@@ -458,6 +554,15 @@ const showDownloadAnimation = () => {
                     section.classList.add('show-button');
                     resolve();
                 }, 3200);
+
+                // Step 5: Show nerd stats toggle bar
+                if (nerdStatsTimeout) {
+                    clearTimeout(nerdStatsTimeout);
+                }
+                nerdStatsTimeout = setTimeout(() => {
+                    elements.nerdStats.classList.remove('hidden');
+                    nerdStatsTimeout = null;
+                }, 3500);
             });
         });
     });
@@ -506,10 +611,24 @@ const showGame = () => {
     snakeGame.show();
 };
 
+// Game panel minimize toggle
+const gameMinimizeBtn = document.getElementById('game-minimize');
+if (gameMinimizeBtn) {
+    gameMinimizeBtn.addEventListener('click', () => {
+        gameElements.container.classList.toggle('minimized');
+    });
+}
+
 // Event Listeners
 elements.form.addEventListener('submit', handleSubmit);
 elements.pasteBtn.addEventListener('click', handlePaste);
 elements.urlInput.addEventListener('input', handleUrlInput);
+if (elements.nerdStatsToggle) {
+    elements.nerdStatsToggle.addEventListener('click', () => {
+        const isExpanded = elements.nerdStatsToggle.getAttribute('aria-expanded') === 'true';
+        elements.nerdStatsToggle.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+    });
+}
 
 // Fix: Use explicit click handlers for format buttons, Removed mousedown preventDefault to fix click issues
 elements.formatBtns.forEach(btn => {

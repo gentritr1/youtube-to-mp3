@@ -21,6 +21,7 @@
     position: relative;
     width: 90px;
     height: 90px;
+    filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.15));
 }
 
 .vinyl-record {
@@ -35,10 +36,32 @@
         radial-gradient(circle at center, transparent 34px, rgba(255, 255, 255, 0.02) 35px, transparent 36px),
         radial-gradient(circle at center, hsl(240 3.7% 10%) 0%, hsl(240 3.7% 8%) 100%);
     border: 2px solid rgba(255, 255, 255, 0.08);
-    animation: spin 2s linear infinite;
+    animation: vinyl-spin 2s linear infinite;
     box-shadow:
         0 0 0 3px rgba(255, 255, 255, 0.03),
-        0 4px 15px rgba(0, 0, 0, 0.3);
+        0 4px 15px rgba(0, 0, 0, 0.3),
+        inset 0 0 20px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Reflective highlight sweep */
+.vinyl-record::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg,
+            transparent 0deg,
+            rgba(255, 255, 255, 0.06) 30deg,
+            transparent 60deg,
+            transparent 180deg,
+            rgba(255, 255, 255, 0.04) 210deg,
+            transparent 240deg);
+    animation: vinyl-spin 2s linear infinite;
+    pointer-events: none;
 }
 
 /* Label in the center */
@@ -50,11 +73,14 @@
     height: 28px;
     border-radius: 50%;
     background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 28%) 100%);
-    animation: spin 2s linear infinite;
+    animation: vinyl-spin 2s linear infinite;
     display: flex;
     align-items: center;
     justify-content: center;
     transform-origin: center;
+    box-shadow:
+        0 0 8px rgba(16, 185, 129, 0.4),
+        0 0 20px rgba(16, 185, 129, 0.15);
 }
 
 .vinyl-label::after {
@@ -89,6 +115,17 @@
     border-radius: 50%;
 }
 
+@keyframes vinyl-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Keep old 'spin' name as alias for cassette reels etc */
 @keyframes spin {
     from {
         transform: rotate(0deg);

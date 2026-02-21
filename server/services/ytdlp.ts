@@ -12,6 +12,7 @@ import { parseProgress } from '../utils/parseProgress.js';
 import { sanitizeFilename } from '../utils/sanitize.js';
 import { getTask, updateTask } from './taskManager.js';
 import { VideoInfo } from '../types.js';
+import { analyzeAudio } from './audioAnalysis.js';
 
 
 /**
@@ -260,6 +261,12 @@ export async function convertVideo(taskId: string, url: string, format: string):
                 status: 'Complete!',
                 filename: actualFilename,
                 downloadUrl: `/api/download/${taskId}/${encodeURIComponent(actualFilename)}`
+            });
+            // Fire-and-forget audio analysis
+            analyzeAudio(finalPath).then((stats) => {
+                updateTask(taskId, { audioStats: stats });
+            }).catch((err: any) => {
+                console.warn(`[AudioAnalysis] Failed for ${taskId}:`, err.message);
             });
         } else {
             fail(`Output file missing: ${actualFilename}`);
