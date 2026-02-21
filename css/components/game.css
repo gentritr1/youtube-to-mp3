@@ -1,0 +1,662 @@
+/* ========================================
+   Snake Game — Floating Panel
+   Modern glassmorphic floating widget
+   ======================================== */
+
+/* ---- Floating panel shell ---- */
+.game-container.game-floating {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 1000;
+    width: 360px;
+    max-height: calc(100vh - 2.5rem);
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(165deg,
+            hsl(225 16% 8% / 0.97),
+            hsl(225 14% 6% / 0.98));
+    border: 1px solid hsl(225 10% 16%);
+    border-radius: var(--radius-xl);
+    box-shadow:
+        0 24px 48px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px hsl(225 10% 12% / 0.6),
+        inset 0 1px 0 hsl(225 10% 20% / 0.3);
+    animation: gamePanelSlideIn 0.45s var(--transition-smooth);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.game-container.game-floating.hidden {
+    display: none;
+}
+
+@keyframes gamePanelSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ---- Panel header ---- */
+.game-floating .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    background: hsl(225 14% 9% / 0.8);
+    border-bottom: 1px solid hsl(225 10% 14%);
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.game-floating .game-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--foreground);
+    letter-spacing: -0.01em;
+}
+
+.game-floating .game-title::before {
+    content: none;
+}
+
+.game-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.game-floating .game-score {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.game-floating .game-score #score {
+    color: var(--emerald);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.game-minimize-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid hsl(225 10% 18%);
+    border-radius: 5px;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.game-minimize-btn:hover {
+    background: hsl(225 12% 16%);
+    color: var(--foreground);
+    border-color: hsl(225 10% 24%);
+}
+
+.game-minimize-btn svg {
+    transition: transform 0.2s ease;
+}
+
+/* ---- Scrollable body ---- */
+.game-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    overflow-y: auto;
+    max-height: calc(100vh - 5rem);
+}
+
+/* Custom scrollbar for game body */
+.game-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.game-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.game-body::-webkit-scrollbar-thumb {
+    background: hsl(225 10% 22%);
+    border-radius: 2px;
+}
+
+/* ---- Minimized state ---- */
+.game-floating.minimized .game-body {
+    display: none;
+}
+
+.game-floating.minimized {
+    max-height: none;
+}
+
+.game-floating.minimized .game-header {
+    border-bottom: none;
+    border-radius: var(--radius-xl);
+}
+
+.game-floating.minimized .game-minimize-btn svg {
+    transform: rotate(90deg);
+}
+
+
+/* ========================================
+   Game UI Elements
+   ======================================== */
+
+/* ---- Stats bar ---- */
+.game-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 0.4rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    color: var(--muted-foreground);
+    background: hsl(225 12% 10%);
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    border: 1px solid hsl(225 10% 14%);
+}
+
+.stat-item .stat-icon {
+    font-size: 0.75rem;
+}
+
+.stat-item .stat-value {
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+/* ---- Combo display ---- */
+.combo-display {
+    display: none;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--amber);
+    background: var(--amber-soft);
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    border: 1px solid hsl(38 60% 30%);
+    animation: comboPulse 0.4s ease-out;
+}
+
+.combo-display.active {
+    display: flex;
+}
+
+@keyframes comboPulse {
+    0% {
+        transform: scale(1.15);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ---- Split indicator ---- */
+.split-indicator {
+    display: none;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--rose);
+    background: var(--rose-soft);
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    border: 1px solid hsl(347 50% 32%);
+    animation: splitPulse 1.5s ease-in-out infinite;
+}
+
+.split-indicator.active {
+    display: flex;
+}
+
+.split-indicator kbd {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    padding: 0.05rem 0.25rem;
+    background: hsl(347 50% 28%);
+    border: 1px solid hsl(347 50% 38%);
+    border-radius: 3px;
+    color: hsl(347 77% 72%);
+}
+
+@keyframes splitPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 4px hsl(347 77% 50% / 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 12px hsl(347 77% 50% / 0.35);
+    }
+}
+
+/* ---- Power-up indicator ---- */
+.powerup-indicator {
+    display: none;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    animation: powerupGlow 1s ease-in-out infinite alternate;
+}
+
+.powerup-indicator.active {
+    display: flex;
+}
+
+.powerup-indicator.ghost {
+    color: var(--violet);
+    background: var(--violet-soft);
+    border: 1px solid hsl(258 60% 40%);
+}
+
+.powerup-indicator.speed {
+    color: var(--sky);
+    background: var(--sky-soft);
+    border: 1px solid hsl(199 60% 35%);
+}
+
+.powerup-indicator.split {
+    color: var(--rose);
+    background: var(--rose-soft);
+    border: 1px solid hsl(347 50% 32%);
+}
+
+@keyframes powerupGlow {
+    from {
+        box-shadow: 0 0 4px currentColor;
+    }
+
+    to {
+        box-shadow: 0 0 12px currentColor;
+    }
+}
+
+
+/* ========================================
+   Canvas
+   ======================================== */
+canvas {
+    background: hsl(225 18% 4%);
+    border: 1px solid hsl(225 10% 13%);
+    border-radius: var(--radius);
+    box-shadow:
+        0 2px 20px rgba(0, 0, 0, 0.4),
+        inset 0 0 40px rgba(0, 0, 0, 0.5);
+    image-rendering: auto;
+    transition: box-shadow var(--transition-base);
+    max-width: 100%;
+    height: auto;
+}
+
+canvas:focus {
+    border-color: hsl(225 10% 20%);
+    outline: none;
+}
+
+canvas.playing {
+    box-shadow:
+        0 2px 20px rgba(0, 0, 0, 0.4),
+        0 0 30px hsl(160 84% 39% / 0.06),
+        inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+
+/* ========================================
+   Controls & Legend
+   ======================================== */
+
+/* ---- Power-up legend ---- */
+.powerup-legend {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.25rem 0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.625rem;
+    font-family: var(--font-mono);
+    color: var(--muted-foreground);
+    letter-spacing: -0.01em;
+}
+
+.legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+.legend-dot.normal {
+    background: var(--emerald);
+    box-shadow: 0 0 6px var(--emerald);
+}
+
+.legend-dot.golden {
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+}
+
+.legend-dot.speed {
+    background: var(--sky);
+    box-shadow: 0 0 6px var(--sky);
+}
+
+.legend-dot.ghost {
+    background: var(--violet);
+    box-shadow: 0 0 6px var(--violet);
+}
+
+.legend-dot.split {
+    background: var(--rose);
+    box-shadow: 0 0 6px var(--rose);
+}
+
+/* ---- Game footer / controls ---- */
+.game-restart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.game-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.game-controls {
+    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    color: var(--muted-foreground);
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.game-controls kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.625rem;
+    font-family: var(--font-mono);
+    background: hsl(225 12% 12%);
+    border: 1px solid hsl(225 10% 18%);
+    border-radius: 3px;
+    color: var(--foreground);
+    line-height: 1;
+}
+
+.control-divider {
+    color: var(--muted-foreground);
+    opacity: 0.35;
+    margin: 0 0.1rem;
+}
+
+/* ---- Restart button ---- */
+.restart-btn {
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius);
+    background: var(--emerald);
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow:
+        0 2px 8px hsl(160 84% 39% / 0.3);
+}
+
+.restart-btn:hover {
+    background: hsl(160 84% 44%);
+    transform: translateY(-1px);
+    box-shadow:
+        0 4px 16px hsl(160 84% 39% / 0.35);
+}
+
+.restart-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+
+/* ========================================
+   High Scores
+   ======================================== */
+.high-scores {
+    width: 100%;
+    padding: 0.75rem;
+    background: hsl(225 14% 8%);
+    border-radius: var(--radius);
+    border: 1px solid hsl(225 10% 13%);
+}
+
+.high-scores h4 {
+    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    color: var(--muted-foreground);
+    margin-bottom: 0.5rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.high-scores h4::before {
+    content: '🏆';
+    font-size: 0.8rem;
+}
+
+#high-scores-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#high-scores-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.4rem;
+    border-bottom: 1px solid hsl(225 10% 11%);
+    border-radius: 4px;
+    transition: background var(--transition-fast);
+}
+
+#high-scores-list li:last-child {
+    border-bottom: none;
+}
+
+#high-scores-list li:first-child span:last-child {
+    color: var(--amber);
+    font-weight: 700;
+}
+
+#high-scores-list span:first-child {
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+}
+
+#high-scores-list span:last-child {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--emerald);
+}
+
+
+/* ========================================
+   Responsive
+   ======================================== */
+@media (max-width: 768px) {
+    .game-container.game-floating {
+        width: 320px;
+        bottom: 1rem;
+        right: 1rem;
+    }
+
+    .game-floating .game-header,
+    .powerup-legend,
+    .game-restart-container,
+    .game-footer,
+    .high-scores {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-container.game-floating {
+        width: calc(100% - 1rem);
+        left: 0.5rem;
+        right: 0.5rem;
+        bottom: 0.5rem;
+        border-radius: var(--radius-lg);
+    }
+
+    .game-floating .game-header {
+        font-size: 0.8rem;
+    }
+
+    .game-stats {
+        gap: 0.35rem;
+    }
+
+    .stat-item,
+    .powerup-indicator,
+    .split-indicator {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.45rem;
+    }
+
+    .powerup-legend {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        font-size: 0.6rem;
+    }
+
+    .legend-item {
+        min-width: 55px;
+    }
+
+    .game-controls {
+        font-size: 0.625rem;
+    }
+
+    .game-controls kbd {
+        font-size: 0.575rem;
+        padding: 0.05rem 0.2rem;
+    }
+
+    .restart-btn {
+        font-size: 0.75rem;
+        padding: 0.4rem 1rem;
+    }
+
+    .high-scores h4 {
+        font-size: 0.65rem;
+    }
+
+    #high-scores-list li {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.35rem;
+    }
+}
+
+/* ---- Hover effects (pointer devices only) ---- */
+@media (hover: hover) and (pointer: fine) {
+    .restart-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    #high-scores-list li:hover {
+        background: hsl(225 12% 10%);
+    }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+    .game-container.game-floating {
+        animation: none;
+    }
+
+    .restart-btn {
+        animation: none;
+    }
+}
+
+/* ---- Mobile controls ---- */
+.mobile-controls {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: inline;
+    }
+
+    .desktop-controls {
+        display: none;
+    }
+}

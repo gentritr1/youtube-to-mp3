@@ -1,7 +1,6 @@
 /* ========================================
    Nerd Stats Panel
-   Lives outside the converter-card,
-   uses the full container width (up to 900px)
+   Full-width expandable stats strip
    ======================================== */
 
 .nerd-stats {
@@ -14,64 +13,68 @@
     display: none;
 }
 
-/* ---- Toggle Button ---- */
+/* ---- Toggle button ---- */
 .nerd-stats-toggle {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    background: hsl(225 14% 7%);
+    border: 1px solid hsl(225 10% 13%);
+    border-radius: var(--radius-lg);
     color: var(--muted-foreground);
+    font-family: var(--font-sans);
     font-size: 0.8125rem;
     font-weight: 500;
-    font-family: inherit;
     cursor: pointer;
-    padding: 0.75rem 1.25rem;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    padding: 0.6875rem 1.125rem;
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        border-color var(--transition-fast);
+    letter-spacing: -0.01em;
 }
 
 .nerd-stats-label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 .nerd-stats-toggle:hover {
-    background-color: var(--secondary);
+    background-color: hsl(225 12% 10%);
     color: var(--foreground);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: hsl(225 10% 18%);
 }
 
 .nerd-stats-chevron {
-    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     flex-shrink: 0;
+    color: var(--muted-foreground);
 }
 
 .nerd-stats-toggle[aria-expanded="true"] .nerd-stats-chevron {
     transform: rotate(180deg);
 }
 
-/* When expanded, round only the top of the toggle */
+/* Expanded toggle — connects to grid */
 .nerd-stats-toggle[aria-expanded="true"] {
-    border-radius: var(--radius) var(--radius) 0 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     border-bottom-color: transparent;
     color: var(--foreground);
-    background-color: var(--card);
 }
 
-/* ---- Stats Grid ---- */
+/* ---- Stats grid ---- */
 .nerd-stats-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 0;
     max-height: 0;
     overflow: hidden;
-    background: var(--card);
-    border: 1px solid var(--border);
+    background: hsl(225 14% 7%);
+    border: 1px solid hsl(225 10% 13%);
     border-top: none;
-    border-radius: 0 0 var(--radius) var(--radius);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     transition: max-height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
 }
 
@@ -79,24 +82,23 @@
     max-height: 200px;
 }
 
-/* ---- Stat Chips ---- */
+/* ---- Stat chips ---- */
 .stat-chip {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem 0.5rem;
+    padding: 1.125rem 0.5rem;
     text-align: center;
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     transition:
-        opacity 0.35s ease calc(var(--index) * 50ms),
-        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2) calc(var(--index) * 50ms),
-        background-color 0.2s ease;
+        opacity 0.3s ease calc(var(--index) * 40ms),
+        transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.2) calc(var(--index) * 40ms),
+        background-color var(--transition-fast);
     position: relative;
 }
 
-/* Vertical dividers between chips */
 .stat-chip:not(:last-child)::after {
     content: '';
     position: absolute;
@@ -104,7 +106,7 @@
     top: 25%;
     height: 50%;
     width: 1px;
-    background-color: var(--border);
+    background-color: hsl(225 10% 14%);
 }
 
 .nerd-stats-toggle[aria-expanded="true"]+.nerd-stats-grid .stat-chip {
@@ -113,27 +115,30 @@
 }
 
 .stat-chip:hover {
-    background-color: var(--secondary);
+    background-color: hsl(225 12% 10%);
 }
 
-/* Large bold value */
-.stat-value {
+/* Value */
+.stat-chip .stat-value {
+    font-family: var(--font-mono);
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--foreground);
     line-height: 1.2;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
     white-space: nowrap;
 }
 
-/* Tiny muted label */
-.stat-label {
-    font-size: 0.625rem;
+/* Label */
+.stat-chip .stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
     color: var(--muted-foreground);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.08em;
     white-space: nowrap;
 }
+
 
 /* ---- Responsive ---- */
 @media (max-width: 640px) {
@@ -141,13 +146,12 @@
         grid-template-columns: repeat(3, 1fr);
     }
 
-    /* Add a horizontal rule between the two rows */
     .stat-chip:nth-child(3)::after {
         display: none;
     }
 
     .stat-chip:nth-child(n+4) {
-        border-top: 1px solid var(--border);
+        border-top: 1px solid hsl(225 10% 13%);
     }
 }
 
@@ -161,6 +165,6 @@
     }
 
     .stat-chip:nth-child(n+3) {
-        border-top: 1px solid var(--border);
+        border-top: 1px solid hsl(225 10% 13%);
     }
 }

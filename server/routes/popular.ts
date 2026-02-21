@@ -32,7 +32,7 @@ const GENRES: Record<string, GenreData> = {
     pop: {
         name: 'Pop Hits',
         icon: '🎤',
-        color: '#ff6b9d',
+        color: '#10b981',
         videos: [
             {
                 videoId: 'dQw4w9WgXcQ',
@@ -67,7 +67,7 @@ const GENRES: Record<string, GenreData> = {
     hiphop: {
         name: 'Hip-Hop & Rap',
         icon: '🎧',
-        color: '#9b59b6',
+        color: '#8b5cf6',
         videos: [
             {
                 videoId: 'RgKAFK5djSk',
@@ -102,7 +102,7 @@ const GENRES: Record<string, GenreData> = {
     electronic: {
         name: 'Electronic & EDM',
         icon: '🎛️',
-        color: '#00d4ff',
+        color: '#0ea5e9',
         videos: [
             {
                 videoId: 'y6120QOlsfU',
@@ -137,7 +137,7 @@ const GENRES: Record<string, GenreData> = {
     rock: {
         name: 'Rock Classics',
         icon: '🎸',
-        color: '#e74c3c',
+        color: '#ef4444',
         videos: [
             {
                 videoId: 'fJ9rUzIMcZQ',
@@ -172,7 +172,7 @@ const GENRES: Record<string, GenreData> = {
     chill: {
         name: 'Chill & Acoustic',
         icon: '☕',
-        color: '#2ecc71',
+        color: '#f59e0b',
         videos: [
             {
                 videoId: 'YQHsXMglC9A',

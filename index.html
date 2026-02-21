@@ -10,10 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Optimize Font Loading -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"
-        media="print" onload="this.media='all'">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'">
     <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+            rel="stylesheet">
     </noscript>
 
     <!-- Core CSS (Parallel Downloads) -->
@@ -29,7 +32,7 @@
     <link rel="stylesheet" href="css/components/features.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/batch.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/nerd-stats.css" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="game.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/components/game.css" media="print" onload="this.media='all'">
 </head>
 
 <body>
@@ -176,76 +179,6 @@
                 <p id="error-message"></p>
             </div>
 
-            <!-- Mini Game Area -->
-            <div id="game-container" class="game-container hidden">
-                <div class="game-header">
-                    <span class="game-title">Play Snake!</span>
-                    <span class="game-score">Score: <span id="score">0</span></span>
-                </div>
-
-                <!-- Stats Bar -->
-                <div class="game-stats">
-                    <div class="stat-item">
-                        <span class="stat-icon">📏</span>
-                        <span>Length:</span>
-                        <span id="snake-length" class="stat-value">3</span>
-                    </div>
-                    <div id="combo-display" class="combo-display">
-                        <span>🔥</span>
-                        <span id="combo-count">x2</span>
-                        <span>COMBO!</span>
-                    </div>
-                    <div id="split-indicator" class="split-indicator">
-                        <span>🐍</span>
-                        <span>Snake <span id="split-snake-num">1</span></span>
-                        <kbd>X</kbd>
-                    </div>
-                    <div id="powerup-indicator" class="powerup-indicator">
-                        <span id="powerup-icon">👻</span>
-                        <span id="powerup-timer">5s</span>
-                    </div>
-                </div>
-
-                <canvas id="game-canvas" width="320" height="320"></canvas>
-
-                <!-- Power-up Legend -->
-                <div class="powerup-legend">
-                    <div class="legend-item"><span class="legend-dot normal"></span>+10</div>
-                    <div class="legend-item"><span class="legend-dot golden"></span>2x Grow</div>
-                    <div class="legend-item"><span class="legend-dot speed"></span>Speed</div>
-                    <div class="legend-item"><span class="legend-dot ghost"></span>Ghost</div>
-                    <div class="legend-item"><span class="legend-dot split"></span>Split</div>
-                </div>
-
-                <!-- Play Again Button (centered) -->
-                <div class="game-restart-container">
-                    <button id="restart-btn" class="restart-btn hidden">Play Again</button>
-                </div>
-
-                <div class="game-footer">
-                    <p class="game-controls">
-                        <span class="desktop-controls">
-                            <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> move
-                            <span class="control-divider">•</span>
-                            <kbd>X</kbd> switch
-                        </span>
-                        <span class="mobile-controls hidden-desktop">
-                            <span class="control-divider">|</span>
-                            Swipe to move • Double tap switch
-                        </span>
-                    </p>
-                </div>
-
-                <!-- High Scores -->
-                <div class="high-scores">
-                    <h4>High Scores</h4>
-                    <ul id="high-scores-list">
-                        <!-- Scores will be injected here -->
-                    </ul>
-                </div>
-            </div>
-
-
         </section>
 
         <!-- Nerd Stats Panel (outside card for wider layout) -->
@@ -295,6 +228,86 @@
         </footer>
     </main>
 
+    <!-- Floating Game Panel -->
+    <div id="game-container" class="game-container game-floating hidden">
+        <div class="game-header">
+            <span class="game-title">🐍 Snake</span>
+            <div class="game-header-right">
+                <span class="game-score">Score: <span id="score">0</span></span>
+                <button type="button" id="game-minimize" class="game-minimize-btn" aria-label="Minimize game">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="game-body">
+            <!-- Stats Bar -->
+            <div class="game-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">📏</span>
+                    <span>Length:</span>
+                    <span id="snake-length" class="stat-value">3</span>
+                </div>
+                <div id="combo-display" class="combo-display">
+                    <span>🔥</span>
+                    <span id="combo-count">x2</span>
+                    <span>COMBO!</span>
+                </div>
+                <div id="split-indicator" class="split-indicator">
+                    <span>🐍</span>
+                    <span>Snake <span id="split-snake-num">1</span></span>
+                    <kbd>X</kbd>
+                </div>
+                <div id="powerup-indicator" class="powerup-indicator">
+                    <span id="powerup-icon">👻</span>
+                    <span id="powerup-timer">5s</span>
+                </div>
+            </div>
+
+            <canvas id="game-canvas" width="320" height="320"></canvas>
+
+            <!-- Power-up Legend -->
+            <div class="powerup-legend">
+                <div class="legend-item"><span class="legend-dot normal"></span>+10</div>
+                <div class="legend-item"><span class="legend-dot golden"></span>2x Grow</div>
+                <div class="legend-item"><span class="legend-dot speed"></span>Speed</div>
+                <div class="legend-item"><span class="legend-dot ghost"></span>Ghost</div>
+                <div class="legend-item"><span class="legend-dot split"></span>Split</div>
+            </div>
+
+            <!-- Play Again Button (centered) -->
+            <div class="game-restart-container">
+                <button id="restart-btn" class="restart-btn hidden">Play Again</button>
+            </div>
+
+            <div class="game-footer">
+                <p class="game-controls">
+                    <span class="desktop-controls">
+                        <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> move
+                        <span class="control-divider">•</span>
+                        <kbd>X</kbd> switch
+                    </span>
+                    <span class="mobile-controls hidden-desktop">
+                        <span class="control-divider">|</span>
+                        Swipe to move • Double tap switch
+                    </span>
+                </p>
+            </div>
+
+            <!-- High Scores -->
+            <div class="high-scores">
+                <h4>High Scores</h4>
+                <ul id="high-scores-list">
+                    <!-- Scores will be injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game/Game.js" defer></script>
     <script src="js/snake-game.js" defer></script>
     <script src="js/features.js" defer></script>
     <script src="js/batch.js" defer></script>

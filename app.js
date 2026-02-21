@@ -571,6 +571,14 @@ const showGame = () => {
     snakeGame.show();
 };
 
+// Game panel minimize toggle
+const gameMinimizeBtn = document.getElementById('game-minimize');
+if (gameMinimizeBtn) {
+    gameMinimizeBtn.addEventListener('click', () => {
+        gameElements.container.classList.toggle('minimized');
+    });
+}
+
 // Event Listeners
 elements.form.addEventListener('submit', handleSubmit);
 elements.pasteBtn.addEventListener('click', handlePaste);
