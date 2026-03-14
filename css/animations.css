@@ -10,7 +10,7 @@ body::before {
     transform: translate(-50%, -50%);
     z-index: -2;
     pointer-events: none;
-    animation: zenPulsePrimary 20s ease-in-out infinite alternate;
+    animation: zen-pulse-primary 20s ease-in-out infinite alternate;
     mix-blend-mode: screen;
 }
 
@@ -26,7 +26,7 @@ html::before {
     transform: translate(-50%, -50%);
     z-index: -2;
     pointer-events: none;
-    animation: zenPulseSecondary 25s ease-in-out infinite alternate-reverse;
+    animation: zen-pulse-secondary 25s ease-in-out infinite alternate-reverse;
     mix-blend-mode: screen;
 }
 
@@ -44,37 +44,37 @@ body::after {
     opacity: 0.5;
 }
 
-@keyframes zenPulsePrimary {
+@keyframes zen-pulse-primary {
     0% {
-        transform: translate(-50%, -50%) scale(1) translate(0, 0);
-        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(calc(1 + var(--audio-pulse-scale, 0))) translate(0, 0);
+        opacity: calc(0.6 + var(--audio-pulse-opacity, 0));
     }
 
     50% {
-        transform: translate(-50%, -50%) scale(1.1) translate(-2%, 2%);
-        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(calc(1.1 + var(--audio-pulse-scale, 0))) translate(-2%, 2%);
+        opacity: calc(0.8 + var(--audio-pulse-opacity, 0));
     }
 
     100% {
-        transform: translate(-50%, -50%) scale(0.95) translate(2%, -2%);
-        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(calc(0.95 + var(--audio-pulse-scale, 0))) translate(2%, -2%);
+        opacity: calc(0.6 + var(--audio-pulse-opacity, 0));
     }
 }
 
-@keyframes zenPulseSecondary {
+@keyframes zen-pulse-secondary {
     0% {
-        transform: translate(-50%, -50%) scale(1.1) translate(2%, -2%);
-        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(calc(1.1 + var(--audio-pulse-scale, 0))) translate(2%, -2%);
+        opacity: calc(0.7 + var(--audio-pulse-opacity, 0));
     }
 
     50% {
-        transform: translate(-50%, -50%) scale(0.9) translate(-2%, -2%);
-        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(calc(0.9 + var(--audio-pulse-scale, 0))) translate(-2%, -2%);
+        opacity: calc(0.5 + var(--audio-pulse-opacity, 0));
     }
 
     100% {
-        transform: translate(-50%, -50%) scale(1.05) translate(0, 2%);
-        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(calc(1.05 + var(--audio-pulse-scale, 0))) translate(0, 2%);
+        opacity: calc(0.8 + var(--audio-pulse-opacity, 0));
     }
 }
 

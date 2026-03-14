@@ -382,6 +382,10 @@ npm run test:node
 | :--- | :--- |
 | **PWA Support** | ✅ Added service worker for offline capability and manifest for installation |
 | **Dark/Light Toggle** | User preference for theme |
+| **Guess the Track Challenge** | A 5-second trivia mini-game that plays a random snippet from popular feed to win multipliers or unlock secrets |
+| **Pomodoro Focus Room** | A distraction-free mode that streams long Lo-Fi links with a minimalist timer and hides conversion UI |
+| **Beat-matched Crossfade** | Seamless DJ-style track transitions when switching previews |
+| **Automated Lyrics** | Extract subtitle files or fetch lyrics during conversion to show karaoke-style scrolling over the background |
 
 ---
 
