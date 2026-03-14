@@ -380,7 +380,7 @@ npm run test:node
 
 | Feature | Description |
 | :--- | :--- |
-| **PWA Support** | Add service worker for offline capability |
+| **PWA Support** | ✅ Added service worker for offline capability and manifest for installation |
 | **Dark/Light Toggle** | User preference for theme |
 
 ---
