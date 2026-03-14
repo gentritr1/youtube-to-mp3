@@ -40,7 +40,11 @@ export class LyricsController {
                 if (data.events) {
                     data.events.forEach(event => {
                         if (event.segs && event.segs.length > 0) {
-                            const line = event.segs.map(s => s.utf8).join('').trim();
+                            const line = event.segs
+                                .filter(s => typeof s.utf8 === 'string')
+                                .map(s => s.utf8)
+                                .join('')
+                                .trim();
                             if (line) {
                                 this.lyrics.push({ text: line, time: event.tStartMs });
                             }
@@ -86,6 +90,11 @@ export class LyricsController {
             el.id = `lyric-${index}`;
             this.container.appendChild(el);
         });
+
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
 
         // Simple mock playback - display one line every 2.5 seconds
         // Real sync would need audio timing, but this provides the karaoke vibe during wait
