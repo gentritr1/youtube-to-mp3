@@ -90,7 +90,7 @@ class GuessTrackGame {
             this.isLoading = false;
             return;
         }
-
+        const tracks = FeaturesModule.getRandomTracks(4);
         if (tracks.length === 0) {
              this.elements.statusText.textContent = "Waiting for music feed to load...";
              // Retry in 1 second
