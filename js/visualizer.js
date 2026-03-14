@@ -9,6 +9,7 @@ const AudioVisualizer = (() => {
     let analyserNode = null;
     let currentAudioElement = null;
     let sourceNode = null; // Track current source node
+    const mediaSourceMap = new WeakMap(); // Cache nodes to avoid "already created" errors
     let animationFrameId = null;
     let dataArray = null;
 
@@ -20,6 +21,10 @@ const AudioVisualizer = (() => {
             analyserNode = audioContext.createAnalyser();
             analyserNode.fftSize = 256; // 128 frequency bins
             analyserNode.smoothingTimeConstant = 0.8;
+
+            // Connect analyser to destination once
+            analyserNode.connect(audioContext.destination);
+
             dataArray = new Uint8Array(analyserNode.frequencyBinCount);
         }
 
@@ -34,26 +39,36 @@ const AudioVisualizer = (() => {
 
         initContext();
 
-        // If this is a new audio element, create a new media element source.
-        // Web Audio limits one MediaElementAudioSourceNode per HTMLMediaElement.
+        // If this is a new audio element, switch the source node connection
         if (currentAudioElement !== audioElement) {
-            // Disconnect previous node if exists
+            // Disconnect current source node from the analyser
             if (sourceNode) {
                 sourceNode.disconnect();
-                sourceNode = null;
             }
 
             currentAudioElement = audioElement;
-            try {
-                // Cross origin needed in some browsers to capture audio from external domains
-                audioElement.crossOrigin = "anonymous";
-                sourceNode = audioContext.createMediaElementSource(audioElement);
 
-                // Route: Audio Element -> Analyser -> Destination (Speakers)
-                sourceNode.connect(analyserNode);
-                analyserNode.connect(audioContext.destination);
-            } catch (error) {
-                console.warn('[AudioVisualizer] Failed to connect audio node. Audio may be cross-origin restricted.', error);
+            // Retrieve from cache or create new
+            sourceNode = mediaSourceMap.get(audioElement);
+
+            if (!sourceNode) {
+                try {
+                    // Cross origin needed in some browsers to capture audio from external domains
+                    audioElement.crossOrigin = "anonymous";
+                    sourceNode = audioContext.createMediaElementSource(audioElement);
+                    mediaSourceMap.set(audioElement, sourceNode);
+                } catch (error) {
+                    console.warn('[AudioVisualizer] Failed to create source node.', error);
+                }
+            }
+
+            // Connect the new/cached source to the analyser
+            if (sourceNode) {
+                try {
+                    sourceNode.connect(analyserNode);
+                } catch (error) {
+                    console.warn('[AudioVisualizer] Failed to connect source node.', error);
+                }
             }
         }
 
