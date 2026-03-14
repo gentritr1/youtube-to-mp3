@@ -4,6 +4,9 @@
 
 export class LyricsController {
     constructor(container) {
+        if (!container) {
+            console.error('LyricsController requires a valid DOM element as container');
+        }
         this.container = container;
         this.active = false;
         this.lyrics = [];
@@ -75,6 +78,7 @@ export class LyricsController {
     }
 
     start() {
+        if (!this.container) return;
         if (this.lyrics.length === 0) return;
         
         this.active = true;
@@ -100,7 +104,7 @@ export class LyricsController {
         // Real sync would need audio timing, but this provides the karaoke vibe during wait
         this.intervalId = setInterval(() => {
             this.advanceTarget();
-        }, 2200);
+        }, 2500);
 
         this.advanceTarget(); // Show first line immediately
     }
@@ -113,7 +117,7 @@ export class LyricsController {
 
         // Mark previous as past
         if (this.currentIndex > 0) {
-            const prev = document.getElementById(`lyric-${this.currentIndex - 1}`);
+            const prev = this.container.querySelector(`#lyric-${this.currentIndex - 1}`);
             if (prev) {
                 prev.classList.remove('active');
                 prev.classList.add('past');
@@ -121,7 +125,7 @@ export class LyricsController {
         }
 
         // Mark current as active
-        const current = document.getElementById(`lyric-${this.currentIndex}`);
+        const current = this.container.querySelector(`#lyric-${this.currentIndex}`);
         if (current) {
             current.classList.add('active');
         }
@@ -130,6 +134,8 @@ export class LyricsController {
     }
 
     stop() {
+        if (!this.container) return;
+
         this.active = false;
         if (this.intervalId) {
             clearInterval(this.intervalId);
