@@ -9,6 +9,7 @@ A clean, modern, and minimal YouTube media converter built with Node.js and Vani
 - **Batch Downloads**: Convert up to 10 videos at once with a smooth animated queue UI, progress tracking for each video, and bulk download links.
 - **Popular Music Discovery**: Curated music suggestions organized by genre (Pop, Hip-Hop, Rock, Electronic, etc.) with one-click conversion.
 - **Audio Preview**: 30-second audio previews with waveform visualization before downloading - includes robust error handling and graceful playback state management.
+- **PWA Support**: Fully installable as a standalone app on Desktop and Mobile with offline capabilities powered by a custom Service Worker.
 - **Mobile Support**: Fully responsive design with touch controls for the game (Swipe to move, Double-tap to switch).
 - **Snake Game (Enhanced Edition)**: A modular, feature-rich snake game with:
   - **Dynamic Power-ups**: Golden (3x growth), Speed, Ghost (no collision), and Split.
@@ -80,6 +81,7 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 
 ### Frontend
 - **Vanilla JS & ES6+**: High performance with zero heavy framework overhead.
+- **PWA Ready**: Includes `manifest.json` and a robust `service-worker.js` for caching static assets and enabling offline usage.
 - **Modular CSS Architecture**: Organized style modules (`/css/components`, `/css/layout`, `/css/animations`) for maintainability.
 - **Premium Animations**: Physics-based SVG animations (Walking Note, Spinning Reel) for a polished user experience.
 - **Modular Game Engine**: The Snake Game is self-contained in `js/snake-game.js`.
@@ -129,7 +131,10 @@ npm run preflight
 - `/css/` - Modular styling architecture (base, layout, components, animations)
   - `/css/components/features.css` - Popular videos & audio preview styles
   - `/css/components/batch.css` - Batch downloads queue & progress styles
+- `/assets/icons/` - High-quality generated app icons for PWA installation
 - `/index.html` - Optimized semantic layout with prioritized download area
+- `/manifest.json` - Web App Manifest for PWA identity
+- `/service-worker.js` - Service Worker for offline caching and API routing
 - `/app.js` - Frontend service layer handling API calls and game lifecycle
 - `/style.css` - CSS entry point (imports modules)
 - `/game.css` - Snake game specific styles
