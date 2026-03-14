@@ -50,7 +50,8 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
     // Ignore API calls and non-GET requests
-    if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+    const pathname = new URL(event.request.url).pathname;
+    if (event.request.method !== 'GET' || pathname === '/api' || pathname.startsWith('/api/')) {
         return;
     }
 
@@ -64,7 +65,9 @@ self.addEventListener('fetch', (event) => {
             fetch(event.request)
                 .then((networkResponse) => {
                     return caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, networkResponse.clone());
+                        if (networkResponse && networkResponse.ok) {
+                            cache.put(event.request, networkResponse.clone());
+                        }
                         return networkResponse;
                     });
                 })
