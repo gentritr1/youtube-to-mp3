@@ -10,6 +10,24 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+            return res.status(400).json({ message: 'Invalid URL protocol' });
+        }
+        
+        const allowedDomains = ['youtube.com', 'youtu.be', 'google.com', 'googlevideo.com'];
+        const isAllowed = allowedDomains.some(domain => 
+            parsedUrl.hostname === domain || parsedUrl.hostname.endsWith(`.${domain}`)
+        );
+
+        if (!isAllowed) {
+            return res.status(400).json({ message: 'Domain not allowed' });
+        }
+    } catch (e) {
+        return res.status(400).json({ message: 'Invalid URL' });
+    }
+
+    try {
         const response = await fetch(url);
         
         if (!response.ok) {

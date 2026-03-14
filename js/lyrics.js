@@ -15,7 +15,7 @@ export class LyricsController {
         if (!subtitles || !subtitles.length) return false;
         
         // Try to find English, otherwise fallback to the first available
-        const sub = subtitles.find(s => s.lang.startsWith('en')) || subtitles[0];
+        const sub = subtitles.find(s => s.lang?.startsWith('en')) || subtitles[0];
         
         try {
             console.log(`[Lyrics] Fetching subtitles for lang: ${sub.lang}`);

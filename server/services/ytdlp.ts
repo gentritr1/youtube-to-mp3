@@ -110,13 +110,16 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
                     const info = JSON.parse(stdout);
                     
                     const subtitles: { lang: string; url: string; ext: string }[] = [];
+                    const seenLangs = new Set<string>();
+                    
                     const extractSubs = (source: any) => {
                         if (!source) return;
                         for (const [lang, subs] of Object.entries(source)) {
-                            if (Array.isArray(subs as any[])) {
+                            if (!seenLangs.has(lang) && Array.isArray(subs as any[])) {
                                 const bestSub = (subs as any[]).find(s => s.ext === 'vtt' || s.ext === 'json3') || (subs as any[])[0];
                                 if (bestSub && bestSub.url) {
                                     subtitles.push({ lang, url: bestSub.url, ext: bestSub.ext });
+                                    seenLangs.add(lang);
                                 }
                             }
                         }

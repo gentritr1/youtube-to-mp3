@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import lyricsRoute from '../server/routes/lyrics.js';
@@ -11,6 +11,11 @@ const originalFetch = global.fetch;
 
 describe('Lyrics API Route', () => {
     beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    afterEach(() => {
+        global.fetch = originalFetch;
         vi.restoreAllMocks();
     });
 

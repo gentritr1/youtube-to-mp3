@@ -25,7 +25,7 @@ router.use('/download', downloadLimiter, downloadRoute);
 // New features: Popular Videos & Audio Preview
 router.use('/popular', infoLimiter, popularRoute);
 router.use('/preview', conversionLimiter, previewRoute);
-router.use('/lyrics', lyricsRoute);
+router.use('/lyrics', infoLimiter, lyricsRoute);
 
 // Batch downloads - uses conversion limiter since it creates tasks
 router.use('/batch-convert', conversionLimiter, batchConvertRoute);
