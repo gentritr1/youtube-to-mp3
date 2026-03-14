@@ -9,6 +9,7 @@ A clean, modern, and minimal YouTube media converter built with Node.js and Vani
 - **Batch Downloads**: Convert up to 10 videos at once with a smooth animated queue UI, progress tracking for each video, and bulk download links.
 - **Popular Music Discovery**: Curated music suggestions organized by genre (Pop, Hip-Hop, Rock, Electronic, etc.) with one-click conversion.
 - **Audio Preview**: 30-second audio previews with waveform visualization before downloading - includes robust error handling and graceful playback state management.
+- **Automated Lyrics**: Displays a karaoke-style scrolling lyrics overlay in the background during the video conversion process, fetching native subtitles automatically.
 - **Interactive Audio Visualizer**: Native Web Audio API implementation that analyzes audio frequencies in real-time to drive background Zen animations, creating a reactive "beat-synced" atmosphere.
 - **PWA Support**: Fully installable as a standalone app on Desktop and Mobile with offline capabilities powered by a custom Service Worker. (See [test_pwa.md](test_pwa.md) for testing instructions).
 - **Snake Game (Enhanced Edition)**: A modular, feature-rich snake game with:

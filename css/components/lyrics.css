@@ -1,0 +1,62 @@
+.lyrics-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    background: radial-gradient(circle at center, rgba(30, 30, 50, 0.4) 0%, transparent 70%);
+}
+
+.lyrics-background:not(.hidden) {
+    opacity: 1;
+}
+
+.lyric-line {
+    font-size: 3rem;
+    font-weight: 800;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.1);
+    white-space: pre-wrap;
+    max-width: 80%;
+    position: absolute;
+    transform: translateY(100vh);
+    transition: transform 3s linear, color 0.5s ease-in-out;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    /* Fancy glassmorphism/gradient effect for active text */
+    background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    margin: 0;
+}
+
+.lyric-line.active {
+    opacity: 1;
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateY(0);
+    text-shadow: 0 0 30px rgba(100, 150, 255, 0.5);
+    /* Active glow */
+    -webkit-text-fill-color: initial;
+}
+
+.lyric-line.past {
+    transform: translateY(-100vh);
+    opacity: 0;
+    color: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+    .lyric-line {
+        font-size: 1.5rem;
+    }
+}

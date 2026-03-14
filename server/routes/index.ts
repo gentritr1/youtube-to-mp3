@@ -12,6 +12,7 @@ import popularRoute from './popular.js';
 import previewRoute from './preview.js';
 import batchConvertRoute from './batchConvert.js';
 import batchProgressRoute from './batchProgress.js';
+import lyricsRoute from './lyrics.js';
 import { conversionLimiter, infoLimiter, downloadLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
@@ -24,6 +25,7 @@ router.use('/download', downloadLimiter, downloadRoute);
 // New features: Popular Videos & Audio Preview
 router.use('/popular', infoLimiter, popularRoute);
 router.use('/preview', conversionLimiter, previewRoute);
+router.use('/lyrics', lyricsRoute);
 
 // Batch downloads - uses conversion limiter since it creates tasks
 router.use('/batch-convert', conversionLimiter, batchConvertRoute);

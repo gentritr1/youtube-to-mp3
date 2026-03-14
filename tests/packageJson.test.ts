@@ -253,15 +253,17 @@ describe('package.json Configuration', () => {
 
     it('should not have unused @types packages', () => {
       const runtimeDeps = Object.keys(packageJson.dependencies || {});
-      const typesDeps = Object.keys(packageJson.devDependencies || {})
-        .filter(dep => dep.startsWith('@types/'));
+      const devDepsKeys = Object.keys(packageJson.devDependencies || {});
+      const allDeps = [...runtimeDeps, ...devDepsKeys];
+      
+      const typesDeps = devDepsKeys.filter(dep => dep.startsWith('@types/'));
 
       typesDeps.forEach(typesDep => {
         const packageName = typesDep.replace('@types/', '');
         // Special cases: node is always needed, better-sqlite3 is valid
         const isValidTypes = packageName === 'node' ||
-          runtimeDeps.includes(packageName) ||
-          runtimeDeps.includes(packageName.replace(/-/g, ''));
+          allDeps.includes(packageName) ||
+          allDeps.includes(packageName.replace(/-/g, ''));
         expect(isValidTypes).toBe(true);
       });
     });

@@ -6,6 +6,8 @@
 // Configuration
 const API_URL = '';
 
+import { LyricsController } from './js/lyrics.js';
+
 // DOM Elements
 const elements = {
     form: document.getElementById('converter-form'),
@@ -44,6 +46,8 @@ const state = {
     isLoading: false,
     videoInfo: null,
 };
+
+const lyricsController = new LyricsController(document.getElementById('lyrics-background'));
 
 // Module-level timers
 let nerdStatsTimeout = null;
@@ -168,6 +172,8 @@ const hideResults = () => {
     elements.errorSection.classList.add('hidden');
     // Stop any running conversion animation
     conversionAnimations.stop(elements.conversionAnimation);
+    
+    lyricsController.stop();
 
     // Clear background timers
     if (nerdStatsTimeout) {
@@ -498,12 +504,18 @@ const handleSubmit = async (e) => {
         }
         elements.preview.classList.remove('hidden', 'loading');
 
+        // Check for subtitles and start karaoke
+        if (videoInfo.subtitles && videoInfo.subtitles.length > 0) {
+            fetchLyricsAndStartKaraoke(videoInfo.subtitles);
+        }
+
         // Convert video
         const { url: downloadUrl, filename } = await convertVideo(videoId, state.format, videoInfo.title);
 
         // Stop conversion animation and hide progress
         conversionAnimations.stop(elements.conversionAnimation);
         elements.progressSection.classList.add('hidden');
+        lyricsController.stop();
         elements.downloadLink.href = downloadUrl;
 
         // Start orchestrated download animation
@@ -514,6 +526,21 @@ const handleSubmit = async (e) => {
         showError(error.message || 'An error occurred');
     } finally {
         setLoading(false);
+    }
+};
+
+/**
+ * Handle background lyrics fetch & start
+ */
+const fetchLyricsAndStartKaraoke = async (subtitles) => {
+    try {
+        const loaded = await lyricsController.loadSubtitles(subtitles);
+        // Only start if still actively loading (user didn't change page/cancel)
+        if (loaded && state.isLoading) {
+            lyricsController.start();
+        }
+    } catch (e) {
+        console.warn('Silent fail for lyrics', e);
     }
 };
 

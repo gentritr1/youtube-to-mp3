@@ -77,8 +77,8 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
                 '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
-                // Use mweb (mobile web) client which works reliably
-                '--extractor-args', 'youtube:player_client=mweb',
+                // Use default or robust fallback clients
+                '--extractor-args', 'youtube:player_client=ios,android,web',
                 '--geo-bypass',
                 '--socket-timeout', '30',
             ];
@@ -108,12 +108,30 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
                 }
                 try {
                     const info = JSON.parse(stdout);
+                    
+                    const subtitles: { lang: string; url: string; ext: string }[] = [];
+                    const extractSubs = (source: any) => {
+                        if (!source) return;
+                        for (const [lang, subs] of Object.entries(source)) {
+                            if (Array.isArray(subs as any[])) {
+                                const bestSub = (subs as any[]).find(s => s.ext === 'vtt' || s.ext === 'json3') || (subs as any[])[0];
+                                if (bestSub && bestSub.url) {
+                                    subtitles.push({ lang, url: bestSub.url, ext: bestSub.ext });
+                                }
+                            }
+                        }
+                    };
+
+                    extractSubs(info.subtitles);
+                    extractSubs(info.automatic_captions);
+
                     resolve({
                         id: info.id,
                         title: info.title,
                         thumbnail: info.thumbnail,
                         author: info.uploader || info.channel,
                         duration: formatDuration(info.duration),
+                        subtitles: subtitles.length > 0 ? subtitles : undefined
                     });
                 } catch (e) {
                     reject(new Error('Failed to parse video info'));
@@ -157,8 +175,8 @@ export async function convertVideo(taskId: string, url: string, format: string):
         '--no-check-certificates',
         '--force-ipv4',
         '--referer', 'https://www.youtube.com/',
-        // Use mweb (mobile web) client which works reliably for downloads
-        '--extractor-args', 'youtube:player_client=mweb',
+        // Robust fallback clients to avoid empty formats on certain videos
+        '--extractor-args', 'youtube:player_client=ios,android,web',
         '--geo-bypass',
         '--socket-timeout', '30',
     ];
@@ -175,7 +193,7 @@ export async function convertVideo(taskId: string, url: string, format: string):
             '--progress'
         ]
         : [
-            '-f', 'bestvideo+bestaudio/best',
+            '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/bestvideo+bestaudio/best',
             '--merge-output-format', 'mp4',
             '--no-playlist',
             ...(config.IS_PROD ? ['--concurrent-fragments', '1'] : []),
