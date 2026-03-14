@@ -9,8 +9,8 @@ A clean, modern, and minimal YouTube media converter built with Node.js and Vani
 - **Batch Downloads**: Convert up to 10 videos at once with a smooth animated queue UI, progress tracking for each video, and bulk download links.
 - **Popular Music Discovery**: Curated music suggestions organized by genre (Pop, Hip-Hop, Rock, Electronic, etc.) with one-click conversion.
 - **Audio Preview**: 30-second audio previews with waveform visualization before downloading - includes robust error handling and graceful playback state management.
-- **PWA Support**: Fully installable as a standalone app on Desktop and Mobile with offline capabilities powered by a custom Service Worker.
-- **Mobile Support**: Fully responsive design with touch controls for the game (Swipe to move, Double-tap to switch).
+- **Interactive Audio Visualizer**: Native Web Audio API implementation that analyzes audio frequencies in real-time to drive background Zen animations, creating a reactive "beat-synced" atmosphere.
+- **PWA Support**: Fully installable as a standalone app on Desktop and Mobile with offline capabilities powered by a custom Service Worker. (See [test_pwa.md](test_pwa.md) for testing instructions).
 - **Snake Game (Enhanced Edition)**: A modular, feature-rich snake game with:
   - **Dynamic Power-ups**: Golden (3x growth), Speed, Ghost (no collision), and Split.
   - **Snake Splitting**: Ability to cut your snake in half and switch between them with `X`.
@@ -81,6 +81,7 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 
 ### Frontend
 - **Vanilla JS & ES6+**: High performance with zero heavy framework overhead.
+- **Reactive Audio**: Real-time frequency analysis via `js/visualizer.js` connecting HTMLMediaElements to CSS Custom Properties.
 - **PWA Ready**: Includes `manifest.json` and a robust `service-worker.js` for caching static assets and enabling offline usage.
 - **Modular CSS Architecture**: Organized style modules (`/css/components`, `/css/layout`, `/css/animations`) for maintainability.
 - **Premium Animations**: Physics-based SVG animations (Walking Note, Spinning Reel) for a polished user experience.
@@ -139,6 +140,7 @@ npm run preflight
 - `/style.css` - CSS entry point (imports modules)
 - `/game.css` - Snake game specific styles
 - `/js/snake-game.js` - Encapsulated Snake Game logic
+- `/js/visualizer.js` - Interactive Web Audio Visualizer module
 - `/js/features.js` - Popular videos carousel & audio preview module
 - `/js/batch.js` - Batch downloads queue management & progress tracking
 - `/tests/` - Vitest unit tests (259+ tests)
