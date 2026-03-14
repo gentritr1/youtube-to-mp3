@@ -362,7 +362,7 @@ const FeaturesModule = (() => {
             state.previewAudio.pause();
             state.previewAudio = null;
         }
-        if (window.AudioVisualizer) AudioVisualizer.pause();
+        if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
         state.isPreviewPlaying = false;
         elements.previewPlayBtn.classList.remove('playing');
 
@@ -430,7 +430,7 @@ const FeaturesModule = (() => {
                     state.previewAudio.pause();
                     state.previewAudio = null;
                 }
-                if (window.AudioVisualizer) AudioVisualizer.pause();
+                if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
                 state.isPreviewPlaying = false;
                 elements.previewPlayBtn.classList.remove('playing');
 
@@ -454,7 +454,7 @@ const FeaturesModule = (() => {
             state.previewAudio.addEventListener('ended', () => {
                 state.isPreviewPlaying = false;
                 elements.previewPlayBtn.classList.remove('playing');
-                if (window.AudioVisualizer) AudioVisualizer.pause();
+                if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
             });
 
             // Show content
@@ -481,7 +481,7 @@ const FeaturesModule = (() => {
             state.previewAudio.pause();
             state.previewAudio = null;
         }
-        if (window.AudioVisualizer) AudioVisualizer.pause();
+        if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
         state.isPreviewPlaying = false;
         state.previewVideoId = null;
         elements.previewPlayer.classList.remove('active');
@@ -503,13 +503,13 @@ const FeaturesModule = (() => {
             state.previewAudio.pause();
             state.isPreviewPlaying = false;
             elements.previewPlayBtn.classList.remove('playing');
-            if (window.AudioVisualizer) AudioVisualizer.pause();
+            if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
         } else {
             state.previewAudio.play()
                 .then(() => {
                     state.isPreviewPlaying = true;
                     elements.previewPlayBtn.classList.add('playing');
-                    if (window.AudioVisualizer) AudioVisualizer.play(state.previewAudio);
+                    if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.play(state.previewAudio);
                 })
                 .catch((error) => {
                     console.error('[Features] Playback failed:', error);

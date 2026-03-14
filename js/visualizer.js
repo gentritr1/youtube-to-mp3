@@ -8,6 +8,7 @@ const AudioVisualizer = (() => {
     let audioContext = null;
     let analyserNode = null;
     let currentAudioElement = null;
+    let sourceNode = null; // Track current source node
     let animationFrameId = null;
     let dataArray = null;
 
@@ -36,11 +37,17 @@ const AudioVisualizer = (() => {
         // If this is a new audio element, create a new media element source.
         // Web Audio limits one MediaElementAudioSourceNode per HTMLMediaElement.
         if (currentAudioElement !== audioElement) {
+            // Disconnect previous node if exists
+            if (sourceNode) {
+                sourceNode.disconnect();
+                sourceNode = null;
+            }
+
             currentAudioElement = audioElement;
             try {
                 // Cross origin needed in some browsers to capture audio from external domains
                 audioElement.crossOrigin = "anonymous";
-                const sourceNode = audioContext.createMediaElementSource(audioElement);
+                sourceNode = audioContext.createMediaElementSource(audioElement);
 
                 // Route: Audio Element -> Analyser -> Destination (Speakers)
                 sourceNode.connect(analyserNode);
