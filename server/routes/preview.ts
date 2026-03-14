@@ -227,7 +227,7 @@ router.post('/', async (req: Request, res: Response) => {
         });
 
     } catch (error: any) {
-        console.error('[Preview] Generation error:', error);
+        console.error('[Preview] Generation error details:', error);
         res.status(500).json({
             success: false,
             message: error.message || 'Failed to generate preview'

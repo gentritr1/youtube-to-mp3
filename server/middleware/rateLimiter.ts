@@ -12,7 +12,11 @@ const { RATE_LIMIT } = config;
  * Helper to skip rate limits on localhost or in development mode
  */
 const skipOnLocalhost = (req: any) => {
-    return !config.IS_PROD || req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1';
+    // Disable rate limiting completely for local development
+    if (!config.IS_PROD) return true;
+    
+    const clientIp = req.ip || req.connection.remoteAddress;
+    return clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1';
 };
 
 /**
