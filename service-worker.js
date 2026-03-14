@@ -39,11 +39,9 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('[Service Worker] Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
+                cacheNames.filter((name) => name !== CACHE_NAME).map((cacheName) => {
+                    console.log('[Service Worker] Deleting old cache:', cacheName);
+                    return caches.delete(cacheName);
                 })
             );
         }).then(() => self.clients.claim())
@@ -60,7 +58,8 @@ self.addEventListener('fetch', (event) => {
     if (event.request.url.startsWith('chrome-extension://')) return;
 
     // Best Practice: Network First for HTML to assure the latest markup
-    if (event.request.mode === 'navigate' || event.request.headers.get('accept').includes('text/html')) {
+    const acceptHeader = event.request.headers.get('accept');
+    if (event.request.mode === 'navigate' || (acceptHeader && acceptHeader.includes('text/html'))) {
         event.respondWith(
             fetch(event.request)
                 .then((networkResponse) => {
@@ -72,9 +71,14 @@ self.addEventListener('fetch', (event) => {
                 .catch(() => {
                     // Fallback to cache
                     return caches.match(event.request).then((cachedResponse) => {
-                         if (cachedResponse) return cachedResponse;
-                         // If we had an offline.html, we'd return it here
-                    })
+                        if (cachedResponse) return cachedResponse;
+                        // If we had an offline.html, we'd return it here
+                        return new Response('Offline', {
+                            status: 503,
+                            statusText: 'Service Unavailable',
+                            headers: { 'Content-Type': 'text/html' }
+                        });
+                    });
                 })
         );
         return;
@@ -99,6 +103,10 @@ self.addEventListener('fetch', (event) => {
                 return networkResponse;
             }).catch((err) => {
                 console.log('[Service Worker] Fetch failed.', err);
+                return caches.match(event.request).then((cacheRes) => {
+                    if (cacheRes) return cacheRes;
+                    return new Response('', { status: 503, statusText: 'Service Unavailable' });
+                });
             });
         })
     );
