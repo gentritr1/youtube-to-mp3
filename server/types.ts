@@ -40,6 +40,7 @@ export interface VideoInfo {
     thumbnail: string;
     author: string;
     duration: string | null;
+    subtitles?: { lang: string; url: string; ext: string }[];
 }
 
 /**
