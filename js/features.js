@@ -637,12 +637,35 @@ const FeaturesModule = (() => {
         loadGenres();
     };
 
+    /**
+     * Get random tracks from loaded genres
+     */
+    const getRandomTracks = (count = 4) => {
+        if (!state.genres || state.genres.length === 0) return [];
+        
+        let allVideos = [];
+        state.genres.forEach(g => {
+            if (g.videos) allVideos = allVideos.concat(g.videos);
+        });
+
+        // Filter out live streams
+        allVideos = allVideos.filter(v => !v.isLive && v.duration !== 'LIVE');
+
+        if (allVideos.length < count) {
+            return [...allVideos].sort(() => 0.5 - Math.random());
+        }
+
+        const shuffled = [...allVideos].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    };
+
     // Public API
     return {
         init,
         reload,
         showPreview,
-        closePreview
+        closePreview,
+        getRandomTracks
     };
 })();
 

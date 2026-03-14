@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="css/components/nerd-stats.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/lyrics.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/components/game.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/components/guess-track.css" media="print" onload="this.media='all'">
 </head>
 
 <body>
@@ -238,6 +239,7 @@
         <div class="game-header">
             <span class="game-title">🐍 Snake</span>
             <div class="game-header-right">
+                <button type="button" class="mini-game-btn" data-game="guesstrack" title="Switch to Guess the Track">🎵 Switch</button>
                 <span class="game-score">Score: <span id="score">0</span></span>
                 <button type="button" id="game-minimize" class="game-minimize-btn" aria-label="Minimize game">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -312,7 +314,60 @@
         </div>
     </div>
 
+    <!-- Floating Guess the Track Panel -->
+    <div id="guess-track-container" class="guess-track-container game-floating hidden">
+        <div class="game-header">
+            <span class="game-title">🎵 Guess the Track</span>
+            <div class="game-header-right">
+                <button type="button" class="mini-game-btn" data-game="snake" title="Switch to Snake">🐍 Switch</button>
+                <span class="game-score">Score: <span id="gt-score">0</span></span>
+                <button type="button" id="gt-minimize" class="game-minimize-btn" aria-label="Minimize game">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="game-body gt-body">
+            <div class="gt-stats-bar">
+                <div class="gt-lives">
+                    Lives: <span id="gt-lives-count">❤️❤️❤️</span>
+                </div>
+                <div class="gt-streak">
+                    Combo: <span id="gt-streak-count">0</span>
+                </div>
+            </div>
+            
+            <div class="gt-audio-player">
+                <div id="gt-timer-bar-container" class="gt-timer-bar-container hidden">
+                    <div id="gt-timer-bar" class="gt-timer-bar"></div>
+                </div>
+                <div id="gt-audio-visualizer" class="gt-audio-visualizer">
+                    <div class="gt-bar"></div>
+                    <div class="gt-bar"></div>
+                    <div class="gt-bar"></div>
+                    <div class="gt-bar"></div>
+                    <div class="gt-bar"></div>
+                </div>
+                <div id="gt-status-text" class="gt-status-text">Click Start to Play</div>
+            </div>
+
+            <div id="gt-options" class="gt-options">
+                <button class="gt-option hidden" data-index="0" id="gt-opt-0">Option 1</button>
+                <button class="gt-option hidden" data-index="1" id="gt-opt-1">Option 2</button>
+                <button class="gt-option hidden" data-index="2" id="gt-opt-2">Option 3</button>
+                <button class="gt-option hidden" data-index="3" id="gt-opt-3">Option 4</button>
+            </div>
+
+            <div class="game-restart-container">
+                <button id="gt-start-btn" class="restart-btn gt-start-btn">Start Game</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/snake-game.js" defer></script>
+    <script src="js/guess-track.js" defer></script>
     <script src="js/visualizer.js" defer></script>
     <script src="js/features.js" defer></script>
     <script src="js/batch.js" defer></script>

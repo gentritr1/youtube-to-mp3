@@ -3,8 +3,8 @@
    Modern glassmorphic floating widget
    ======================================== */
 
-/* ---- Floating panel shell ---- */
-.game-container.game-floating {
+/* ---- Floating panel shell (Generic for all mini-games) ---- */
+.game-floating {
     position: fixed;
     bottom: 1.25rem;
     right: 1.25rem;
@@ -31,7 +31,7 @@
     -webkit-backdrop-filter: blur(20px);
 }
 
-.game-container.game-floating.hidden {
+.game-floating.hidden {
     display: none;
 }
 
@@ -163,6 +163,34 @@
 
 .game-floating.minimized .game-minimize-btn svg {
     transform: rotate(90deg);
+}
+
+/* ---- Mini-game Switch Button ---- */
+.mini-game-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.625rem;
+    background: hsl(225 12% 14% / 0.5);
+    border: 1px solid hsl(225 10% 20%);
+    border-radius: 99px;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    backdrop-filter: blur(4px);
+}
+
+.mini-game-btn:hover {
+    background: hsl(225 12% 20%);
+    color: var(--foreground);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.mini-game-btn:active {
+    transform: translateY(0);
 }
 
 
