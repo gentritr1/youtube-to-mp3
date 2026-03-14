@@ -1016,7 +1016,20 @@
         show() {
             this.elements.container.classList.remove('hidden');
             this.displayHighScores();
-            if (!this.isRunning) this.init();
+            if (!this.isRunning) {
+                if (this.snakes.length === 0) {
+                    this.init();
+                } else {
+                    this.isRunning = true;
+                    this.lastTime = performance.now();
+                    requestAnimationFrame(this.gameLoop.bind(this));
+                }
+            }
+        }
+
+        hide() {
+            this.elements.container.classList.add('hidden');
+            this.isRunning = false;
         }
     }
 
