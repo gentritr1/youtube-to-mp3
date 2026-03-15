@@ -1,0 +1,38 @@
+{
+  "name": "Chill & Acoustic",
+  "icon": "☕",
+  "color": "#f59e0b",
+  "description": "Softer vocals and acoustic-friendly picks for users who want cleaner preview moments.",
+  "order": 60,
+  "enabled": true,
+  "videos": [
+    {
+      "videoId": "YQHsXMglC9A",
+      "title": "Hello",
+      "artist": "Adele",
+      "duration": "6:07",
+      "tag": "Ballad"
+    },
+    {
+      "videoId": "lTRiuFIWV54",
+      "title": "Let Her Go",
+      "artist": "Passenger",
+      "duration": "4:15",
+      "tag": "Acoustic"
+    },
+    {
+      "videoId": "2Vv-BfVoq4g",
+      "title": "Perfect",
+      "artist": "Ed Sheeran",
+      "duration": "4:40",
+      "tag": "Romantic"
+    },
+    {
+      "videoId": "zABLecsR5UE",
+      "title": "Someone You Loved",
+      "artist": "Lewis Capaldi",
+      "duration": "3:07",
+      "tag": "Piano"
+    }
+  ]
+}

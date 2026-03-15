@@ -2,13 +2,23 @@
  * Tests for Rate Limiter Middleware
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
     apiLimiter,
     conversionLimiter,
     infoLimiter,
-    downloadLimiter
+    downloadLimiter,
+    skipOnLocalhost
 } from '../server/middleware/rateLimiter.ts';
+import { config } from '../server/config.ts';
+
+const originalIsDev = config.IS_DEV;
+const originalIsProd = config.IS_PROD;
+
+afterEach(() => {
+    config.IS_DEV = originalIsDev;
+    config.IS_PROD = originalIsProd;
+});
 
 describe('Rate Limiter Configuration', () => {
     it('should export apiLimiter', () => {
@@ -87,5 +97,15 @@ describe('Rate Limiter Behavior', () => {
     it('conversionLimiter should be configured', () => {
         expect(conversionLimiter).toBeDefined();
         expect(typeof conversionLimiter).toBe('function');
+    });
+
+    it('skipOnLocalhost should still detect localhost IPs in production mode', () => {
+        config.IS_DEV = false;
+        config.IS_PROD = true;
+
+        expect(skipOnLocalhost({ ip: '127.0.0.1', socket: { remoteAddress: '10.0.0.5' } })).toBe(true);
+        expect(skipOnLocalhost({ ip: '::1', socket: { remoteAddress: '10.0.0.5' } })).toBe(true);
+        expect(skipOnLocalhost({ ip: undefined, socket: { remoteAddress: '::ffff:127.0.0.1' } })).toBe(true);
+        expect(skipOnLocalhost({ ip: '203.0.113.10', socket: { remoteAddress: '203.0.113.10' } })).toBe(false);
     });
 });

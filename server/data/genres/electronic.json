@@ -1,0 +1,38 @@
+{
+  "name": "Electronic & EDM",
+  "icon": "🎛️",
+  "color": "#0ea5e9",
+  "description": "Actually electronic now: festival staples, synth-led anthems, and safer global EDM picks.",
+  "order": 40,
+  "enabled": true,
+  "videos": [
+    {
+      "videoId": "y6120QOlsfU",
+      "title": "Sandstorm",
+      "artist": "Darude",
+      "duration": "3:45",
+      "tag": "Festival"
+    },
+    {
+      "videoId": "60ItHLz5WEA",
+      "title": "Faded",
+      "artist": "Alan Walker",
+      "duration": "3:33",
+      "tag": "Atmospheric"
+    },
+    {
+      "videoId": "IcrbM1l_BoI",
+      "title": "Wake Me Up",
+      "artist": "Avicii",
+      "duration": "4:33",
+      "tag": "Anthem"
+    },
+    {
+      "videoId": "gCYcHz2k5x0",
+      "title": "Animals",
+      "artist": "Martin Garrix",
+      "duration": "5:03",
+      "tag": "Big room"
+    }
+  ]
+}

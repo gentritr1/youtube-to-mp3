@@ -40,7 +40,17 @@ npm test
 
 ---
 
-## 4. Verify TypeScript Build
+## 4. Update Service Worker (PWA)
+
+If your feature added new files or changed UI logic, you MUST update the Service Worker.
+Check the dedicated workflow for details: [service_worker_maintenance.md](./service_worker_maintenance.md)
+
+1. Add any new `.js` or `.css` files to `STATIC_ASSETS` in `service-worker.js`.
+2. **Bump the `CACHE_NAME` version string** (e.g. `v3` -> `v4`).
+
+---
+
+## 5. Verify TypeScript Build
 
 // turbo
 ```bash
@@ -51,7 +61,7 @@ npm run build
 
 ---
 
-## 5. Update Dockerfile (If Needed)
+## 6. Update Dockerfile (If Needed)
 
 Check if your feature requires:
 - [ ] New system dependencies (add to `apk add` in Dockerfile)
@@ -61,7 +71,7 @@ Check if your feature requires:
 
 ---
 
-## 6. Docker Build Test (CRITICAL)
+## 7. Docker Build Test (CRITICAL)
 
 Build and run the Docker container locally to verify it works in production-like environment:
 
@@ -89,7 +99,7 @@ npm run docker:up
 
 ---
 
-## 7. Preflight Check (All-in-One)
+## 8. Preflight Check (All-in-One)
 
 Run the full preflight check before committing:
 
@@ -101,7 +111,7 @@ This runs: `npm test` → `npm run build` → `npm run docker:build`
 
 ---
 
-## 8. Commit & Push
+## 9. Commit & Push
 
 ```bash
 git add .
@@ -111,7 +121,7 @@ git push -u origin feature/<feature-name>
 
 ---
 
-## 9. Create Pull Request
+## 10. Create Pull Request
 
 ```bash
 gh pr create --title "feat: <Feature Title>" --body "## Summary\n<description>"
@@ -130,3 +140,4 @@ gh pr create --title "feat: <Feature Title>" --body "## Summary\n<description>"
 | `npm run docker:up` | Start with docker compose |
 | `npm run docker:down` | Stop docker compose |
 | `npm run preflight` | Full pre-commit check (test + build + docker) |
+| `/sw` | Reminder: Check Service Worker versioning |

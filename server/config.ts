@@ -12,16 +12,21 @@ const parsedPort = Number.parseInt(process.env.PORT ?? '', 10);
 export const config = {
     PORT: Number.isFinite(parsedPort) ? parsedPort : 3000,
     IS_PROD: !!process.env.RENDER || process.env.NODE_ENV === 'production',
+    IS_DEV: process.env.NODE_ENV === 'development',
 
     // Paths
     ROOT_DIR: path.resolve(__dirname, '..'),
     DOWNLOADS_DIR: path.resolve(__dirname, '..', 'downloads'),
     TASKS_FILE: path.resolve(__dirname, '..', 'tasks.json'),
     DB_PATH: path.resolve(__dirname, '..', 'tasks.db'),
+    GENRES_DIR: path.resolve(__dirname, 'data', 'genres'),
 
     // Redis (for job queue)
     REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
     USE_QUEUE: process.env.USE_QUEUE === 'true' || false,
+    WATCH_GENRES: process.env.WATCH_GENRES
+        ? process.env.WATCH_GENRES === 'true'
+        : process.env.NODE_ENV !== 'production',
 
     // Timeouts
     CLEANUP_INTERVAL_MS: 60 * 60 * 1000, // 1 hour

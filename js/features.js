@@ -7,7 +7,7 @@ const FeaturesModule = (() => {
     // State
     const state = {
         genres: [],
-        activeGenre: 'pop',
+        activeGenre: 'global',
         previewAudio: null,
         previewVideoId: null,
         isPreviewPlaying: false,
@@ -68,12 +68,20 @@ const FeaturesModule = (() => {
         popularSection.id = 'popular-section';
         popularSection.innerHTML = `
             <div class="popular-header">
-                <h2 class="popular-title">
-                    <span class="popular-title-icon">🔥</span>
-                    Popular Music
-                </h2>
-                <p class="popular-subtitle">Click to preview or convert</p>
+                <div class="popular-header-copy">
+                    <span class="popular-eyebrow">Fresh discovery</span>
+                    <h2 class="popular-title">
+                        <span class="popular-title-icon">🔥</span>
+                        Popular Music
+                    </h2>
+                    <p class="popular-subtitle">Global-friendly picks for preview, guessing, and instant conversion.</p>
+                </div>
+                <div class="popular-header-pulse" aria-hidden="true">
+                    <span class="popular-pulse-dot"></span>
+                    Live rotation
+                </div>
             </div>
+            <div class="popular-active-genre" id="popular-active-genre"></div>
             <div class="genre-tabs" id="genre-tabs"></div>
             <div class="video-carousel" id="video-carousel"></div>
         `;
@@ -157,6 +165,7 @@ const FeaturesModule = (() => {
         // Cache elements
         elements = {
             popularSection,
+            activeGenreSummary: document.getElementById('popular-active-genre'),
             genreTabs: document.getElementById('genre-tabs'),
             videoCarousel: document.getElementById('video-carousel'),
             previewPlayer,
@@ -206,6 +215,9 @@ const FeaturesModule = (() => {
 
             if (data.success && data.genres) {
                 state.genres = data.genres;
+                if (!state.genres.some(genre => genre.id === state.activeGenre)) {
+                    state.activeGenre = state.genres.find(genre => genre.id === 'global')?.id || state.genres[0]?.id || '';
+                }
                 renderGenreTabs();
                 renderVideoCarousel(state.activeGenre);
             } else {
@@ -237,7 +249,7 @@ const FeaturesModule = (() => {
                 style="${genre.id === state.activeGenre ? `background: ${escapeAttr(genre.color)};` : ''}"
             >
                 <span class="genre-tab-icon">${escapeHtml(genre.icon)}</span>
-                ${escapeHtml(genre.name)}
+                <span>${escapeHtml(genre.name)}</span>
             </button>
         `).join('');
 
@@ -280,14 +292,28 @@ const FeaturesModule = (() => {
         const genre = state.genres.find(g => g.id === genreId);
         if (!genre) return;
 
+        if (elements.activeGenreSummary) {
+            elements.activeGenreSummary.innerHTML = `
+                <div class="popular-genre-card" style="--genre-accent: ${escapeAttr(genre.color)}">
+                    <span class="popular-genre-icon">${escapeHtml(genre.icon)}</span>
+                    <div class="popular-genre-copy">
+                        <span class="popular-genre-label">${escapeHtml(genre.name)}</span>
+                        <p class="popular-genre-description">${escapeHtml(genre.description || 'Curated tracks for preview and conversion.')}</p>
+                    </div>
+                    <span class="popular-genre-count">${genre.videos.length} tracks</span>
+                </div>
+            `;
+        }
+
         // Check if video is a live stream (preview not supported)
         const isLive = (video) => video.isLive || video.duration === 'LIVE';
 
-        elements.videoCarousel.innerHTML = genre.videos.map(video => `
-            <article class="video-card" data-video-id="${escapeAttr(video.videoId)}" ${isLive(video) ? 'data-is-live="true"' : ''}>
+        elements.videoCarousel.innerHTML = genre.videos.map((video, index) => `
+            <article class="video-card" data-video-id="${escapeAttr(video.videoId)}" ${isLive(video) ? 'data-is-live="true"' : ''} style="--card-index: ${index}; --card-accent: ${escapeAttr(genre.color)}">
                 <div class="video-card-thumbnail">
                     <img src="${escapeAttr(video.thumbnail)}" alt="${escapeAttr(video.title)}" loading="lazy">
                     <span class="video-card-duration">${escapeHtml(video.duration)}</span>
+                    ${video.tag ? `<span class="video-card-tag">${escapeHtml(video.tag)}</span>` : ''}
                     <div class="video-card-overlay">
                         <div class="video-card-play">
                             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -312,6 +338,7 @@ const FeaturesModule = (() => {
                     </div>
                 </div>
                 <div class="video-card-info">
+                    <span class="video-card-rank">0${index + 1}</span>
                     <h3 class="video-card-title">${escapeHtml(video.title)}</h3>
                     <p class="video-card-artist">${escapeHtml(video.artist)}</p>
                 </div>
@@ -637,12 +664,39 @@ const FeaturesModule = (() => {
         loadGenres();
     };
 
+    /**
+     * Get random tracks from loaded genres
+     */
+    const getRandomTracks = (count = 4) => {
+        if (!state.genres || state.genres.length === 0) return [];
+
+        const globalVideos = state.genres
+            .filter(g => g.id === 'global')
+            .flatMap(g => g.videos || []);
+
+        const otherVideos = state.genres
+            .filter(g => g.id !== 'global')
+            .flatMap(g => g.videos || []);
+
+        const allVideos = [...globalVideos, ...otherVideos]
+            .filter(v => !v.isLive && v.duration !== 'LIVE')
+            .filter((video, index, videos) => videos.findIndex(candidate => candidate.videoId === video.videoId) === index);
+
+        if (allVideos.length < count) {
+            return [...allVideos].sort(() => 0.5 - Math.random());
+        }
+
+        const shuffled = [...allVideos].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    };
+
     // Public API
     return {
         init,
         reload,
         showPreview,
-        closePreview
+        closePreview,
+        getRandomTracks
     };
 })();
 

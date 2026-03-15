@@ -628,21 +628,74 @@ const gameElements = {
     splitSnakeNum: document.getElementById('split-snake-num')
 };
 
-// Initialize the Snake Game
+const gtElements = {
+    container: document.getElementById('guess-track-container'),
+    scoreDisplay: document.getElementById('gt-score'),
+    livesDisplay: document.getElementById('gt-lives-count'),
+    streakDisplay: document.getElementById('gt-streak-count'),
+    streakMeterFill: document.getElementById('gt-streak-meter-fill'),
+    timerBarContainer: document.getElementById('gt-timer-bar-container'),
+    timerBar: document.getElementById('gt-timer-bar'),
+    visualizer: document.getElementById('gt-audio-visualizer'),
+    statusBadge: document.getElementById('gt-status-badge'),
+    statusText: document.getElementById('gt-status-text'),
+    statusDetail: document.getElementById('gt-status-detail'),
+    feedbackLayer: document.getElementById('gt-feedback-layer'),
+    options: document.querySelectorAll('.gt-option'),
+    startBtn: document.getElementById('gt-start-btn')
+};
+
+// Initialize the Mini Games
 let snakeGame = null;
+let guessTrackGame = null;
+let activeMiniGame = 'snake';
 
 const showGame = () => {
-    if (!snakeGame) {
-        snakeGame = new SnakeGame(gameElements);
+    if (activeMiniGame === 'snake') {
+        if (!snakeGame) {
+            snakeGame = new SnakeGame(gameElements);
+        }
+        if (guessTrackGame) guessTrackGame.hide();
+        snakeGame.show();
+    } else {
+        if (!guessTrackGame) {
+            guessTrackGame = new GuessTrackGame(gtElements);
+        }
+        if (snakeGame) snakeGame.hide();
+        guessTrackGame.show();
     }
-    snakeGame.show();
 };
+
+// Mini-game toggles
+document.querySelectorAll('.mini-game-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const nextGame = e.currentTarget?.dataset?.game;
+        const allowedGames = new Set(['snake', 'guesstrack']);
+
+        if (!nextGame || !allowedGames.has(nextGame)) {
+            return;
+        }
+
+        document.querySelectorAll('.mini-game-btn').forEach(b => {
+            b.classList.remove('active');
+        });
+        e.currentTarget.classList.add('active');
+        activeMiniGame = nextGame;
+        showGame();
+    });
+});
 
 // Game panel minimize toggle
 const gameMinimizeBtn = document.getElementById('game-minimize');
 if (gameMinimizeBtn) {
     gameMinimizeBtn.addEventListener('click', () => {
         gameElements.container.classList.toggle('minimized');
+    });
+}
+const gtMinimizeBtn = document.getElementById('gt-minimize');
+if (gtMinimizeBtn) {
+    gtMinimizeBtn.addEventListener('click', () => {
+        gtElements.container.classList.toggle('minimized');
     });
 }
 

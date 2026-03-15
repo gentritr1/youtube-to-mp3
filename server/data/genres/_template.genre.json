@@ -1,0 +1,17 @@
+{
+  "name": "Genre Name",
+  "icon": "🎵",
+  "color": "#22c55e",
+  "description": "Short description for the UI.",
+  "order": 100,
+  "enabled": true,
+  "videos": [
+    {
+      "videoId": "dQw4w9WgXcQ",
+      "title": "Track Title",
+      "artist": "Artist Name",
+      "duration": "3:33",
+      "tag": "Optional label"
+    }
+  ]
+}

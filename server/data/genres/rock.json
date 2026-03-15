@@ -1,0 +1,38 @@
+{
+  "name": "Rock Classics",
+  "icon": "🎸",
+  "color": "#ef4444",
+  "description": "Pure rock staples with stronger title-to-link alignment and more recognisable openings.",
+  "order": 50,
+  "enabled": true,
+  "videos": [
+    {
+      "videoId": "fJ9rUzIMcZQ",
+      "title": "Bohemian Rhapsody",
+      "artist": "Queen",
+      "duration": "5:55",
+      "tag": "Epic"
+    },
+    {
+      "videoId": "hTWKbfoikeg",
+      "title": "Smells Like Teen Spirit",
+      "artist": "Nirvana",
+      "duration": "5:01",
+      "tag": "Grunge"
+    },
+    {
+      "videoId": "kXYiU_JCYtU",
+      "title": "Numb",
+      "artist": "Linkin Park",
+      "duration": "3:07",
+      "tag": "Alt rock"
+    },
+    {
+      "videoId": "1w7OgIMMRc4",
+      "title": "Sweet Child O' Mine",
+      "artist": "Guns N' Roses",
+      "duration": "5:03",
+      "tag": "Guitar"
+    }
+  ]
+}

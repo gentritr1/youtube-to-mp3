@@ -463,11 +463,13 @@
             this.snakes = [];
             this.activeSnakeIndex = 0;
             this.isRunning = false;
+            this.isEnded = false;
             this.score = 0;
 
             this.lastTime = 0;
             this.timeAccumulator = 0;
             this.animationFrameId = null;
+            this.overlayAnimationFrameId = null;
             this.currentTickRate = GAME_CONFIG.baseTickRate;
 
             this.activePowerup = null;
@@ -603,11 +605,14 @@
             this.displayHighScores();
 
             this.isRunning = true;
+            this.isEnded = false;
             this.lastTime = performance.now();
             this.timeAccumulator = 0;
 
             if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
-            requestAnimationFrame(this.gameLoop.bind(this));
+            if (this.overlayAnimationFrameId) cancelAnimationFrame(this.overlayAnimationFrameId);
+            this.overlayAnimationFrameId = null;
+            this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
         }
 
         gameLoop(timestamp) {
@@ -813,7 +818,11 @@
 
         gameOver() {
             this.isRunning = false;
+            this.isEnded = true;
             cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+            if (this.overlayAnimationFrameId) cancelAnimationFrame(this.overlayAnimationFrameId);
+            this.overlayAnimationFrameId = null;
 
             this.saveHighScore(this.score);
             this.elements.restartBtn.classList.remove('hidden');
@@ -914,11 +923,13 @@
                 // Animate fade in
                 if (opacity < 1) {
                     opacity += 0.08;
-                    requestAnimationFrame(fadeIn);
+                    this.overlayAnimationFrameId = requestAnimationFrame(fadeIn);
+                } else {
+                    this.overlayAnimationFrameId = null;
                 }
             };
 
-            requestAnimationFrame(fadeIn);
+            this.overlayAnimationFrameId = requestAnimationFrame(fadeIn);
         }
 
         drawBrokenSnake(ctx, x, y, size) {
@@ -1016,7 +1027,24 @@
         show() {
             this.elements.container.classList.remove('hidden');
             this.displayHighScores();
-            if (!this.isRunning) this.init();
+            if (!this.isRunning) {
+                if (this.isEnded || this.snakes.length === 0) {
+                    this.init();
+                } else {
+                    this.isRunning = true;
+                    this.lastTime = performance.now();
+                    this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
+                }
+            }
+        }
+
+        hide() {
+            this.elements.container.classList.add('hidden');
+            this.isRunning = false;
+            if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+            if (this.overlayAnimationFrameId) cancelAnimationFrame(this.overlayAnimationFrameId);
+            this.overlayAnimationFrameId = null;
         }
     }
 

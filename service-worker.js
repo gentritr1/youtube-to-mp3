@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yt-converter-v2';
+const CACHE_NAME = 'yt-converter-v6'; // AGENT: BUMP THIS VERSION on any UI/Logic change!
 
 // Assets to cache for offline support
 const STATIC_ASSETS = [
@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
     '/js/features.js',
     '/js/batch.js',
     '/js/snake-game.js',
+    '/js/visualizer.js',
     '/css/base.css',
     '/css/animations.css',
     '/css/layout/main.css',
@@ -17,7 +18,10 @@ const STATIC_ASSETS = [
     '/css/components/features.css',
     '/css/components/batch.css',
     '/css/components/nerd-stats.css',
+    '/css/components/lyrics.css',
     '/css/components/game.css',
+    '/css/components/guess-track.css',
+    '/js/guess-track.js',
     '/css/utils/helpers.css',
     '/manifest.json',
     '/assets/icons/icon-192x192.png',

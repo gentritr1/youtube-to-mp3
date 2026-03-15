@@ -1,0 +1,38 @@
+{
+  "name": "Hip-Hop & Rap",
+  "icon": "🎧",
+  "color": "#8b5cf6",
+  "description": "Rap-heavy picks only, replacing crossover tracks that made this shelf feel mixed.",
+  "order": 30,
+  "enabled": true,
+  "videos": [
+    {
+      "videoId": "YVkUvmDQ3HY",
+      "title": "Without Me",
+      "artist": "Eminem",
+      "duration": "4:51",
+      "tag": "Classic rap"
+    },
+    {
+      "videoId": "ApXoWvfEYVU",
+      "title": "Sunflower",
+      "artist": "Post Malone & Swae Lee",
+      "duration": "2:54",
+      "tag": "Melodic"
+    },
+    {
+      "videoId": "2zNSgSzhBfM",
+      "title": "Can't Hold Us",
+      "artist": "Macklemore & Ryan Lewis",
+      "duration": "4:18",
+      "tag": "Arena"
+    },
+    {
+      "videoId": "fPO76Jlnz6c",
+      "title": "Gangsta's Paradise",
+      "artist": "Coolio ft. L.V.",
+      "duration": "4:17",
+      "tag": "Legend"
+    }
+  ]
+}
