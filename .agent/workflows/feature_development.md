@@ -40,7 +40,17 @@ npm test
 
 ---
 
-## 4. Verify TypeScript Build
+## 4. Update Service Worker (PWA)
+
+If your feature added new files or changed UI logic, you MUST update the Service Worker.
+Check the dedicated workflow for details: [service_worker_maintenance.md](file:///Users/gentlegen/Desktop/youtube-to-mp3/.agent/workflows/service_worker_maintenance.md)
+
+1. Add any new `.js` or `.css` files to `STATIC_ASSETS` in `service-worker.js`.
+2. **Bump the `CACHE_NAME` version string** (e.g. `v3` -> `v4`).
+
+---
+
+## 5. Verify TypeScript Build
 
 // turbo
 ```bash
@@ -130,3 +140,4 @@ gh pr create --title "feat: <Feature Title>" --body "## Summary\n<description>"
 | `npm run docker:up` | Start with docker compose |
 | `npm run docker:down` | Stop docker compose |
 | `npm run preflight` | Full pre-commit check (test + build + docker) |
+| `/sw` | Reminder: Check Service Worker versioning |
