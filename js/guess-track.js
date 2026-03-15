@@ -152,10 +152,9 @@ class GuessTrackGame {
         } catch (e) {
             console.error("[GuessTrack] Error loading preview:", e);
             if (this.isActive) {
-                this.elements.statusText.textContent = "Failed to load audio.";
+                this.elements.statusText.textContent = "Track unavailable. Skipping...";
                 this.isLoading = false;
-                this.elements.startBtn.classList.remove('hidden');
-                this.elements.startBtn.textContent = "Try Again";
+                setTimeout(() => this.startRound(), 1500);
             }
         }
     }
