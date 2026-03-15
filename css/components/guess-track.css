@@ -5,7 +5,11 @@
     width: 380px;
     --gt-accent: var(--sky);
     --gt-accent-soft: color-mix(in srgb, var(--sky) 26%, transparent);
-    --gt-panel-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    --gt-panel-shadow: 0 18px 40px color-mix(in srgb, var(--game-shadow) 82%, transparent);
+    --gt-surface: color-mix(in srgb, var(--game-surface-soft) 88%, transparent);
+    --gt-surface-strong: color-mix(in srgb, var(--game-surface-strong) 92%, transparent);
+    --gt-surface-soft: color-mix(in srgb, var(--game-surface-soft) 72%, transparent);
+    --gt-option-surface: color-mix(in srgb, var(--game-surface-soft) 78%, transparent);
 }
 
 .guess-track-container[data-gt-state="success"],
@@ -41,12 +45,13 @@
     font-family: var(--font-mono);
     color: var(--muted-foreground);
     background:
-        linear-gradient(135deg, rgba(12, 19, 31, 0.88), rgba(10, 15, 24, 0.72)),
+        linear-gradient(135deg, color-mix(in srgb, white 4%, transparent), transparent 36%),
+        linear-gradient(135deg, var(--gt-surface), var(--gt-surface-strong)),
         radial-gradient(circle at top right, var(--gt-accent-soft), transparent 55%);
     padding: 0.7rem 0.95rem;
     border-radius: 18px;
     border: 1px solid color-mix(in srgb, var(--gt-accent) 22%, var(--border));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 14%, transparent);
     backdrop-filter: blur(12px);
 }
 
@@ -69,7 +74,8 @@
     padding: 1rem 1rem 0.9rem;
     background:
         radial-gradient(circle at top center, color-mix(in srgb, var(--gt-accent) 18%, transparent), transparent 60%),
-        linear-gradient(180deg, rgba(7, 12, 20, 0.98), rgba(12, 20, 31, 0.92));
+        linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent 26%),
+        linear-gradient(180deg, var(--gt-surface-strong), var(--gt-surface));
     border: 1px solid color-mix(in srgb, var(--gt-accent) 20%, var(--border));
     border-radius: 22px;
     display: flex;
@@ -79,7 +85,7 @@
     position: relative;
     overflow: hidden;
     gap: 0.95rem;
-    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), var(--gt-panel-shadow);
+    box-shadow: inset 0 0 30px color-mix(in srgb, black 32%, transparent), var(--gt-panel-shadow);
     transition: border-color var(--transition-base), box-shadow var(--transition-smooth), transform var(--transition-smooth);
 }
 
@@ -95,7 +101,7 @@
 .guess-track-container.is-streak-hot .gt-audio-player {
     background:
         radial-gradient(circle at top center, rgba(251, 146, 60, 0.24), transparent 52%),
-        linear-gradient(180deg, rgba(23, 12, 10, 0.98), rgba(22, 16, 18, 0.94));
+        linear-gradient(180deg, color-mix(in srgb, var(--gt-surface-strong) 92%, rgba(35, 20, 14, 0.65)), color-mix(in srgb, var(--gt-surface) 94%, rgba(26, 18, 18, 0.6)));
 }
 
 .gt-feedback-layer {
@@ -111,7 +117,7 @@
     left: 0;
     width: 100%;
     height: 5px;
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--gt-surface-soft) 86%, transparent);
 }
 
 .gt-timer-bar {
@@ -193,9 +199,9 @@
     width: 100%;
     height: 8px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--gt-surface-soft) 90%, transparent);
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid color-mix(in srgb, var(--game-border) 52%, transparent);
 }
 
 .gt-streak-meter-fill {
@@ -215,13 +221,11 @@
 }
 
 .gt-option {
-    --gt-option-surface: rgba(11, 18, 29, 0.72);
-
     padding: 0.8rem 0.95rem;
     background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 48%),
         var(--gt-option-surface);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid color-mix(in srgb, var(--game-border) 54%, transparent);
     border-radius: 16px;
     color: var(--foreground);
     font-size: 0.82rem;
@@ -244,7 +248,7 @@
 .gt-option:hover:not(:disabled) {
     background:
         linear-gradient(135deg, color-mix(in srgb, var(--gt-accent) 14%, transparent), transparent 60%),
-        rgba(15, 24, 38, 0.88);
+        color-mix(in srgb, var(--gt-surface) 92%, transparent);
     border-color: color-mix(in srgb, var(--gt-accent) 32%, transparent);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
     transform: translateY(-2px) scale(1.01);
@@ -253,7 +257,7 @@
 .gt-option.correct {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(16, 185, 129, 0.12));
     border-color: rgba(16, 185, 129, 0.65);
-    color: #d1fae5;
+    color: color-mix(in srgb, white 88%, var(--emerald));
     font-weight: 700;
     box-shadow: 0 12px 24px rgba(16, 185, 129, 0.14);
 }
@@ -261,7 +265,7 @@
 .gt-option.wrong {
     background: linear-gradient(135deg, rgba(244, 63, 94, 0.28), rgba(244, 63, 94, 0.12));
     border-color: rgba(244, 63, 94, 0.72);
-    color: #ffe4e6;
+    color: color-mix(in srgb, white 90%, var(--rose));
     font-weight: 700;
     animation: gt-wrong-option 320ms ease-in-out;
 }
@@ -381,4 +385,26 @@
     .gt-audio-player {
         transition-duration: 0ms !important;
     }
+}
+
+:root[data-theme="frutiger-aero"] .guess-track-container {
+    --gt-panel-shadow: 0 18px 40px rgba(84, 165, 188, 0.16);
+    --gt-surface: rgba(240, 252, 255, 0.72);
+    --gt-surface-strong: rgba(255, 255, 255, 0.78);
+    --gt-surface-soft: rgba(226, 248, 252, 0.54);
+    --gt-option-surface: rgba(223, 246, 251, 0.62);
+}
+
+:root[data-theme="frutiger-aero"] .gt-stats-bar,
+:root[data-theme="frutiger-aero"] .gt-audio-player,
+:root[data-theme="frutiger-aero"] .gt-option,
+:root[data-theme="frutiger-aero"] .gt-streak-meter {
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.78) inset,
+        0 16px 30px rgba(84, 165, 188, 0.12);
+}
+
+:root[data-theme="frutiger-aero"] .gt-status-badge {
+    color: color-mix(in srgb, var(--foreground) 84%, var(--primary));
+    background: color-mix(in srgb, var(--gt-accent) 14%, rgba(255, 255, 255, 0.44));
 }

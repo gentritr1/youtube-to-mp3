@@ -1,0 +1,101 @@
+.theme-switcher-shell {
+    display: grid;
+    gap: 0.55rem;
+    min-width: min(100%, 23rem);
+}
+
+.theme-switcher-label {
+    color: var(--muted-foreground);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: right;
+}
+
+.theme-switcher-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.theme-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 7rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--hero-border) 85%, transparent);
+    background: color-mix(in srgb, var(--hero-surface-strong) 84%, transparent);
+    color: var(--foreground);
+    cursor: pointer;
+    transition:
+        transform var(--transition-fast),
+        border-color var(--transition-fast),
+        background var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.theme-option:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--hero-orb) 62%, transparent);
+    box-shadow: 0 14px 24px color-mix(in srgb, var(--hero-orb) 18%, transparent);
+}
+
+.theme-option.active {
+    background: color-mix(in srgb, var(--hero-orb) 17%, rgba(255, 255, 255, 0.06));
+    border-color: color-mix(in srgb, var(--hero-orb) 68%, transparent);
+    box-shadow:
+        0 16px 28px color-mix(in srgb, var(--hero-orb) 16%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--hero-orb) 18%, transparent) inset;
+}
+
+.theme-option-swatch {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.theme-option-copy {
+    display: grid;
+    text-align: left;
+    line-height: 1.05;
+}
+
+.theme-option-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.theme-option-short {
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+}
+
+.theme-option[data-theme-value="space"] .theme-option-swatch {
+    background: linear-gradient(135deg, #93c5fd, #1d4ed8 55%, #111827);
+}
+
+.theme-option[data-theme-value="green"] .theme-option-swatch {
+    background: linear-gradient(135deg, #86efac, #16a34a 55%, #052e16);
+}
+
+.theme-option[data-theme-value="frutiger-aero"] .theme-option-swatch {
+    background: linear-gradient(135deg, #d9f9ff, #6ee7f9 55%, #22c55e);
+}
+
+@media (max-width: 720px) {
+    .theme-switcher-label {
+        text-align: left;
+    }
+
+    .theme-switcher-options {
+        justify-content: flex-start;
+    }
+}

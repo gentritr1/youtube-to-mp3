@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="space">
 
 <head>
     <meta charset="UTF-8">
@@ -27,8 +27,15 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/layout/main.css">
+    <link rel="stylesheet" href="css/layout/hero.css">
     <link rel="stylesheet" href="css/components/form.css">
+    <link rel="stylesheet" href="css/components/header.css">
+    <link rel="stylesheet" href="css/components/theme-switcher.css">
+    <link rel="stylesheet" href="css/components/karaoke-panel.css">
     <link rel="stylesheet" href="css/utils/helpers.css">
+    <link rel="stylesheet" href="css/themes/space.css">
+    <link rel="stylesheet" href="css/themes/green.css">
+    <link rel="stylesheet" href="css/themes/frutiger-aero.css">
 
     <!-- Deferred CSS (Not needed for initial render) -->
     <link rel="stylesheet" href="css/components/results.css" media="print" onload="this.media='all'">
@@ -43,149 +50,298 @@
 
 <body>
     <main class="container">
-        <header class="header">
-            <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-                <h1 class="logo-text" aria-label="YT Converter">
-                    <span class="letter" style="--index: 0" aria-hidden="true">Y</span><span class="letter"
-                        style="--index: 1" aria-hidden="true">T</span><span class="letter space" style="--index: 2"
-                        aria-hidden="true"> </span><span class="letter" style="--index: 3"
-                        aria-hidden="true">C</span><span class="letter" style="--index: 4"
-                        aria-hidden="true">o</span><span class="letter" style="--index: 5"
-                        aria-hidden="true">n</span><span class="letter" style="--index: 6"
-                        aria-hidden="true">v</span><span class="letter" style="--index: 7"
-                        aria-hidden="true">e</span><span class="letter" style="--index: 8"
-                        aria-hidden="true">r</span><span class="letter" style="--index: 9"
-                        aria-hidden="true">t</span><span class="letter" style="--index: 10"
-                        aria-hidden="true">e</span><span class="letter" style="--index: 11" aria-hidden="true">r</span>
-                </h1>
-            </div>
-            <p class="tagline">Convert YouTube videos to MP3 or MP4</p>
-        </header>
+        <section class="hero-shell">
+            <header class="header hero-header">
+                <div class="hero-header-top">
+                    <span class="hero-eyebrow">Easy YouTube converter</span>
+                    <div id="theme-switcher" class="theme-switcher" aria-label="Theme switcher"></div>
+                </div>
+                <div class="hero-main">
+                    <div class="hero-content">
+                        <div class="logo">
+                            <div class="logo-badge" aria-hidden="true">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                            </div>
+                            <div class="logo-copy">
+                                <span class="logo-kicker">YT converter</span>
+                                <h1 class="logo-text">YT Converter</h1>
+                            </div>
+                        </div>
+                        <div class="hero-copy">
+                            <h2 class="hero-title">Paste a YouTube link, pick a format, and download in a few taps.</h2>
+                            <p class="tagline">This page keeps things simple: choose MP3 or MP4, try a theme you like, and follow lyrics on screen when a video includes them.</p>
+                        </div>
+                        <div class="hero-metrics" aria-label="Feature highlights">
+                            <div class="hero-metric">
+                                <span class="hero-metric-icon" aria-hidden="true">🎨</span>
+                                <span class="hero-metric-label">Themes</span>
+                                <span class="hero-metric-value">Pick the look you like best</span>
+                            </div>
+                            <div class="hero-metric">
+                                <span class="hero-metric-icon" aria-hidden="true">🎤</span>
+                                <span class="hero-metric-label">Lyrics</span>
+                                <span class="hero-metric-value">Easy-to-read lyrics when available</span>
+                            </div>
+                            <div class="hero-metric">
+                                <span class="hero-metric-icon" aria-hidden="true">🎮</span>
+                                <span class="hero-metric-label">Bonus</span>
+                                <span class="hero-metric-value">Play a quick game while your file gets ready</span>
+                            </div>
+                        </div>
+                    </div>
 
-        <div id="lyrics-background" class="lyrics-background hidden"></div>
-        <section class="converter-card">
-            <form id="converter-form" class="form">
-                <div class="input-group">
-                    <label for="url-input" class="sr-only">YouTube URL</label>
-                    <input type="url" id="url-input" class="input" placeholder="Paste YouTube URL here..."
-                        autocomplete="off" required>
-                    <button type="button" id="paste-btn" class="paste-btn" aria-label="Paste from clipboard"
-                        title="Paste from clipboard">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    <aside class="hero-art" aria-label="Animated brand illustration">
+                        <div class="hero-art-card">
+                            <div class="hero-art-chips">
+                                <span class="hero-art-chip">🎵 MP3</span>
+                                <span class="hero-art-chip">🎬 MP4</span>
+                                <span class="hero-art-chip">✨ Themes</span>
+                            </div>
+                            <div class="hero-runway" aria-hidden="true">
+                                <div class="hero-file-stream">
+                                    <span class="hero-file-card hero-file-card-mp3">MP3</span>
+                                    <span class="hero-file-card hero-file-card-mp4">MP4</span>
+                                    <span class="hero-file-card hero-file-card-wave">WAV</span>
+                                </div>
+                                <div class="hero-runway-brand">
+                                    <span class="run-letter" style="--jump-index: 0">Y</span>
+                                    <span class="run-letter" style="--jump-index: 1">T</span>
+                                    <span class="run-letter spacer"></span>
+                                    <span class="run-letter" style="--jump-index: 2">C</span>
+                                    <span class="run-letter" style="--jump-index: 3">o</span>
+                                    <span class="run-letter" style="--jump-index: 4">n</span>
+                                    <span class="run-letter" style="--jump-index: 5">v</span>
+                                    <span class="run-letter" style="--jump-index: 6">e</span>
+                                    <span class="run-letter" style="--jump-index: 7">r</span>
+                                    <span class="run-letter" style="--jump-index: 8">t</span>
+                                    <span class="run-letter" style="--jump-index: 9">e</span>
+                                    <span class="run-letter" style="--jump-index: 10">r</span>
+                                </div>
+                                <div class="hero-runner">
+                                    <span class="runner-trail"></span>
+                                    <span class="runner-cargo"></span>
+                                    <span class="runner-body"></span>
+                                    <span class="runner-window"></span>
+                                    <span class="runner-wheel runner-wheel-left"></span>
+                                    <span class="runner-wheel runner-wheel-right"></span>
+                                    <span class="runner-headlight"></span>
+                                </div>
+                            </div>
+                            <div class="hero-art-preview">
+                                <div class="hero-art-preview-screen">
+                                    <div class="hero-art-wave hero-art-wave-1"></div>
+                                    <div class="hero-art-wave hero-art-wave-2"></div>
+                                    <div class="hero-art-wave hero-art-wave-3"></div>
+                                    <div class="hero-art-play"></div>
+                                </div>
+                                <div class="hero-art-preview-copy">
+                                    <span class="hero-art-preview-label">Now loading</span>
+                                    <strong>Fun, fast, and a little more alive</strong>
+                                </div>
+                            </div>
+                            <div class="hero-floating-icons" aria-hidden="true">
+                                <span class="hero-float-icon hero-float-icon-note">🎵</span>
+                                <span class="hero-float-icon hero-float-icon-star">✦</span>
+                                <span class="hero-float-icon hero-float-icon-spark">💿</span>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </header>
+
+            <div class="hero-stage">
+                <section class="converter-card">
+                        <div class="converter-card-header">
+                        <div class="converter-card-copy">
+                            <span class="converter-card-eyebrow">⚡ Quick convert</span>
+                            <h3 class="converter-card-title">Turn a YouTube video into MP3 or MP4</h3>
+                            <p class="converter-card-subtitle">Paste a link, choose your format, and we will handle the rest.</p>
+                        </div>
+                        <div class="converter-card-steps" aria-label="How it works">
+                            <span class="converter-step">🔗 Paste link</span>
+                            <span class="converter-step">🎚️ Pick format</span>
+                            <span class="converter-step">⬇️ Download</span>
+                        </div>
+                    </div>
+
+                    <form id="converter-form" class="form">
+                        <div class="form-section-label">
+                            <span class="form-section-title">Video link</span>
+                            <span class="form-section-hint">Works with standard YouTube video links</span>
+                        </div>
+                        <div class="input-group">
+                            <label for="url-input" class="sr-only">YouTube URL</label>
+                            <input type="url" id="url-input" class="input" placeholder="Paste YouTube URL here..."
+                                autocomplete="off" required>
+                            <button type="button" id="paste-btn" class="paste-btn" aria-label="Paste from clipboard"
+                                title="Paste from clipboard">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="format-row">
+                            <div class="form-section-label compact">
+                                <span class="form-section-title">Choose format</span>
+                                <span class="form-section-hint">Audio for music, video if you want the full clip</span>
+                            </div>
+                        </div>
+                        <div class="format-toggle">
+                            <button type="button" class="format-btn active" data-format="mp3">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-mp3"
+                                    aria-hidden="true">
+                                    <path class="note-beam" d="M9 18V5l12-3v13" />
+                                    <circle class="note-left" cx="6" cy="18" r="3" />
+                                    <circle class="note-right" cx="18" cy="16" r="3" />
+                                    <line class="stem-left" x1="9" y1="18" x2="9" y2="5" />
+                                    <line class="stem-right" x1="21" y1="13" x2="21" y2="2" />
+                                </svg>
+                                MP3
+                            </button>
+                            <button type="button" class="format-btn" data-format="mp4">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-mp4"
+                                    aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <g class="reel-inner">
+                                        <circle cx="12" cy="12" r="3" />
+                                        <path d="M12 2v20" />
+                                        <path d="M2 12h20" />
+                                        <path d="M4.93 4.93l14.14 14.14" />
+                                        <path d="M19.07 4.93L4.93 19.07" />
+                                    </g>
+                                </svg>
+                                MP4
+                            </button>
+                        </div>
+
+                        <div class="convert-action-row">
+                            <div class="convert-action-copy">
+                                <span class="convert-action-title">Ready when you are</span>
+                                <span class="convert-action-hint">Your file will appear below as soon as it is prepared.</span>
+                            </div>
+                            <button type="submit" id="convert-btn" class="convert-btn">
+                                <span class="btn-text">Convert</span>
+                                <span class="btn-loader hidden">
+                                    <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="preview" class="preview hidden">
+                        <div class="thumbnail-wrapper">
+                            <img id="thumbnail" class="thumbnail" alt="Video thumbnail">
+                            <div class="thumbnail-skeleton skeleton"></div>
+                        </div>
+                        <div class="preview-info">
+                            <h3 id="video-title" class="video-title"></h3>
+                            <div class="title-skeleton skeleton"></div>
+                            <p id="video-duration" class="video-duration"></p>
+                            <div class="duration-skeleton skeleton"></div>
+                        </div>
+                    </div>
+
+                    <div id="progress-section" class="progress-section hidden">
+                        <div id="conversion-animation" class="conversion-animation">
+                            <!-- Animation content injected by JS -->
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <p id="progress-text" class="progress-text" aria-live="polite">Preparing...</p>
+                    </div>
+
+                    <div id="download-section" class="download-section hidden">
+                        <div class="border-progress"></div>
+                        <div class="success-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round" class="checkmark-svg">
+                                <path class="checkmark-circle" d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline class="checkmark-check" points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="download-content">
+                            <p class="success-text">Ready to download!</p>
+                        </div>
+                        <a id="download-link" class="download-btn" download>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download
+                        </a>
+                    </div>
+
+                    <div id="error-section" class="error-section hidden">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
                         </svg>
-                    </button>
-                </div>
+                        <p id="error-message"></p>
+                    </div>
+                </section>
 
-                <div class="format-toggle">
-                    <button type="button" class="format-btn active" data-format="mp3">
-                        <!-- Walking Notes SVG -->
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-mp3"
-                            aria-hidden="true">
-                            <path class="note-beam" d="M9 18V5l12-3v13" />
-                            <circle class="note-left" cx="6" cy="18" r="3" />
-                            <circle class="note-right" cx="18" cy="16" r="3" />
-                            <line class="stem-left" x1="9" y1="18" x2="9" y2="5" />
-                            <line class="stem-right" x1="21" y1="13" x2="21" y2="2" />
-                        </svg>
-                        MP3
-                    </button>
-                    <button type="button" class="format-btn" data-format="mp4">
-                        <!-- Spinning Reel SVG -->
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-mp4"
-                            aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" />
-                            <g class="reel-inner">
-                                <circle cx="12" cy="12" r="3" />
-                                <path d="M12 2v20" />
-                                <path d="M2 12h20" />
-                                <path d="M4.93 4.93l14.14 14.14" />
-                                <path d="M19.07 4.93L4.93 19.07" />
-                            </g>
-                        </svg>
-                        MP4
-                    </button>
-                </div>
+                <aside class="hero-sidecar">
+                    <section class="karaoke-card" id="karaoke-card">
+                            <div class="karaoke-panel-header">
+                            <div>
+                                <span class="karaoke-eyebrow">🎧 While you wait</span>
+                                <h2 class="karaoke-panel-title">Lyrics and mini games</h2>
+                            </div>
+                            <div class="karaoke-panel-tabs" role="group" aria-label="Lounge mode">
+                                <button type="button" class="karaoke-tab active" data-panel-mode="karaoke" aria-pressed="true">Karaoke</button>
+                                <button type="button" class="karaoke-tab" data-panel-mode="arcade" aria-pressed="false">Arcade</button>
+                            </div>
+                        </div>
 
-                <button type="submit" id="convert-btn" class="convert-btn">
-                    <span class="btn-text">Convert</span>
-                    <span class="btn-loader hidden">
-                        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-                        </svg>
-                    </span>
-                </button>
-            </form>
+                        <div class="karaoke-status">
+                            <span id="karaoke-status-badge" class="karaoke-status-badge" data-tone="idle">Waiting</span>
+                            <div>
+                                <p id="karaoke-status-title" class="karaoke-status-title">Paste a video to get started.</p>
+                                <p id="karaoke-status-detail" class="karaoke-status-detail">If the video has subtitles, the lyrics will show up here while your file is being prepared.</p>
+                            </div>
+                        </div>
 
-            <!-- Preview Section (hidden by default) -->
-            <div id="preview" class="preview hidden">
-                <div class="thumbnail-wrapper">
-                    <img id="thumbnail" class="thumbnail" alt="Video thumbnail">
-                    <div class="thumbnail-skeleton skeleton"></div>
-                </div>
-                <div class="preview-info">
-                    <h3 id="video-title" class="video-title"></h3>
-                    <div class="title-skeleton skeleton"></div>
-                    <p id="video-duration" class="video-duration"></p>
-                    <div class="duration-skeleton skeleton"></div>
-                </div>
+                        <div class="karaoke-panel-body">
+                            <div id="karaoke-view" class="karaoke-view">
+                                <div id="karaoke-lines" class="karaoke-lines"></div>
+                            </div>
+
+                            <div id="arcade-view" class="karaoke-view hidden">
+                                <div class="arcade-grid">
+                                    <article class="arcade-card">
+                                        <span class="arcade-card-title">Snake</span>
+                                        <p class="arcade-card-copy">Play a quick round of Snake while your download is getting ready.</p>
+                                    </article>
+                                    <article class="arcade-card">
+                                        <span class="arcade-card-title">Guess the Track</span>
+                                        <p class="arcade-card-copy">Try a music guessing game if you want something a little more fast-paced.</p>
+                                    </article>
+                                    <div class="arcade-launch-row">
+                                        <button type="button" class="arcade-launch-btn" data-game-launch="snake">Launch Snake</button>
+                                        <button type="button" class="arcade-launch-btn" data-game-launch="guesstrack">Launch Guess Track</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </aside>
             </div>
-
-            <!-- Progress Section (hidden by default) -->
-            <div id="progress-section" class="progress-section hidden">
-                <div id="conversion-animation" class="conversion-animation">
-                    <!-- Animation content injected by JS -->
-                </div>
-                <div class="progress-bar">
-                    <div id="progress-fill" class="progress-fill"></div>
-                </div>
-                <p id="progress-text" class="progress-text" aria-live="polite">Preparing...</p>
-            </div>
-
-            <!-- Download Section (hidden by default) -->
-            <div id="download-section" class="download-section hidden">
-                <div class="border-progress"></div>
-                <div class="success-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round" class="checkmark-svg">
-                        <path class="checkmark-circle" d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline class="checkmark-check" points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <div class="download-content">
-                    <p class="success-text">Ready to download!</p>
-                </div>
-                <a id="download-link" class="download-btn" download>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Download
-                </a>
-            </div>
-
-            <!-- Error Section (hidden by default) -->
-            <div id="error-section" class="error-section hidden">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                <p id="error-message"></p>
-            </div>
-
         </section>
 
         <!-- Nerd Stats Panel (outside card for wider layout) -->

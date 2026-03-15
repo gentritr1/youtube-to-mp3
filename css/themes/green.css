@@ -1,0 +1,26 @@
+:root[data-theme="green"] {
+    --background: hsl(152 44% 7%);
+    --foreground: hsl(120 14% 95%);
+    --card: hsl(154 34% 10%);
+    --card-foreground: hsl(120 14% 95%);
+    --secondary: hsl(153 26% 14%);
+    --secondary-foreground: hsl(120 14% 95%);
+    --muted: hsl(152 18% 16%);
+    --muted-foreground: hsl(145 16% 68%);
+    --accent: hsl(153 22% 17%);
+    --primary: hsl(134 90% 89%);
+    --primary-foreground: hsl(148 48% 14%);
+    --border: hsl(150 24% 19%);
+    --input: hsl(150 24% 19%);
+    --ring: hsl(145 58% 44%);
+    --emerald: hsl(146 73% 50%);
+    --sky: hsl(172 79% 55%);
+    --hero-surface: rgba(7, 25, 17, 0.74);
+    --hero-surface-strong: rgba(5, 24, 15, 0.94);
+    --hero-border: rgba(68, 173, 119, 0.34);
+    --hero-orb: rgba(34, 197, 94, 0.9);
+    --hero-orb-soft: rgba(16, 185, 129, 0.26);
+    --hero-glow: rgba(74, 222, 128, 0.22);
+    --ambient-primary: rgba(34, 197, 94, 0.16);
+    --ambient-secondary: rgba(45, 212, 191, 0.12);
+}

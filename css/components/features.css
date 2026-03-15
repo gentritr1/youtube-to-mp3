@@ -11,13 +11,13 @@
 
 .popular-section {
     background:
-        radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.1), transparent 30%),
-        linear-gradient(170deg, hsl(225 14% 8% / 0.9), hsl(225 12% 6% / 0.96));
+        radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb) 16%, transparent), transparent 28%),
+        radial-gradient(circle at bottom left, color-mix(in srgb, var(--sky) 14%, transparent), transparent 30%),
+        linear-gradient(170deg, color-mix(in srgb, var(--hero-surface-strong) 92%, transparent), color-mix(in srgb, var(--card) 96%, transparent));
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-radius: 1.4rem;
-    border: 1px solid hsl(225 10% 13%);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 82%, transparent);
     padding: 1.5rem;
     opacity: 0;
     animation: section-fade-in 0.5s ease forwards;
@@ -97,8 +97,8 @@
     gap: 0.45rem;
     padding: 0.5rem 0.7rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--hero-surface-strong) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 66%, transparent);
     color: var(--foreground);
     font-size: 0.74rem;
     font-weight: 600;
@@ -126,7 +126,7 @@
     border-radius: 1rem;
     background:
         linear-gradient(140deg, color-mix(in srgb, var(--genre-accent) 14%, rgba(255, 255, 255, 0.02)), rgba(255, 255, 255, 0.02)),
-        rgba(12, 18, 29, 0.78);
+        color-mix(in srgb, var(--hero-surface-strong) 84%, transparent);
     border: 1px solid color-mix(in srgb, var(--genre-accent) 24%, rgba(255, 255, 255, 0.06));
     animation: fadeSlideIn 320ms ease both;
 }
@@ -186,9 +186,9 @@
 .genre-tab {
     padding: 0.5rem 0.92rem;
     border-radius: 100px;
-    background: hsl(225 12% 10% / 0.82);
+    background: color-mix(in srgb, var(--secondary) 82%, transparent);
     color: var(--muted-foreground);
-    border: 1px solid hsl(225 10% 14%);
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     cursor: pointer;
     font-family: var(--font-sans);
     font-size: 0.84rem;
@@ -202,9 +202,9 @@
 }
 
 .genre-tab:hover {
-    background: hsl(225 12% 14%);
+    background: color-mix(in srgb, var(--hero-orb) 10%, var(--accent));
     color: var(--foreground);
-    border-color: hsl(225 10% 20%);
+    border-color: color-mix(in srgb, var(--hero-orb) 42%, transparent);
     transform: translateY(-1px);
 }
 
@@ -227,7 +227,7 @@
     overflow-x: auto;
     padding: 0.25rem 0 0.5rem;
     scrollbar-width: thin;
-    scrollbar-color: hsl(225 10% 18%) transparent;
+    scrollbar-color: color-mix(in srgb, var(--border) 92%, transparent) transparent;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
 }
@@ -241,12 +241,12 @@
 }
 
 .video-carousel::-webkit-scrollbar-thumb {
-    background: hsl(225 10% 18%);
+    background: color-mix(in srgb, var(--border) 92%, transparent);
     border-radius: 3px;
 }
 
 .video-carousel::-webkit-scrollbar-thumb:hover {
-    background: hsl(225 10% 24%);
+    background: color-mix(in srgb, var(--hero-border) 78%, transparent);
 }
 
 .video-card {
@@ -254,12 +254,12 @@
     scroll-snap-align: start;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%),
-        hsl(225 14% 8%);
+        color-mix(in srgb, var(--card) 96%, transparent);
     border-radius: 1.15rem;
     overflow: hidden;
     cursor: pointer;
     transition: all var(--transition-base);
-    border: 1px solid hsl(225 10% 12%);
+    border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
     position: relative;
     animation: popular-card-in 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: calc(var(--card-index, 0) * 70ms);
@@ -267,7 +267,7 @@
 
 .video-card:hover {
     transform: translateY(-5px);
-    border-color: color-mix(in srgb, var(--card-accent) 30%, hsl(225 10% 20%));
+    border-color: color-mix(in srgb, var(--card-accent) 30%, var(--hero-border));
     box-shadow:
         0 18px 40px -14px rgba(0, 0, 0, 0.6),
         0 0 0 1px color-mix(in srgb, var(--card-accent) 18%, transparent);
@@ -359,7 +359,7 @@
 .video-card-play svg {
     width: 18px;
     height: 18px;
-    color: hsl(225 15% 8%);
+    color: color-mix(in srgb, var(--background) 88%, black);
     margin-left: 2px;
 }
 
@@ -422,10 +422,10 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: hsl(0 0% 0% / 0.7);
+    background: var(--surface-glass-strong);
     backdrop-filter: blur(4px);
-    border: none;
-    color: white;
+    border: 1px solid var(--surface-border);
+    color: var(--foreground);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -434,8 +434,8 @@
 }
 
 .video-action-btn:hover {
-    background: white;
-    color: hsl(225 15% 8%);
+    background: var(--button-secondary);
+    color: var(--button-secondary-foreground);
     transform: scale(1.1);
 }
 
@@ -455,11 +455,15 @@
     margin-top: 0.75rem;
     padding: 1rem;
     background:
-        radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 30%),
-        hsl(225 14% 8%);
+        radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb-soft) 72%, transparent), transparent 30%),
+        linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 22%),
+        var(--surface-glass-strong);
     border-radius: 1rem;
-    border: 1px solid hsl(225 10% 13%);
+    border: 1px solid var(--surface-border);
     display: none;
+    box-shadow:
+        0 18px 34px color-mix(in srgb, var(--glass-shadow) 28%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 14%, transparent);
 }
 
 .preview-player.active {
@@ -527,7 +531,8 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--muted-foreground);
-    background: hsl(225 12% 12%);
+    background: var(--surface-glass-soft);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 74%, transparent);
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
 }
@@ -536,8 +541,8 @@
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: hsl(225 12% 12%);
-    border: none;
+    background: var(--surface-glass-soft);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 74%, transparent);
     color: var(--muted-foreground);
     cursor: pointer;
     display: flex;
@@ -558,12 +563,15 @@
 
 .preview-waveform {
     height: 52px;
-    background: hsl(225 15% 5%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent 100%),
+        color-mix(in srgb, var(--game-canvas) 88%, var(--surface-glass-soft));
     border-radius: var(--radius);
     margin-bottom: 0.75rem;
     overflow: hidden;
     position: relative;
     cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--hero-border) 62%, transparent);
 }
 
 .waveform-canvas {
@@ -576,7 +584,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    background: hsl(160 84% 39% / 0.08);
+    background: color-mix(in srgb, var(--hero-orb) 12%, transparent);
     pointer-events: none;
     width: 0%;
     transition: width 0.1s linear;
@@ -603,9 +611,9 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: var(--foreground);
-    border: none;
-    color: var(--background);
+    background: var(--button-primary);
+    border: 1px solid color-mix(in srgb, white 14%, transparent);
+    color: var(--button-primary-foreground);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -616,7 +624,9 @@
 
 .preview-play-btn:hover {
     transform: scale(1.08);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+    box-shadow:
+        0 14px 28px color-mix(in srgb, var(--hero-orb) 22%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
 }
 
 .preview-play-btn svg {
@@ -656,7 +666,7 @@
 .preview-progress-bar {
     flex: 1;
     height: 3px;
-    background: hsl(225 12% 14%);
+    background: var(--surface-glass-soft);
     border-radius: 2px;
     cursor: pointer;
     position: relative;
@@ -665,7 +675,7 @@
 
 .preview-progress-fill {
     height: 100%;
-    background: var(--foreground);
+    background: var(--button-primary);
     width: 0%;
     transition: width 0.1s linear;
     border-radius: 2px;
@@ -674,9 +684,9 @@
 .preview-convert-btn {
     padding: 0.5rem 0.95rem;
     border-radius: 100px;
-    background: var(--emerald);
+    background: var(--button-primary);
     border: none;
-    color: white;
+    color: var(--button-primary-foreground);
     font-family: var(--font-sans);
     font-size: 0.75rem;
     font-weight: 700;
@@ -687,11 +697,16 @@
     transition: all var(--transition-fast);
     white-space: nowrap;
     letter-spacing: 0.01em;
+    box-shadow:
+        0 14px 28px color-mix(in srgb, var(--hero-orb) 18%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 16%, transparent);
 }
 
 .preview-convert-btn:hover {
     transform: scale(1.04);
-    box-shadow: 0 2px 10px hsl(160 84% 39% / 0.3);
+    box-shadow:
+        0 18px 34px color-mix(in srgb, var(--hero-orb) 24%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
 }
 
 .preview-convert-btn svg {

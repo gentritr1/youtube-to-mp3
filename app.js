@@ -3,10 +3,14 @@
  * Minimal ES6+ implementation with backend integration
  */
 
+import { LyricsController } from './js/lyrics.js';
+import { AnimationController } from './js/ui/animationController.js';
+import { animationRegistry } from './js/ui/animationRegistry.js';
+import { KaraokePanel } from './js/ui/karaokePanel.js';
+import { ThemeController } from './js/ui/themeController.js';
+
 // Configuration
 const API_URL = '';
-
-import { LyricsController } from './js/lyrics.js';
 
 // DOM Elements
 const elements = {
@@ -38,6 +42,15 @@ const elements = {
     statPeak: document.getElementById('stat-peak'),
     statDuration: document.getElementById('stat-duration'),
     statFilesize: document.getElementById('stat-filesize'),
+    themeSwitcher: document.getElementById('theme-switcher'),
+    karaokeTabs: document.querySelectorAll('.karaoke-tab'),
+    karaokeView: document.getElementById('karaoke-view'),
+    arcadeView: document.getElementById('arcade-view'),
+    karaokeLines: document.getElementById('karaoke-lines'),
+    karaokeStatusBadge: document.getElementById('karaoke-status-badge'),
+    karaokeStatusTitle: document.getElementById('karaoke-status-title'),
+    karaokeStatusDetail: document.getElementById('karaoke-status-detail'),
+    arcadeLaunchButtons: document.querySelectorAll('[data-game-launch]')
 };
 
 // State
@@ -47,7 +60,25 @@ const state = {
     videoInfo: null,
 };
 
-const lyricsController = new LyricsController(document.getElementById('lyrics-background'));
+const lyricsController = new LyricsController();
+const animationController = new AnimationController(animationRegistry);
+const themeController = new ThemeController({
+    mount: elements.themeSwitcher,
+    metaThemeColor: document.querySelector('meta[name="theme-color"]')
+});
+const karaokePanel = new KaraokePanel({
+    root: document.getElementById('karaoke-card'),
+    tabs: elements.karaokeTabs,
+    views: {
+        karaoke: elements.karaokeView,
+        arcade: elements.arcadeView
+    },
+    linesContainer: elements.karaokeLines,
+    statusBadge: elements.karaokeStatusBadge,
+    statusTitle: elements.karaokeStatusTitle,
+    statusDetail: elements.karaokeStatusDetail,
+    launchButtons: elements.arcadeLaunchButtons
+});
 
 // Module-level timers
 let nerdStatsTimeout = null;
@@ -56,83 +87,35 @@ let statsIntervalId = null;
 // YouTube URL regex patterns
 const YT_REGEX = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
-/**
- * Conversion Animations - Fun music-themed loading animations
- * Randomly selects one of 4 animations each conversion
- */
-const conversionAnimations = {
-    animations: [
-        {
-            name: 'vinyl',
-            label: '🎵 Spinning vinyl...',
-            html: `<div class="anim-vinyl">
-                <div class="vinyl-record"></div>
-                <div class="vinyl-label"></div>
-                <div class="vinyl-arm"></div>
-            </div>`
-        },
-        {
-            name: 'cassette',
-            label: '📼 Loading tape...',
-            html: `<div class="anim-cassette">
-                <div class="cassette-label"></div>
-                <div class="cassette-reel reel-left"></div>
-                <div class="cassette-reel reel-right"></div>
-                <div class="cassette-window">
-                    <div class="cassette-tape"></div>
-                </div>
-            </div>`
-        },
-        {
-            name: 'equalizer',
-            label: '🎛️ Mixing audio...',
-            html: `<div class="anim-equalizer">
-                <div class="eq-bar"></div>
-                <div class="eq-bar"></div>
-                <div class="eq-bar"></div>
-                <div class="eq-bar"></div>
-                <div class="eq-bar"></div>
-                <div class="eq-bar"></div>
-                <div class="eq-bar"></div>
-            </div>`
-        },
-        {
-            name: 'waveform',
-            label: '🌊 Drawing waveform...',
-            html: `<div class="anim-waveform">
-                <svg class="waveform-svg" viewBox="0 0 140 60" aria-hidden="true" focusable="false">
-                    <path class="waveform-line-bg" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
-                    <path class="waveform-glow" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
-                    <path class="waveform-line" d="M5,30 Q15,10 25,30 T45,30 T65,30 T85,30 T105,30 T125,30 T135,30" />
-                </svg>
-            </div>`
-        }
-    ],
+themeController.init();
+karaokePanel.init();
 
-    getRandom() {
-        return this.animations[Math.floor(Math.random() * this.animations.length)];
-    },
+lyricsController.on('loaded', ({ lyrics }) => {
+    karaokePanel.setLyrics(lyrics);
+});
 
-    start(container) {
-        if (!container) return null;
+lyricsController.on('start', () => {
+    karaokePanel.setStatus(
+        'Live',
+        'Lyrics are moving now.',
+        'The current line will stay highlighted here while your file finishes preparing.',
+        'live'
+    );
+});
 
-        const anim = this.getRandom();
+lyricsController.on('linechange', ({ index }) => {
+    karaokePanel.setActiveLine(index);
+});
 
-        // Respect users' prefers-reduced-motion setting
-        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            container.innerHTML = `<div class="anim-label">${anim.label}</div>`;
-            return anim.name;
-        }
-
-        container.innerHTML = anim.html + `<div class="anim-label">${anim.label}</div>`;
-        return anim.name;
-    },
-
-    stop(container) {
-        if (!container) return;
-        container.innerHTML = '';
+lyricsController.on('stop', ({ preserveLyrics }) => {
+    if (preserveLyrics) {
+        karaokePanel.finishPlayback();
     }
-};
+});
+
+lyricsController.on('empty', () => {
+    karaokePanel.setEmpty();
+});
 
 /**
  * Extract video ID from YouTube URL
@@ -171,9 +154,10 @@ const hideResults = () => {
     elements.downloadSection.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
     elements.errorSection.classList.add('hidden');
     // Stop any running conversion animation
-    conversionAnimations.stop(elements.conversionAnimation);
-    
-    lyricsController.stop();
+    animationController.stop(elements.conversionAnimation);
+
+    lyricsController.stop({ preserveLyrics: false });
+    karaokePanel.setIdle();
 
     // Clear background timers
     if (nerdStatsTimeout) {
@@ -474,10 +458,11 @@ const handleSubmit = async (e) => {
     // Single video mode: original behavior
     hideResults();
     setLoading(true);
+    karaokePanel.setLoading();
 
     // Show progress section with fun animation immediately
     elements.progressSection.classList.remove('hidden');
-    conversionAnimations.start(elements.conversionAnimation);
+    animationController.start('conversionProgress', elements.conversionAnimation);
     updateProgress(0, 'Fetching video info...');
 
     // START THE GAME!
@@ -507,15 +492,17 @@ const handleSubmit = async (e) => {
         // Check for subtitles and start karaoke
         if (videoInfo.subtitles && videoInfo.subtitles.length > 0) {
             fetchLyricsAndStartKaraoke(videoInfo.subtitles);
+        } else {
+            karaokePanel.setEmpty();
         }
 
         // Convert video
-        const { url: downloadUrl, filename } = await convertVideo(videoId, state.format, videoInfo.title);
+        const { url: downloadUrl } = await convertVideo(videoId, state.format, videoInfo.title);
 
         // Stop conversion animation and hide progress
-        conversionAnimations.stop(elements.conversionAnimation);
+        animationController.stop(elements.conversionAnimation);
         elements.progressSection.classList.add('hidden');
-        lyricsController.stop();
+        lyricsController.stop({ preserveLyrics: true });
         elements.downloadLink.href = downloadUrl;
 
         // Start orchestrated download animation
@@ -530,17 +517,22 @@ const handleSubmit = async (e) => {
 };
 
 /**
- * Handle background lyrics fetch & start
+ * Handle karaoke lyrics fetch & start
  */
 const fetchLyricsAndStartKaraoke = async (subtitles) => {
+    karaokePanel.setLoading();
+
     try {
         const loaded = await lyricsController.loadSubtitles(subtitles);
-        // Only start if still actively loading (user didn't change page/cancel)
+
         if (loaded && state.isLoading) {
             lyricsController.start();
+        } else if (!loaded) {
+            karaokePanel.setEmpty();
         }
     } catch (e) {
         console.warn('Silent fail for lyrics', e);
+        karaokePanel.setEmpty();
     }
 };
 
@@ -649,6 +641,14 @@ const gtElements = {
 let snakeGame = null;
 let guessTrackGame = null;
 let activeMiniGame = 'snake';
+const allowedGames = new Set(['snake', 'guesstrack']);
+
+const syncMiniGameControls = () => {
+    document.querySelectorAll('.mini-game-btn').forEach((button) => {
+        button.classList.toggle('active', button.dataset.game === activeMiniGame);
+    });
+    karaokePanel.setActiveGame(activeMiniGame);
+};
 
 const showGame = () => {
     if (activeMiniGame === 'snake') {
@@ -666,22 +666,24 @@ const showGame = () => {
     }
 };
 
+const launchMiniGame = (gameId) => {
+    if (!gameId || !allowedGames.has(gameId)) {
+        return;
+    }
+
+    activeMiniGame = gameId;
+    syncMiniGameControls();
+    showGame();
+};
+
+karaokePanel.setOnLaunchGame(launchMiniGame);
+syncMiniGameControls();
+
 // Mini-game toggles
 document.querySelectorAll('.mini-game-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const nextGame = e.currentTarget?.dataset?.game;
-        const allowedGames = new Set(['snake', 'guesstrack']);
-
-        if (!nextGame || !allowedGames.has(nextGame)) {
-            return;
-        }
-
-        document.querySelectorAll('.mini-game-btn').forEach(b => {
-            b.classList.remove('active');
-        });
-        e.currentTarget.classList.add('active');
-        activeMiniGame = nextGame;
-        showGame();
+        launchMiniGame(nextGame);
     });
 });
 

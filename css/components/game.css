@@ -13,15 +13,16 @@
     max-height: calc(100vh - 2.5rem);
     display: flex;
     flex-direction: column;
-    background: linear-gradient(165deg,
-            hsl(225 16% 8% / 0.97),
-            hsl(225 14% 6% / 0.98));
-    border: 1px solid hsl(225 10% 16%);
+    background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb-soft) 72%, transparent), transparent 30%),
+        linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 22%),
+        linear-gradient(165deg, var(--game-surface), var(--game-surface-strong));
+    border: 1px solid var(--game-border);
     border-radius: var(--radius-xl);
     box-shadow:
-        0 24px 48px -12px rgba(0, 0, 0, 0.5),
-        0 0 0 1px hsl(225 10% 12% / 0.6),
-        inset 0 1px 0 hsl(225 10% 20% / 0.3);
+        0 24px 48px -12px var(--game-shadow),
+        0 0 0 1px color-mix(in srgb, var(--game-border) 60%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 14%, transparent);
     animation: game-panel-slide-in 0.45s var(--transition-smooth);
     overflow: hidden;
     margin: 0;
@@ -54,8 +55,10 @@
     align-items: center;
     width: 100%;
     padding: 0.625rem 0.875rem;
-    background: hsl(225 14% 9% / 0.8);
-    border-bottom: 1px solid hsl(225 10% 14%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent 44%),
+        color-mix(in srgb, var(--game-surface-soft) 92%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--game-border) 72%, transparent);
     font-size: 0.8125rem;
     flex-shrink: 0;
     user-select: none;
@@ -105,7 +108,7 @@
     height: 22px;
     padding: 0;
     background: transparent;
-    border: 1px solid hsl(225 10% 18%);
+    border: 1px solid color-mix(in srgb, var(--game-border) 68%, transparent);
     border-radius: 5px;
     color: var(--muted-foreground);
     cursor: pointer;
@@ -113,9 +116,9 @@
 }
 
 .game-minimize-btn:hover {
-    background: hsl(225 12% 16%);
+    background: color-mix(in srgb, var(--hero-orb) 10%, var(--game-surface-soft));
     color: var(--foreground);
-    border-color: hsl(225 10% 24%);
+    border-color: var(--game-border-strong);
 }
 
 .game-minimize-btn svg {
@@ -143,7 +146,7 @@
 }
 
 .game-body::-webkit-scrollbar-thumb {
-    background: hsl(225 10% 22%);
+    background: color-mix(in srgb, var(--game-border-strong) 82%, transparent);
     border-radius: 2px;
 }
 
@@ -171,8 +174,8 @@
     align-items: center;
     gap: 0.35rem;
     padding: 0.25rem 0.625rem;
-    background: hsl(225 12% 14% / 0.5);
-    border: 1px solid hsl(225 10% 20%);
+    background: color-mix(in srgb, var(--game-surface-soft) 80%, transparent);
+    border: 1px solid color-mix(in srgb, var(--game-border) 72%, transparent);
     border-radius: 99px;
     color: var(--muted-foreground);
     font-size: 0.75rem;
@@ -183,16 +186,17 @@
 }
 
 .mini-game-btn:hover {
-    background: hsl(225 12% 20%);
+    background: color-mix(in srgb, var(--hero-orb) 10%, var(--game-surface-soft));
     color: var(--foreground);
-    border-color: var(--primary);
+    border-color: var(--game-border-strong);
     transform: translateY(-1px);
 }
 
 .mini-game-btn.active {
-    background: hsl(225 12% 20%);
+    background: color-mix(in srgb, var(--hero-orb) 14%, var(--game-surface-soft));
     color: var(--foreground);
-    border-color: var(--primary);
+    border-color: var(--game-border-strong);
+    box-shadow: 0 12px 22px color-mix(in srgb, var(--hero-orb) 16%, transparent);
     transform: translateY(-1px);
 }
 
@@ -222,10 +226,10 @@
     font-size: 0.6875rem;
     font-family: var(--font-mono);
     color: var(--muted-foreground);
-    background: hsl(225 12% 10%);
+    background: color-mix(in srgb, var(--game-surface-soft) 84%, transparent);
     padding: 0.2rem 0.5rem;
     border-radius: 5px;
-    border: 1px solid hsl(225 10% 14%);
+    border: 1px solid color-mix(in srgb, var(--game-border) 68%, transparent);
 }
 
 .stat-item .stat-icon {
@@ -291,10 +295,10 @@
     font-size: 0.6rem;
     font-family: var(--font-mono);
     padding: 0.05rem 0.25rem;
-    background: hsl(347 50% 28%);
-    border: 1px solid hsl(347 50% 38%);
+    background: color-mix(in srgb, var(--rose) 18%, var(--game-surface));
+    border: 1px solid color-mix(in srgb, var(--rose) 42%, var(--game-border));
     border-radius: 3px;
-    color: hsl(347 77% 72%);
+    color: color-mix(in srgb, var(--rose) 54%, white);
 }
 
 @keyframes split-pulse {
@@ -358,8 +362,8 @@
    Canvas
    ======================================== */
 .game-container canvas {
-    background: hsl(225 18% 4%);
-    border: 1px solid hsl(225 10% 13%);
+    background: var(--game-canvas);
+    border: 1px solid var(--game-canvas-border);
     border-radius: var(--radius);
     box-shadow:
         0 2px 20px rgba(0, 0, 0, 0.4),
@@ -371,8 +375,8 @@
 }
 
 .game-container canvas:focus {
-    border-color: hsl(225 10% 20%);
-    box-shadow: 0 0 0 2px hsl(225 18% 4%), 0 0 0 4px hsl(225 10% 40%);
+    border-color: var(--game-border-strong);
+    box-shadow: 0 0 0 2px var(--game-canvas), 0 0 0 4px color-mix(in srgb, var(--game-border-strong) 82%, transparent);
     outline: none;
 }
 
@@ -471,8 +475,8 @@
     padding: 0.1rem 0.3rem;
     font-size: 0.625rem;
     font-family: var(--font-mono);
-    background: hsl(225 12% 12%);
-    border: 1px solid hsl(225 10% 18%);
+    background: color-mix(in srgb, var(--game-surface-soft) 86%, transparent);
+    border: 1px solid color-mix(in srgb, var(--game-border) 72%, transparent);
     border-radius: 3px;
     color: var(--foreground);
     line-height: 1;
@@ -520,9 +524,11 @@
 .high-scores {
     width: 100%;
     padding: 0.75rem;
-    background: hsl(225 14% 8%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 5%, transparent), transparent 28%),
+        color-mix(in srgb, var(--game-surface-soft) 90%, transparent);
     border-radius: var(--radius);
-    border: 1px solid hsl(225 10% 13%);
+    border: 1px solid color-mix(in srgb, var(--game-border) 72%, transparent);
 }
 
 .high-scores h4 {
@@ -556,7 +562,7 @@
     align-items: center;
     font-size: 0.75rem;
     padding: 0.3rem 0.4rem;
-    border-bottom: 1px solid hsl(225 10% 11%);
+    border-bottom: 1px solid color-mix(in srgb, var(--game-border) 40%, transparent);
     border-radius: 4px;
     transition: background var(--transition-fast);
 }
@@ -667,8 +673,39 @@
     }
 
     #high-scores-list li:hover {
-        background: hsl(225 12% 10%);
+        background: color-mix(in srgb, var(--hero-orb) 8%, var(--game-surface-soft));
     }
+}
+
+:root[data-theme="frutiger-aero"] .game-floating {
+    background:
+        radial-gradient(circle at 16% 10%, rgba(255, 255, 255, 0.7), transparent 26%),
+        radial-gradient(circle at 86% 14%, rgba(103, 232, 249, 0.18), transparent 24%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 20%),
+        linear-gradient(165deg, rgba(247, 253, 255, 0.74), rgba(219, 247, 252, 0.68));
+    box-shadow:
+        0 28px 56px rgba(85, 170, 194, 0.22),
+        0 0 0 1px rgba(149, 232, 250, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+:root[data-theme="frutiger-aero"] .game-floating .game-header,
+:root[data-theme="frutiger-aero"] .stat-item,
+:root[data-theme="frutiger-aero"] .mini-game-btn,
+:root[data-theme="frutiger-aero"] .high-scores,
+:root[data-theme="frutiger-aero"] .game-controls kbd {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(220, 248, 253, 0.24)),
+        rgba(255, 255, 255, 0.14);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.8) inset,
+        0 14px 30px rgba(86, 170, 193, 0.12);
+}
+
+:root[data-theme="frutiger-aero"] .game-container canvas {
+    box-shadow:
+        0 16px 34px rgba(56, 125, 145, 0.18),
+        inset 0 0 40px rgba(0, 0, 0, 0.34);
 }
 
 /* ---- Reduced motion ---- */
