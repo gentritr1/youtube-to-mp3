@@ -1,0 +1,38 @@
+{
+  "name": "Pop Hits",
+  "icon": "🎤",
+  "color": "#f43f5e",
+  "description": "High-recognition pop records with official uploads and preview-friendly runtime.",
+  "order": 20,
+  "enabled": true,
+  "videos": [
+    {
+      "videoId": "4NRXx6U8ABQ",
+      "title": "Blinding Lights",
+      "artist": "The Weeknd",
+      "duration": "3:22",
+      "tag": "Synth-pop"
+    },
+    {
+      "videoId": "JGwWNGJdvx8",
+      "title": "Shape of You",
+      "artist": "Ed Sheeran",
+      "duration": "4:23",
+      "tag": "Radio"
+    },
+    {
+      "videoId": "k2qgadSvNyU",
+      "title": "New Rules",
+      "artist": "Dua Lipa",
+      "duration": "3:45",
+      "tag": "Modern pop"
+    },
+    {
+      "videoId": "dQw4w9WgXcQ",
+      "title": "Never Gonna Give You Up",
+      "artist": "Rick Astley",
+      "duration": "3:33",
+      "tag": "Classic"
+    }
+  ]
+}

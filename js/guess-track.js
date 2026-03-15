@@ -17,6 +17,7 @@ class GuessTrackGame {
         this.options = [];
         this.roundActive = false;
         this.isLoading = false;
+        this.feedbackTimer = null;
 
         this.bindEvents();
     }
@@ -42,6 +43,7 @@ class GuessTrackGame {
         this.lives = 3;
         this.streak = 0;
         this.updateStatsUI();
+        this.setStatus('ready', 'Fresh run', 'Back to full lives. Hit start when you are ready.');
         this.startRound();
     }
 
@@ -49,7 +51,7 @@ class GuessTrackGame {
         this.elements.container.classList.remove('hidden');
         this.updateStatsUI();
         if (this.lives > 0 && !this.isActive && !this.isLoading) {
-            this.elements.statusText.textContent = "Click Start to Play!";
+            this.setStatus('ready', 'Click Start to Play', 'You get one short preview and four options.');
             this.elements.startBtn.classList.remove('hidden');
             this.elements.startBtn.textContent = "Start Game";
         }
@@ -59,6 +61,7 @@ class GuessTrackGame {
         this.elements.container.classList.add('hidden');
         if (this.audio) this.audio.pause();
         this.stopTimer();
+        this.stopFeedback();
         this.isActive = false;
     }
 
@@ -71,6 +74,7 @@ class GuessTrackGame {
         
         this.stopAudio();
         this.stopTimer();
+        this.stopFeedback();
         
         // UI Reset
         this.elements.startBtn.classList.add('hidden');
@@ -80,26 +84,27 @@ class GuessTrackGame {
             btn.disabled = false;
         });
         
+        this.elements.container.classList.remove('is-wrong', 'is-correct', 'is-streak-hot');
         this.elements.visualizer.classList.remove('playing');
-        this.elements.statusText.textContent = "Loading next track...";
+        this.setStatus('loading', 'Loading next track...', 'Picking a preview from the music feed.');
         this.elements.timerBarContainer.classList.add('hidden');
         this.elements.timerBar.style.width = '100%';
 
         if (typeof FeaturesModule === 'undefined' || !FeaturesModule.getRandomTracks) {
-            this.elements.statusText.textContent = "Error: Features module not loaded.";
+            this.setStatus('danger', 'Feature unavailable', 'Track data is not ready yet.');
             this.isLoading = false;
             return;
         }
         const tracks = FeaturesModule.getRandomTracks(4);
         if (tracks.length === 0) {
-             this.elements.statusText.textContent = "Waiting for music feed to load...";
+             this.setStatus('loading', 'Waiting for music feed', 'No tracks yet. Retrying in a moment.');
              // Retry in 1 second
              setTimeout(() => this.startRound(), 1000);
              return;
         }
 
         if (tracks.length < 4) {
-             this.elements.statusText.textContent = "Almost ready... fetching more tracks.";
+             this.setStatus('loading', 'Almost ready...', 'Fetching enough options for a fair round.');
              setTimeout(() => this.startRound(), 1500);
              return;
         }
@@ -137,7 +142,7 @@ class GuessTrackGame {
             
             this.audio.addEventListener('error', () => {
                 if (!this.isActive) return;
-                this.elements.statusText.textContent = "Audio failed. Skipping...";
+                this.setStatus('danger', 'Audio failed', 'Skipping to the next preview.');
                 this.isLoading = false;
                 setTimeout(() => this.startRound(), 1500);
             }, { once: true });
@@ -152,7 +157,7 @@ class GuessTrackGame {
         } catch (e) {
             console.error("[GuessTrack] Error loading preview:", e);
             if (this.isActive) {
-                this.elements.statusText.textContent = "Track unavailable. Skipping...";
+                this.setStatus('danger', 'Track unavailable', 'This preview could not be loaded. Skipping.');
                 this.isLoading = false;
                 setTimeout(() => this.startRound(), 1500);
             }
@@ -164,7 +169,7 @@ class GuessTrackGame {
         
         this.audio.play().then(() => {
             this.elements.visualizer.classList.add('playing');
-            this.elements.statusText.textContent = "Guess the track!";
+            this.setStatus('playing', 'Guess the track', 'Listen fast. You have 5 seconds to lock it in.');
             this.elements.timerBarContainer.classList.remove('hidden');
             
             // Show options
@@ -181,6 +186,7 @@ class GuessTrackGame {
                 btn.dataset.videoId = track.videoId;
                 btn.title = `${trackName} - ${artistName}`;
                 btn.classList.remove('hidden');
+                btn.style.setProperty('--gt-option-index', index);
             });
             
             this.roundActive = true;
@@ -189,7 +195,7 @@ class GuessTrackGame {
             
         }).catch(err => {
             console.error("Audio playback blocked", err);
-            this.elements.statusText.textContent = "Click anywhere to allow audio.";
+            this.setStatus('warning', 'Playback blocked', 'Use the button to retry once audio is allowed.');
             this.elements.startBtn.classList.remove('hidden');
             this.elements.startBtn.textContent = "Play manually";
         });
@@ -250,7 +256,7 @@ class GuessTrackGame {
             btn.classList.add('correct');
             this.score += 10 + (this.streak * 5);
             this.streak++;
-            this.elements.statusText.textContent = "Correct! 🎯";
+            this.handleCorrectAnswer();
         } else {
             // Wrong
             btn.classList.add('wrong');
@@ -260,7 +266,7 @@ class GuessTrackGame {
             
             this.streak = 0;
             this.lives--;
-            this.elements.statusText.textContent = "Wrong! ❌";
+            this.handleWrongAnswer();
         }
         
         this.updateStatsUI();
@@ -279,7 +285,9 @@ class GuessTrackGame {
         
         this.streak = 0;
         this.lives--;
-        this.elements.statusText.textContent = "Time's UP! ⏰";
+        this.elements.container.classList.add('is-wrong');
+        this.spawnBurst('miss');
+        this.setStatus('danger', "Time's up", `The right answer was ${this.targetTrack.title || 'the highlighted track'}.`);
         
         this.updateStatsUI();
         this.scheduleNext();
@@ -288,7 +296,7 @@ class GuessTrackGame {
     scheduleNext() {
         if (this.lives <= 0) {
             setTimeout(() => {
-                this.elements.statusText.textContent = `Game Over! Final Score: ${this.score}`;
+                this.setStatus('danger', `Game Over • ${this.score} pts`, 'Reset to start a new run and build a longer combo.');
                 this.elements.startBtn.classList.remove('hidden');
                 this.elements.startBtn.textContent = "Play Again";
             }, 1500);
@@ -303,5 +311,98 @@ class GuessTrackGame {
         this.elements.scoreDisplay.textContent = this.score;
         this.elements.livesDisplay.textContent = '❤️'.repeat(this.lives) + '🖤'.repeat(3 - this.lives);
         this.elements.streakDisplay.textContent = this.streak;
+        const streakProgress = Math.min((this.streak / 3) * 100, 100);
+        if (this.elements.streakMeterFill) {
+            this.elements.streakMeterFill.style.width = `${streakProgress}%`;
+        }
+        this.elements.container.classList.toggle('is-streak-hot', this.streak >= 3);
+    }
+
+    handleCorrectAnswer() {
+        const milestoneHit = this.streak > 0 && this.streak % 3 === 0;
+        this.elements.container.classList.remove('is-wrong');
+        this.elements.container.classList.add('is-correct');
+
+        if (milestoneHit) {
+            this.spawnBurst('streak');
+            this.setStatus('streak', `${this.streak} in a row`, 'Hot streak unlocked. Keep the combo alive.');
+        } else {
+            this.spawnBurst('success');
+            this.setStatus('success', 'Correct', `+${10 + ((this.streak - 1) * 5)} points. Preview mastered.`);
+        }
+    }
+
+    handleWrongAnswer() {
+        const answerTitle = this.targetTrack?.title || 'the highlighted track';
+        this.elements.container.classList.remove('is-correct', 'is-streak-hot');
+        this.elements.container.classList.add('is-wrong');
+        this.spawnBurst('miss');
+        this.setStatus('danger', 'Wrong answer', `The right pick was ${answerTitle}. Resetting your combo.`);
+    }
+
+    setStatus(state, title, detail = '') {
+        if (this.elements.statusBadge) {
+            const badgeMap = {
+                ready: 'Warmup',
+                loading: 'Loading',
+                playing: 'Live',
+                success: 'Correct',
+                streak: 'On Fire',
+                danger: 'Miss',
+                warning: 'Audio'
+            };
+            this.elements.statusBadge.textContent = badgeMap[state] || 'Update';
+        }
+
+        this.elements.container.dataset.gtState = state;
+        this.elements.statusText.textContent = title;
+        if (this.elements.statusDetail) {
+            this.elements.statusDetail.textContent = detail;
+        }
+    }
+
+    stopFeedback() {
+        if (this.feedbackTimer) {
+            clearTimeout(this.feedbackTimer);
+            this.feedbackTimer = null;
+        }
+        if (this.elements.feedbackLayer) {
+            this.elements.feedbackLayer.innerHTML = '';
+        }
+    }
+
+    spawnBurst(type) {
+        if (!this.elements.feedbackLayer) return;
+
+        this.stopFeedback();
+
+        const configs = {
+            success: { count: 14, symbols: ['✦', '•', '♪'], colors: ['#34d399', '#fbbf24', '#7dd3fc'] },
+            streak: { count: 18, symbols: ['🔥', '✦', '♫'], colors: ['#fb7185', '#f59e0b', '#facc15'] },
+            miss: { count: 10, symbols: ['✕', '•'], colors: ['#fb7185', '#fda4af', '#fecdd3'] }
+        };
+
+        const config = configs[type] || configs.success;
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < config.count; i++) {
+            const particle = document.createElement('span');
+            particle.className = `gt-burst gt-burst-${type}`;
+            particle.textContent = config.symbols[i % config.symbols.length];
+            particle.style.setProperty('--gt-burst-x', `${(Math.random() * 120) - 60}px`);
+            particle.style.setProperty('--gt-burst-y', `${-40 - (Math.random() * 70)}px`);
+            particle.style.setProperty('--gt-burst-rotate', `${(Math.random() * 140) - 70}deg`);
+            particle.style.setProperty('--gt-burst-delay', `${i * 35}ms`);
+            particle.style.color = config.colors[i % config.colors.length];
+            fragment.appendChild(particle);
+        }
+
+        this.elements.feedbackLayer.appendChild(fragment);
+        this.feedbackTimer = setTimeout(() => {
+            if (this.elements.feedbackLayer) {
+                this.elements.feedbackLayer.innerHTML = '';
+            }
+            this.feedbackTimer = null;
+        }, 1800);
     }
 }

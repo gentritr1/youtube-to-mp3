@@ -1,0 +1,38 @@
+{
+  "name": "Global Picks",
+  "icon": "🌍",
+  "color": "#22c55e",
+  "description": "Worldwide, recognisable tracks chosen as the default set for broader region coverage.",
+  "order": 10,
+  "enabled": true,
+  "videos": [
+    {
+      "videoId": "4NRXx6U8ABQ",
+      "title": "Blinding Lights",
+      "artist": "The Weeknd",
+      "duration": "3:22",
+      "tag": "Worldwide"
+    },
+    {
+      "videoId": "JGwWNGJdvx8",
+      "title": "Shape of You",
+      "artist": "Ed Sheeran",
+      "duration": "4:23",
+      "tag": "Global hit"
+    },
+    {
+      "videoId": "kJQP7kiw5Fk",
+      "title": "Despacito",
+      "artist": "Luis Fonsi ft. Daddy Yankee",
+      "duration": "4:42",
+      "tag": "Massive"
+    },
+    {
+      "videoId": "9bZkp7q19f0",
+      "title": "Gangnam Style",
+      "artist": "PSY",
+      "duration": "4:13",
+      "tag": "Iconic"
+    }
+  ]
+}

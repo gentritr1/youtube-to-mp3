@@ -633,10 +633,14 @@ const gtElements = {
     scoreDisplay: document.getElementById('gt-score'),
     livesDisplay: document.getElementById('gt-lives-count'),
     streakDisplay: document.getElementById('gt-streak-count'),
+    streakMeterFill: document.getElementById('gt-streak-meter-fill'),
     timerBarContainer: document.getElementById('gt-timer-bar-container'),
     timerBar: document.getElementById('gt-timer-bar'),
     visualizer: document.getElementById('gt-audio-visualizer'),
+    statusBadge: document.getElementById('gt-status-badge'),
     statusText: document.getElementById('gt-status-text'),
+    statusDetail: document.getElementById('gt-status-detail'),
+    feedbackLayer: document.getElementById('gt-feedback-layer'),
     options: document.querySelectorAll('.gt-option'),
     startBtn: document.getElementById('gt-start-btn')
 };

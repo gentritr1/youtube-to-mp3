@@ -15,11 +15,11 @@
 
     <!-- Optimize Font Loading -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'">
     <noscript>
         <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
             rel="stylesheet">
     </noscript>
 
@@ -341,8 +341,16 @@
             </div>
             
             <div class="gt-audio-player">
+                <div id="gt-feedback-layer" class="gt-feedback-layer" aria-hidden="true"></div>
                 <div id="gt-timer-bar-container" class="gt-timer-bar-container hidden">
                     <div id="gt-timer-bar" class="gt-timer-bar"></div>
+                </div>
+                <div class="gt-status-shell">
+                    <div id="gt-status-badge" class="gt-status-badge">Warmup</div>
+                    <div class="gt-status-copy">
+                        <div id="gt-status-text" class="gt-status-text">Click Start to Play</div>
+                        <div id="gt-status-detail" class="gt-status-detail">You get 5 seconds to identify the right song preview.</div>
+                    </div>
                 </div>
                 <div id="gt-audio-visualizer" class="gt-audio-visualizer">
                     <div class="gt-bar"></div>
@@ -351,7 +359,10 @@
                     <div class="gt-bar"></div>
                     <div class="gt-bar"></div>
                 </div>
-                <div id="gt-status-text" class="gt-status-text">Click Start to Play</div>
+            </div>
+
+            <div class="gt-streak-meter" aria-hidden="true">
+                <div id="gt-streak-meter-fill" class="gt-streak-meter-fill"></div>
             </div>
 
             <div id="gt-options" class="gt-options">

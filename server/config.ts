@@ -18,10 +18,14 @@ export const config = {
     DOWNLOADS_DIR: path.resolve(__dirname, '..', 'downloads'),
     TASKS_FILE: path.resolve(__dirname, '..', 'tasks.json'),
     DB_PATH: path.resolve(__dirname, '..', 'tasks.db'),
+    GENRES_DIR: path.resolve(__dirname, 'data', 'genres'),
 
     // Redis (for job queue)
     REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
     USE_QUEUE: process.env.USE_QUEUE === 'true' || false,
+    WATCH_GENRES: process.env.WATCH_GENRES
+        ? process.env.WATCH_GENRES === 'true'
+        : process.env.NODE_ENV !== 'production',
 
     // Timeouts
     CLEANUP_INTERVAL_MS: 60 * 60 * 1000, // 1 hour

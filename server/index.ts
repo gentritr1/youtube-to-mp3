@@ -11,6 +11,7 @@ import routes from './routes/index.js';
 import { loadTasks } from './services/taskManager.js';
 import { cleanupOldTasks, closeDatabase } from './services/sqliteTaskManager.js';
 import { initializeQueue, closeQueue, getQueueStats, isEnabled as isQueueEnabled } from './services/jobQueue.js';
+import { initializeGenreCatalog, stopGenreCatalogWatcher } from './services/genreCatalog.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 
@@ -39,6 +40,7 @@ if (!fs.existsSync(config.DOWNLOADS_DIR)) {
 
 // Load persisted tasks (legacy support)
 loadTasks();
+initializeGenreCatalog();
 
 // Dependency Checks
 import { execSync } from 'child_process';
@@ -151,6 +153,7 @@ const shutdown = async (signal: string) => {
     console.log(`\n[Server] Received ${signal}, shutting down gracefully...`);
 
     try {
+        stopGenreCatalogWatcher();
         await closeQueue();
         closeDatabase();
         console.log('[Server] Cleanup complete, exiting.');
@@ -168,4 +171,3 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 startServer();
 
 export default app;
-
