@@ -530,7 +530,7 @@
     bottom: 17px;
     width: 38px;
     height: 16px;
-    background: linear-gradient(90deg, color-mix(in srgb, white 95%, var(--amber)) 0 16%, color-mix(in srgb, white 68%, var(--amber)) 32%, color-mix(in srgb, white 18%, transparent) 72%, transparent 100%);
+    background: linear-gradient(90deg, color-mix(in srgb, white 95%, var(--hero-headlight)) 0 16%, color-mix(in srgb, white 68%, var(--hero-headlight)) 32%, color-mix(in srgb, white 18%, transparent) 72%, transparent 100%);
     filter: blur(1.8px);
     clip-path: polygon(0 26%, 100% 2%, 100% 98%, 0 74%);
     transform-origin: left center;

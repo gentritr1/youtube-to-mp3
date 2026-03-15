@@ -21,6 +21,7 @@
     --hero-orb: rgba(34, 197, 94, 0.9);
     --hero-orb-soft: rgba(16, 185, 129, 0.26);
     --hero-glow: rgba(74, 222, 128, 0.22);
+    --hero-headlight: hsl(49 92% 68%);
     --ambient-primary: rgba(34, 197, 94, 0.16);
     --ambient-secondary: rgba(45, 212, 191, 0.12);
 }

@@ -37,10 +37,13 @@ export class LyricsController {
 
     async loadSubtitles(subtitles, { requestId = null } = {}) {
         this.stop({ preserveLyrics: false });
-        this.requestId = requestId;
+        const reqId = requestId;
+        this.requestId = reqId;
 
         if (!subtitles || !subtitles.length) {
-            this.emit('empty', { requestId: this.requestId });
+            if (this.requestId === reqId) {
+                this.emit('empty', { requestId: reqId });
+            }
             return false;
         }
 
@@ -52,24 +55,33 @@ export class LyricsController {
             if (!response.ok) throw new Error('Lyrics fetch failed');
 
             const text = await response.text();
-            this.parseSubtitles(text, sub.ext);
+            const parsedLyrics = this.parseSubtitles(text, sub.ext);
 
-            if (!this.lyrics.length) {
-                this.emit('empty', { requestId: this.requestId });
+            if (this.requestId !== reqId) {
                 return false;
             }
 
-            this.emit('loaded', { lyrics: this.getLyrics(), requestId: this.requestId });
+            this.requestId = reqId;
+            this.lyrics = parsedLyrics;
+
+            if (!this.lyrics.length) {
+                this.emit('empty', { requestId: reqId });
+                return false;
+            }
+
+            this.emit('loaded', { lyrics: this.getLyrics(), requestId: reqId });
             return true;
         } catch (error) {
             console.error('[Lyrics] Error loading subtitles:', error);
-            this.emit('empty', { requestId: this.requestId });
+            if (this.requestId === reqId) {
+                this.emit('empty', { requestId: reqId });
+            }
             return false;
         }
     }
 
     parseSubtitles(text, ext) {
-        this.lyrics = [];
+        const parsedLyrics = [];
 
         if (ext === 'json3') {
             try {
@@ -85,28 +97,33 @@ export class LyricsController {
                             .trim();
 
                         if (line) {
-                            this.lyrics.push({ text: line, time: event.tStartMs });
+                            parsedLyrics.push({ text: line, time: event.tStartMs });
                         }
                     });
                 }
             } catch (error) {
                 console.error('[Lyrics] Error parsing JSON3:', error);
             }
-            return;
+            return parsedLyrics;
         }
 
         const lines = text.split(/\r?\n/);
         let currentTime = 0;
+        const metadataPrefixes = ['Kind:', 'Language:', 'NOTE', 'X-TIMESTAMP-MAP', 'Region:'];
 
         for (let i = 0; i < lines.length; i += 1) {
             const line = lines[i].trim();
-            if (!line || line.includes('-->') || !Number.isNaN(parseInt(line, 10)) || line === 'WEBVTT') {
+            const isMetadata = metadataPrefixes.some((prefix) => line.startsWith(prefix));
+            const isCueId = /^\d+$/.test(line);
+            if (!line || line.includes('-->') || isCueId || line === 'WEBVTT' || isMetadata) {
                 continue;
             }
 
-            this.lyrics.push({ text: line, time: currentTime });
+            parsedLyrics.push({ text: line, time: currentTime });
             currentTime += 2000;
         }
+
+        return parsedLyrics;
     }
 
     start() {
@@ -171,5 +188,23 @@ export class LyricsController {
         if (wasActive || !preserveLyrics) {
             this.emit('stop', { lyrics: this.getLyrics(), preserveLyrics, requestId: stopRequestId });
         }
+    }
+
+    finishPlayback() {
+        if (!this.lyrics.length) {
+            return false;
+        }
+
+        if (this.active) {
+            this.stop({ preserveLyrics: true });
+            return true;
+        }
+
+        this.emit('stop', {
+            lyrics: this.getLyrics(),
+            preserveLyrics: true,
+            requestId: this.requestId
+        });
+        return true;
     }
 }

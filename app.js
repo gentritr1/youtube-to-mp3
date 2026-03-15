@@ -58,6 +58,7 @@ const elements = {
 const state = {
     format: 'mp3',
     isLoading: false,
+    isConverting: false,
     videoInfo: null,
     activeLyricsRequestId: 0,
 };
@@ -173,6 +174,7 @@ const hideResults = () => {
     animationController.stop(elements.conversionAnimation);
 
     lyricsController.stop({ preserveLyrics: false });
+    state.isConverting = false;
     state.activeLyricsRequestId = 0;
     karaokePanel.setIdle();
 
@@ -475,6 +477,7 @@ const handleSubmit = async (e) => {
     // Single video mode: original behavior
     hideResults();
     setLoading(true);
+    state.isConverting = true;
     karaokePanel.setLoading();
 
     // Show progress section with fun animation immediately
@@ -519,7 +522,8 @@ const handleSubmit = async (e) => {
         // Stop conversion animation and hide progress
         animationController.stop(elements.conversionAnimation);
         elements.progressSection.classList.add('hidden');
-        lyricsController.stop({ preserveLyrics: true });
+        state.isConverting = false;
+        lyricsController.finishPlayback();
         elements.downloadLink.href = downloadUrl;
 
         // Start orchestrated download animation
@@ -529,6 +533,7 @@ const handleSubmit = async (e) => {
         hideResults();
         showError(error.message || 'An error occurred');
     } finally {
+        state.isConverting = false;
         setLoading(false);
     }
 };
@@ -548,8 +553,10 @@ const fetchLyricsAndStartKaraoke = async (subtitles) => {
             return;
         }
 
-        if (loaded && state.isLoading) {
+        if (loaded && state.isConverting) {
             lyricsController.start();
+        } else if (loaded) {
+            lyricsController.finishPlayback();
         } else if (!loaded) {
             karaokePanel.setEmpty();
         }
