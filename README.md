@@ -1,156 +1,87 @@
 # YT Converter | YouTube to MP3/MP4
 
-A clean, modern, and minimal YouTube media converter built with Node.js and Vanilla JavaScript. Features a sleek "Zen" atmosphere and a built-in game to keep you entertained during conversions.
+A Node.js and vanilla JavaScript YouTube converter with themable UI, batch downloads, discovery previews, karaoke-style lyrics, mini-games, and PWA support.
 
-## 🚀 Key Features
+## What It Does
 
-- **Zen Atmosphere**: Ambient pulsing background gradients (Emerald & Violet), subtle noise textures, and fluid fade-in animations for a premium user experience.
-- **Optimized Workflow**: Real-time conversion feedback (Progress Bar) and instant download notifications prioritized above the game for zero friction.
-- **Batch Downloads**: Convert up to 10 videos at once with a smooth animated queue UI, progress tracking for each video, and bulk download links.
-- **Popular Music Discovery**: Curated music suggestions organized by genre (Pop, Hip-Hop, Rock, Electronic, etc.) with one-click conversion.
-- **Audio Preview**: 30-second audio previews with waveform visualization before downloading - includes robust error handling and graceful playback state management.
-- **Automated Lyrics**: Displays a karaoke-style scrolling lyrics overlay in the background during the video conversion process, fetching native subtitles automatically.
-- **Interactive Audio Visualizer**: Native Web Audio API implementation that analyzes audio frequencies in real-time to drive background Zen animations, creating a reactive "beat-synced" atmosphere.
-- **PWA Support**: Fully installable as a standalone app on Desktop and Mobile with offline capabilities powered by a custom Service Worker. (See [test_pwa.md](test_pwa.md) for testing instructions).
-- **Snake Game (Enhanced Edition)**: A modular, feature-rich snake game with:
-  - **Dynamic Power-ups**: Golden (3x growth), Speed, Ghost (no collision), and Split.
-  - **Snake Splitting**: Ability to cut your snake in half and switch between them with `X`.
-  - **Combo System**: Stack points by eating food in quick succession.
-  - **Responsive Stats**: Flex-wrapping indicators that adapt to any screen size.
-- **Dark Mode**: Sleek dark aesthetic with Shadcn-inspired design tokens.
-- **Dual Formats**: High-quality MP3 (Audio) or MP4 (Video).
+- convert YouTube videos to MP3 or MP4
+- queue up to 10 batch conversions
+- preview curated music suggestions before converting
+- keep lyrics visible in a karaoke panel when subtitles exist
+- let users switch themes across the full UI surface
+- provide lightweight mini-games while conversions run
 
-## 🛠 Prerequisites
+## Prerequisites
 
-Ensure you have the following installed on your system:
+- Node.js
+- `yt-dlp`
+- `ffmpeg`
 
-### 1. Node.js
-Required to run the Express backend.
-
-### 2. yt-dlp & ffmpeg
-The core engine for media extraction and conversion.
 ```bash
 brew install yt-dlp ffmpeg
 ```
 
-## 📦 Installation & Setup
+## Local Setup
 
-1. **Clone & Navigate**:
-   ```bash
-   cd ~/Desktop/youtube-to-mp3
-   ```
-
-2. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Start the Application**:
-   ```bash
-   npm start
-   ```
-   Visit [http://localhost:3000](http://localhost:3000)
-
-## 🏗 Architecture & Technical Details
-
-The application is built with a focus on **modularity**, **high cohesion**, and **low coupling**:
-
-### Backend (Express & Node.js)
-```
-/server
-├── index.ts              # Entry point: Express app setup
-├── config.ts             # Centralized constants (paths, timeouts)
-├── routes/
-│   ├── index.ts          # Route aggregator
-│   ├── info.ts           # GET /api/info
-│   ├── convert.ts        # POST /api/convert (with idempotency)
-│   ├── progress.ts       # GET /api/progress/:taskId
-│   ├── download.ts       # GET /api/download/:taskId/:filename
-│   ├── batchConvert.ts   # POST /api/batch-convert (batch operations)
-│   └── batchProgress.ts  # GET /api/batch-progress/:batchId
-├── services/
-│   ├── ytdlp.ts          # yt-dlp wrapper (getVideoInfo, convertVideo)
-│   ├── taskManager.ts    # Task CRUD, persistence, idempotency
-│   └── batchService.ts   # Batch download orchestration (max 10 videos)
-├── utils/
-│   ├── parseProgress.ts  # Parse yt-dlp output
-│   ├── sanitize.ts       # Filename sanitization
-│   └── formatDuration.ts # Duration formatting
-└── middleware/
-    └── errorHandler.ts   # Centralized error handling
-```
-
-### Frontend
-- **Vanilla JS & ES6+**: High performance with zero heavy framework overhead.
-- **Reactive Audio**: Real-time frequency analysis via `js/visualizer.js` connecting HTMLMediaElements to CSS Custom Properties.
-- **PWA Ready**: Includes `manifest.json` and a robust `service-worker.js` for caching static assets and enabling offline usage.
-- **Modular CSS Architecture**: Organized style modules (`/css/components`, `/css/layout`, `/css/animations`) for maintainability.
-- **Premium Animations**: Physics-based SVG animations (Walking Note, Spinning Reel) for a polished user experience.
-- **Modular Game Engine**: The Snake Game is self-contained in `js/snake-game.js`.
-- **Features Module**: Popular videos carousel and audio preview player in `js/features.js` with robust error handling, promise-based playback control, and graceful state management.
-- **Polling System**: Async task-based polling for progress without layout shifts.
-- **Input Locking**: Prevents state conflicts during conversion (idempotency on UI).
-
-### Key Features
-- **Idempotency**: Same video + format = reuse existing task (no duplicate processing).
-- **Persistence**: Tasks survive server restarts via SQLite database.
-- **Batch Conversions**: Queue up to 10 videos and convert them all with a single click.
-- **Testability**: Utilities and services are unit-testable in isolation.
-
-## 📚 Frontend Architecture Docs
-
-- [docs/THEME_HEADER_REARCHITECTURE_PLAN.md](docs/THEME_HEADER_REARCHITECTURE_PLAN.md) - original rework plan
-- [docs/FRONTEND_THEME_ARCHITECTURE.md](docs/FRONTEND_THEME_ARCHITECTURE.md) - current theme system, module boundaries, verification status, and feature workflow
-- [docs/TESTING_STATUS.md](docs/TESTING_STATUS.md) - transient build/test status and environment-specific troubleshooting
-
-## 🧪 Testing
-
-Run the test suite:
 ```bash
+npm install
+npm start
+```
+
+App URL:
+- [http://localhost:3000](http://localhost:3000)
+
+## Canonical Docs
+
+Use these docs in this order:
+
+- [docs/CODEBASE_GUIDE.md](docs/CODEBASE_GUIDE.md)
+  - main technical guide
+  - architecture, ownership boundaries, theming rules, and feature workflow
+- [docs/TESTING_STATUS.md](docs/TESTING_STATUS.md)
+  - current build/test status
+  - transient environment blockers
+  - troubleshooting notes
+
+## Project Layout
+
+```text
+server/           Express routes, services, middleware, and utilities
+js/               Frontend feature modules
+js/ui/            Theme, animation, and karaoke controllers
+css/base.css      Semantic design tokens
+css/themes/       Theme overrides
+css/layout/       Layout structure
+css/components/   Component-scoped styles
+tests/            Vitest suites
+```
+
+## Main Commands
+
+```bash
+npm start
 npm test
-```
-
-Watch mode for development:
-```bash
 npm run test:watch
+npm run build
 ```
 
-## 🐳 Docker Development
+Optional Docker workflow: use these commands for containerized development and CI-style runs; otherwise run the app locally with `npm start`.
 
-Build and test in Docker locally before deploying:
+Docker helpers:
 
 ```bash
-# Build Docker image
 npm run docker:build
-
-# Build and run container
 npm run docker:test
-
-# Or use docker compose
 npm run docker:up
-
-# Full preflight check (test + build + docker)
 npm run preflight
 ```
 
-## 📁 File Structure
+## Notes
 
-- `/server/` - Modular backend (routes, services, utils, middleware)
-- `/css/` - Modular styling architecture (base, layout, components, animations)
-  - `/css/components/features.css` - Popular videos & audio preview styles
-  - `/css/components/batch.css` - Batch downloads queue & progress styles
-- `/assets/icons/` - High-quality generated app icons for PWA installation
-- `/index.html` - Optimized semantic layout with prioritized download area
-- `/manifest.json` - Web App Manifest for PWA identity
-- `/service-worker.js` - Service Worker for offline caching and API routing
-- `/app.js` - Frontend service layer handling API calls and game lifecycle
-- `/style.css` - CSS entry point (imports modules)
-- `/game.css` - Snake game specific styles
-- `/js/snake-game.js` - Encapsulated Snake Game logic
-- `/js/visualizer.js` - Interactive Web Audio Visualizer module
-- `/js/features.js` - Popular videos carousel & audio preview module
-- `/js/batch.js` - Batch downloads queue management & progress tracking
-- `/tests/` - Vitest unit tests (259+ tests)
+- The main architecture baseline now lives in `docs/CODEBASE_GUIDE.md`.
+- Do not use old planning docs as the source of truth for current structure.
+- Keep transient verification notes out of the architecture guide and in `docs/TESTING_STATUS.md`.
 
-## 📄 License
+## License
+
 MIT
