@@ -13,6 +13,7 @@ class GuessTrackGame {
         this.audio = null;
         this.currentTimeLeft = 5;
         this.timerInterval = null;
+        this.timerFrameId = null;
         this.targetTrack = null;
         this.options = [];
         this.roundActive = false;
@@ -235,31 +236,44 @@ class GuessTrackGame {
 
     startTimer() {
         const totalDuration = 5; // seconds
-        let startTime = Date.now();
-        
-        this.timerInterval = setInterval(() => {
+        let startTime = null;
+
+        const tick = (timestamp) => {
             if (!this.roundActive) {
                 this.stopTimer();
                 return;
             }
-            
-            let elapsed = (Date.now() - startTime) / 1000;
+
+            if (startTime === null) {
+                startTime = timestamp;
+            }
+
+            const elapsed = (timestamp - startTime) / 1000;
             this.currentTimeLeft = Math.max(0, totalDuration - elapsed);
-            
-            let percent = (this.currentTimeLeft / totalDuration) * 100;
+
+            const percent = (this.currentTimeLeft / totalDuration) * 100;
             this.elements.timerBar.style.width = `${percent}%`;
-            
+
             if (this.currentTimeLeft <= 0) {
                 this.stopTimer();
                 this.handleTimeout();
+                return;
             }
-        }, 50);
+
+            this.timerFrameId = requestAnimationFrame(tick);
+        };
+
+        this.timerFrameId = requestAnimationFrame(tick);
     }
     
     stopTimer() {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
+        }
+        if (this.timerFrameId) {
+            cancelAnimationFrame(this.timerFrameId);
+            this.timerFrameId = null;
         }
     }
 
@@ -348,7 +362,8 @@ class GuessTrackGame {
 
     updateStatsUI() {
         this.elements.scoreDisplay.textContent = this.score;
-        this.elements.livesDisplay.textContent = '❤️'.repeat(this.lives) + '🖤'.repeat(3 - this.lives);
+        const clampedLives = Math.max(0, Math.min(this.lives, 3));
+        this.elements.livesDisplay.textContent = '❤️'.repeat(clampedLives) + '🖤'.repeat(3 - clampedLives);
         this.elements.streakDisplay.textContent = this.streak;
         const streakProgress = Math.min((this.streak / 3) * 100, 100);
         if (this.elements.streakMeterFill) {
