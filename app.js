@@ -676,7 +676,9 @@ document.querySelectorAll('.mini-game-btn').forEach(btn => {
             return;
         }
 
-        document.querySelectorAll('.mini-game-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.mini-game-btn').forEach(b => {
+            b.classList.remove('active');
+        });
         e.currentTarget.classList.add('active');
         activeMiniGame = nextGame;
         showGame();

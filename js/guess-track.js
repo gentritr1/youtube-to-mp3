@@ -20,6 +20,8 @@ class GuessTrackGame {
         this.feedbackTimer = null;
         this.retryTimeout = null;
         this.nextRoundTimeout = null;
+        this.previewRequestId = 0;
+        this.pendingRestart = false;
 
         this.bindEvents();
     }
@@ -27,6 +29,7 @@ class GuessTrackGame {
     bindEvents() {
         if (this.elements.startBtn) {
             this.elements.startBtn.addEventListener('click', () => {
+                this.pendingRestart = false;
                 if (this.lives <= 0) {
                     this.resetGame();
                 } else {
@@ -52,6 +55,12 @@ class GuessTrackGame {
     show() {
         this.elements.container.classList.remove('hidden');
         this.updateStatsUI();
+        if (this.pendingRestart && !this.isActive && !this.isLoading) {
+            this.setStatus('ready', 'Play Again', 'Your last run ended. Start a fresh round when ready.');
+            this.elements.startBtn.classList.remove('hidden');
+            this.elements.startBtn.textContent = "Play Again";
+            return;
+        }
         if (this.lives > 0 && !this.isActive && !this.isLoading) {
             this.setStatus('ready', 'Click Start to Play', 'You get one short preview and four options.');
             this.elements.startBtn.classList.remove('hidden');
@@ -61,6 +70,8 @@ class GuessTrackGame {
 
     hide() {
         this.elements.container.classList.add('hidden');
+        this.previewRequestId++;
+        this.pendingRestart = this.pendingRestart || (this.nextRoundTimeout !== null && this.lives <= 0);
         this.clearPendingTimeouts();
         if (this.audio) this.audio.pause();
         this.stopTimer();
@@ -73,10 +84,12 @@ class GuessTrackGame {
 
     async startRound() {
         if (this.lives <= 0) return;
+        const requestId = ++this.previewRequestId;
         
         this.isActive = true;
         this.roundActive = false;
         this.isLoading = true;
+        this.pendingRestart = false;
         this.clearPendingTimeouts();
         
         this.stopAudio();
@@ -129,6 +142,10 @@ class GuessTrackGame {
 
             if (!response.ok) throw new Error('Preview fetch failed');
             const data = await response.json();
+
+            if (requestId !== this.previewRequestId || !this.isActive) {
+                return;
+            }
             
             if (!data.success) throw new Error(data.message);
             if (typeof data.previewUrl !== 'string' || data.previewUrl.trim() === '') {
@@ -145,7 +162,7 @@ class GuessTrackGame {
             this.audio.volume = 0.5; // reasonable volume
             
             const onCanPlay = () => {
-                if (!this.isActive || !this.isLoading) return;
+                if (requestId !== this.previewRequestId || !this.isActive || !this.isLoading || !this.audio) return;
                 this.isLoading = false;
                 this.beginPlayback();
                 this.audio.removeEventListener('canplaythrough', onCanPlay);
@@ -156,7 +173,7 @@ class GuessTrackGame {
             this.audio.addEventListener('loadeddata', onCanPlay);
             
             this.audio.addEventListener('error', () => {
-                if (!this.isActive) return;
+                if (requestId !== this.previewRequestId || !this.isActive) return;
                 this.setStatus('danger', 'Audio failed', 'Skipping to the next preview.');
                 this.isLoading = false;
                 this.scheduleRetry(1500);
@@ -171,7 +188,7 @@ class GuessTrackGame {
 
         } catch (e) {
             console.error("[GuessTrack] Error loading preview:", e);
-            if (this.isActive) {
+            if (requestId === this.previewRequestId && this.isActive) {
                 this.setStatus('danger', 'Track unavailable', 'This preview could not be loaded. Skipping.');
                 this.isLoading = false;
                 this.scheduleRetry(1500);
@@ -261,7 +278,9 @@ class GuessTrackGame {
         this.stopAudio();
         
         // Disable all
-        this.elements.options.forEach(b => b.disabled = true);
+        this.elements.options.forEach(b => {
+            b.disabled = true;
+        });
         
         const btn = e.target;
         const guessedId = btn.dataset.videoId;
@@ -293,7 +312,9 @@ class GuessTrackGame {
         this.roundActive = false;
         this.stopAudio();
         
-        this.elements.options.forEach(b => b.disabled = true);
+        this.elements.options.forEach(b => {
+            b.disabled = true;
+        });
         
         const correctBtn = Array.from(this.elements.options).find(b => b.dataset.videoId === this.targetTrack.videoId);
         if (correctBtn) correctBtn.classList.add('correct');
@@ -439,6 +460,9 @@ class GuessTrackGame {
     clearNextRoundTimeout() {
         if (this.nextRoundTimeout) {
             clearTimeout(this.nextRoundTimeout);
+            if (this.lives <= 0) {
+                this.pendingRestart = true;
+            }
             this.nextRoundTimeout = null;
         }
     }

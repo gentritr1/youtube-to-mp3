@@ -216,6 +216,7 @@
 
 .gt-option {
     --gt-option-surface: rgba(11, 18, 29, 0.72);
+
     padding: 0.8rem 0.95rem;
     background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 48%),
