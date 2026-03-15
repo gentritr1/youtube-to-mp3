@@ -44,14 +44,14 @@
     color: var(--lyrics-text-active);
     transform: translateY(0);
     text-shadow: 0 0 30px var(--lyrics-glow);
-    /* Active glow */
-    -webkit-text-fill-color: initial;
+    -webkit-text-fill-color: var(--lyrics-text-active);
 }
 
 .lyric-line.past {
     transform: translateY(-100vh);
     opacity: 0;
     color: var(--lyrics-text-past);
+    -webkit-text-fill-color: var(--lyrics-text-past);
 }
 
 @media (max-width: 768px) {

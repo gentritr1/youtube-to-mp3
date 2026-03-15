@@ -43,6 +43,7 @@ const elements = {
     statDuration: document.getElementById('stat-duration'),
     statFilesize: document.getElementById('stat-filesize'),
     themeSwitcher: document.getElementById('theme-switcher'),
+    karaokeCard: document.getElementById('karaoke-card'),
     karaokeTabs: document.querySelectorAll('.karaoke-tab'),
     karaokeView: document.getElementById('karaoke-view'),
     arcadeView: document.getElementById('arcade-view'),
@@ -67,7 +68,7 @@ const themeController = new ThemeController({
     metaThemeColor: document.querySelector('meta[name="theme-color"]')
 });
 const karaokePanel = new KaraokePanel({
-    root: document.getElementById('karaoke-card'),
+    root: elements.karaokeCard,
     tabs: elements.karaokeTabs,
     views: {
         karaoke: elements.karaokeView,
@@ -87,8 +88,17 @@ let statsIntervalId = null;
 // YouTube URL regex patterns
 const YT_REGEX = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
-themeController.init();
-karaokePanel.init();
+try {
+    themeController.init();
+} catch (error) {
+    console.error('themeController.init failed', error);
+}
+
+try {
+    karaokePanel.init();
+} catch (error) {
+    console.error('karaokePanel.init failed', error);
+}
 
 lyricsController.on('loaded', ({ lyrics }) => {
     karaokePanel.setLyrics(lyrics);

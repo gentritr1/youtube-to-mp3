@@ -498,21 +498,21 @@
 
 :root[data-theme="frutiger-aero"] .converter-card {
     background:
-        radial-gradient(circle at 18% 10%, rgba(255, 255, 255, 0.62), transparent 32%),
-        radial-gradient(circle at 84% 16%, rgba(56, 189, 248, 0.18), transparent 28%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 22%),
-        linear-gradient(160deg, rgba(255, 255, 255, 0.52), rgba(214, 248, 255, 0.28) 42%, rgba(175, 241, 255, 0.2) 100%);
-    border-color: rgba(102, 197, 225, 0.56);
+        radial-gradient(circle at 18% 10%, var(--frutiger-converter-glow), transparent 32%),
+        radial-gradient(circle at 84% 16%, var(--frutiger-converter-orb), transparent 28%),
+        linear-gradient(180deg, var(--frutiger-converter-sheen), transparent 22%),
+        linear-gradient(160deg, var(--frutiger-converter-surface-top), var(--frutiger-converter-surface-mid) 42%, var(--frutiger-converter-surface-bottom) 100%);
+    border-color: var(--frutiger-converter-border);
     box-shadow:
-        0 26px 60px rgba(92, 170, 194, 0.22),
-        0 1px 0 rgba(255, 255, 255, 0.72) inset,
-        0 0 0 1px rgba(194, 245, 255, 0.48) inset;
+        0 26px 60px var(--frutiger-converter-shadow),
+        0 1px 0 var(--frutiger-converter-inset) inset,
+        0 0 0 1px var(--frutiger-converter-outline) inset;
 }
 
 :root[data-theme="frutiger-aero"] .converter-card::before {
     background:
-        radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.78), transparent 26%),
-        linear-gradient(130deg, rgba(255, 255, 255, 0.48), transparent 25% 58%, rgba(110, 231, 249, 0.22) 100%);
+        radial-gradient(circle at 20% 0%, var(--frutiger-overlay-glow), transparent 26%),
+        linear-gradient(130deg, var(--frutiger-button-inset), transparent 25% 58%, var(--frutiger-overlay-accent) 100%);
 }
 
 :root[data-theme="frutiger-aero"] .input,
@@ -521,24 +521,24 @@
 :root[data-theme="frutiger-aero"] .progress-section,
 :root[data-theme="frutiger-aero"] .conversion-animation {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(220, 248, 253, 0.24)),
-        rgba(255, 255, 255, 0.18);
-    border-color: rgba(109, 203, 226, 0.46);
+        linear-gradient(180deg, var(--frutiger-control-top), var(--frutiger-control-bottom)),
+        var(--frutiger-control-surface);
+    border-color: var(--frutiger-control-border);
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.8) inset,
-        0 16px 34px rgba(84, 165, 188, 0.16);
+        0 1px 0 var(--frutiger-control-inset) inset,
+        0 16px 34px var(--frutiger-control-shadow);
 }
 
 :root[data-theme="frutiger-aero"] .format-btn.active {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(188, 241, 252, 0.42)),
-        linear-gradient(135deg, rgba(126, 229, 252, 0.82), rgba(110, 231, 183, 0.7));
+        linear-gradient(180deg, var(--frutiger-active-top), var(--frutiger-active-bottom)),
+        linear-gradient(135deg, var(--frutiger-active-accent-1), var(--frutiger-active-accent-2));
     color: color-mix(in srgb, var(--foreground) 88%, var(--primary));
-    border: 1px solid rgba(54, 177, 207, 0.5);
+    border: 1px solid var(--frutiger-active-border);
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.86) inset,
-        0 18px 30px rgba(86, 186, 208, 0.2),
-        0 0 0 1px rgba(145, 239, 255, 0.55) inset;
+        0 1px 0 var(--frutiger-active-inset) inset,
+        0 18px 30px var(--frutiger-active-shadow),
+        0 0 0 1px var(--frutiger-active-outline) inset;
 }
 
 :root[data-theme="frutiger-aero"] .format-btn.active svg,
@@ -547,7 +547,7 @@
 :root[data-theme="frutiger-aero"] .format-btn.active .icon-mp4 {
     color: inherit;
     opacity: 1;
-    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.4));
+    filter: drop-shadow(0 1px 0 var(--frutiger-active-icon-shadow));
 }
 
 :root[data-theme="frutiger-aero"] .format-btn:not(.active) {
@@ -557,21 +557,21 @@
 :root[data-theme="frutiger-aero"] .conversion-animation::before,
 :root[data-theme="frutiger-aero"] .convert-btn::after {
     background:
-        radial-gradient(circle at 18% 8%, rgba(255, 255, 255, 0.82), transparent 24%),
-        linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 35% 62%, rgba(103, 232, 249, 0.2) 100%);
+        radial-gradient(circle at 18% 8%, var(--frutiger-overlay-glow), transparent 24%),
+        linear-gradient(135deg, var(--frutiger-overlay-sheen), transparent 35% 62%, var(--frutiger-overlay-accent) 100%);
 }
 
 :root[data-theme="frutiger-aero"] .convert-btn {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 45%),
-        linear-gradient(135deg, #1492aa, #2dcad8 58%, #86efac 100%);
+        linear-gradient(180deg, var(--frutiger-button-top), transparent 45%),
+        linear-gradient(135deg, var(--frutiger-button-accent-1), var(--frutiger-button-accent-2) 58%, var(--frutiger-button-accent-3) 100%);
     box-shadow:
-        0 18px 34px rgba(83, 182, 204, 0.24),
-        0 1px 0 rgba(255, 255, 255, 0.42) inset;
+        0 18px 34px var(--frutiger-button-shadow),
+        0 1px 0 var(--frutiger-button-inset) inset;
 }
 
 :root[data-theme="frutiger-aero"] .progress-fill {
     background:
-        linear-gradient(90deg, rgba(255, 255, 255, 0.26), transparent 20%),
-        linear-gradient(90deg, #22d3ee, #38bdf8 48%, #4ade80 100%);
+        linear-gradient(90deg, var(--frutiger-progress-sheen), transparent 20%),
+        linear-gradient(90deg, var(--frutiger-progress-accent-1), var(--frutiger-progress-accent-2) 48%, var(--frutiger-progress-accent-3) 100%);
 }

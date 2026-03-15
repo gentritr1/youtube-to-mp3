@@ -130,3 +130,9 @@ body {
     letter-spacing: -0.011em;
     transition: background var(--transition-smooth), color var(--transition-smooth);
 }
+
+@media (prefers-reduced-motion: reduce) {
+    body {
+        transition: none !important;
+    }
+}

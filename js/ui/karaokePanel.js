@@ -21,6 +21,8 @@ export class KaraokePanel {
         this.onLaunchGame = onLaunchGame;
         this.lines = [];
         this.mode = 'karaoke';
+        this._tabHandlers = [];
+        this._launchHandlers = [];
     }
 
     init() {
@@ -32,21 +34,40 @@ export class KaraokePanel {
     }
 
     bindEvents() {
+        this.destroy();
+
         this.tabs.forEach((tab) => {
-            tab.addEventListener('click', () => {
+            const handler = () => {
                 this.setMode(tab.dataset.panelMode || 'karaoke');
-            });
+            };
+
+            tab.addEventListener('click', handler);
+            this._tabHandlers.push({ element: tab, handler });
         });
 
         this.launchButtons.forEach((button) => {
-            button.addEventListener('click', () => {
+            const handler = () => {
                 const gameId = button.dataset.gameLaunch;
                 if (!gameId) return;
 
                 this.setMode('arcade');
                 this.onLaunchGame(gameId);
-            });
+            };
+
+            button.addEventListener('click', handler);
+            this._launchHandlers.push({ element: button, handler });
         });
+    }
+
+    destroy() {
+        this._tabHandlers.forEach(({ element, handler }) => {
+            element.removeEventListener('click', handler);
+        });
+        this._launchHandlers.forEach(({ element, handler }) => {
+            element.removeEventListener('click', handler);
+        });
+        this._tabHandlers = [];
+        this._launchHandlers = [];
     }
 
     setOnLaunchGame(onLaunchGame) {

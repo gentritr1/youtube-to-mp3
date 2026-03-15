@@ -1,5 +1,3 @@
-export const DEFAULT_THEME = 'space';
-
 export const themes = [
     {
         id: 'space',
@@ -24,6 +22,8 @@ export const themes = [
     }
 ];
 
+export const DEFAULT_THEME = themes.find((theme) => theme.id === 'space') || themes[0];
+
 export const getThemeById = (themeId) => {
-    return themes.find((theme) => theme.id === themeId) || themes[0];
+    return themes.find((theme) => theme.id === themeId) || DEFAULT_THEME;
 };

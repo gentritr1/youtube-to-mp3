@@ -157,49 +157,6 @@ Minimum checks:
 - run `npm test`
 - document any environment-specific test blockers in the PR or handoff note
 
-## Verification Status
-
-The current implementation was verified with:
-
-```bash
-npm run build
-npm test
-node --check app.js
-node --check js/features.js
-node --check js/batch.js
-node --check js/ui/themeController.js
-```
-
-### Current results
-
-- `npm run build`: passed
-- `npm test` inside sandbox: fails lyrics route tests because Supertest cannot bind a port in the sandbox
-- `npm test` outside sandbox: lyrics tests pass; one suite still fails because `better-sqlite3` was compiled for a different Node ABI
-- targeted `node --check` runs: passed
-
-### Current known blocker
-
-`tests/sqliteTaskManager.test.ts` still fails until the native module is rebuilt for the active Node version.
-
-Current error class:
-- `ERR_DLOPEN_FAILED`
-- `NODE_MODULE_VERSION 115` installed vs `NODE_MODULE_VERSION 131` required
-
-Recommended fix when ready:
-
-```bash
-npm rebuild better-sqlite3
-```
-
-If that is not enough:
-
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-Use the rebuild path first.
-
 ## Next-Step Guidance
 
 The next feature work should build on this architecture, not bypass it.

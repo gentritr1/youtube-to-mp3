@@ -101,6 +101,7 @@ The application is built with a focus on **modularity**, **high cohesion**, and 
 
 - [docs/THEME_HEADER_REARCHITECTURE_PLAN.md](docs/THEME_HEADER_REARCHITECTURE_PLAN.md) - original rework plan
 - [docs/FRONTEND_THEME_ARCHITECTURE.md](docs/FRONTEND_THEME_ARCHITECTURE.md) - current theme system, module boundaries, verification status, and feature workflow
+- [docs/TESTING_STATUS.md](docs/TESTING_STATUS.md) - transient build/test status and environment-specific troubleshooting
 
 ## 🧪 Testing
 

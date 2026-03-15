@@ -7,7 +7,7 @@ export class ThemeController {
         this.root = root;
         this.mount = mount;
         this.metaThemeColor = metaThemeColor;
-        this.activeTheme = DEFAULT_THEME;
+        this.activeTheme = DEFAULT_THEME.id;
     }
 
     init() {
@@ -22,7 +22,7 @@ export class ThemeController {
         } catch (_error) {
             storedTheme = null;
         }
-        this.applyTheme(storedTheme || DEFAULT_THEME);
+        this.applyTheme(storedTheme || DEFAULT_THEME.id);
     }
 
     render() {
