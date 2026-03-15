@@ -74,11 +74,11 @@ const FeaturesModule = (() => {
                         <span class="popular-title-icon">🔥</span>
                         Popular Music
                     </h2>
-                    <p class="popular-subtitle">Global-friendly picks for preview, guessing, and instant conversion.</p>
+                    <p class="popular-subtitle">Easy picks to preview, explore, and convert right away.</p>
                 </div>
                 <div class="popular-header-pulse" aria-hidden="true">
                     <span class="popular-pulse-dot"></span>
-                    Live rotation
+                    Updated picks
                 </div>
             </div>
             <div class="popular-active-genre" id="popular-active-genre"></div>

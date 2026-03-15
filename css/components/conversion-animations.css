@@ -9,9 +9,36 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100px;
+    min-height: 126px;
     width: 100%;
-    padding: 0.5rem 0;
+    padding: 0.95rem 1rem;
+    border-radius: 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--hero-border) 62%, transparent);
+    background:
+        radial-gradient(circle at top, color-mix(in srgb, var(--hero-orb-soft) 80%, transparent), transparent 52%),
+        linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 30%),
+        color-mix(in srgb, var(--card) 58%, transparent);
+    box-shadow:
+        0 1px 0 var(--glass-highlight) inset,
+        0 20px 40px color-mix(in srgb, var(--glass-shadow) 42%, transparent);
+    backdrop-filter: blur(20px) saturate(130%);
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    position: relative;
+    overflow: hidden;
+}
+
+.conversion-animation::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(140deg, color-mix(in srgb, white 18%, transparent), transparent 28% 55%, color-mix(in srgb, var(--liquid-tint) 72%, transparent) 100%);
+    pointer-events: none;
+}
+
+.conversion-animation > * {
+    position: relative;
+    z-index: 1;
 }
 
 /* ========================================
@@ -21,7 +48,7 @@
     position: relative;
     width: 90px;
     height: 90px;
-    filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.15));
+    filter: drop-shadow(0 10px 28px color-mix(in srgb, var(--hero-orb) 24%, transparent));
 }
 
 .vinyl-record {
@@ -34,8 +61,8 @@
         radial-gradient(circle at center, transparent 18px, rgba(255, 255, 255, 0.02) 19px, transparent 20px),
         radial-gradient(circle at center, transparent 26px, rgba(255, 255, 255, 0.03) 27px, transparent 28px),
         radial-gradient(circle at center, transparent 34px, rgba(255, 255, 255, 0.02) 35px, transparent 36px),
-        radial-gradient(circle at center, hsl(240 3.7% 10%) 0%, hsl(240 3.7% 8%) 100%);
-    border: 2px solid rgba(255, 255, 255, 0.08);
+        radial-gradient(circle at center, color-mix(in srgb, var(--background) 92%, black) 0%, color-mix(in srgb, var(--background) 98%, black) 100%);
+    border: 2px solid color-mix(in srgb, white 12%, transparent);
     animation: vinyl-spin 2s linear infinite;
     box-shadow:
         0 0 0 3px rgba(255, 255, 255, 0.03),
@@ -72,7 +99,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 28%) 100%);
+    background: linear-gradient(135deg, var(--hero-orb) 0%, color-mix(in srgb, var(--hero-orb) 70%, var(--emerald)) 100%);
     animation: vinyl-spin 2s linear infinite;
     display: flex;
     align-items: center;
@@ -170,7 +197,9 @@
     position: relative;
     width: 130px;
     height: 78px;
-    background: linear-gradient(180deg, hsl(240 3.7% 14%) 0%, hsl(240 3.7% 10%) 100%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 32%),
+        linear-gradient(180deg, color-mix(in srgb, var(--card) 88%, var(--background)) 0%, color-mix(in srgb, var(--background) 94%, black) 100%);
     border-radius: 6px;
     border: 1.5px solid rgba(255, 255, 255, 0.08);
     display: flex;
@@ -187,7 +216,7 @@
     left: 12px;
     right: 12px;
     height: 16px;
-    background: linear-gradient(90deg, hsl(142 76% 36%) 0%, hsl(142 50% 28%) 100%);
+    background: linear-gradient(90deg, var(--hero-orb) 0%, color-mix(in srgb, var(--emerald) 88%, var(--hero-orb)) 100%);
     border-radius: 2px;
     opacity: 0.8;
 }
@@ -266,9 +295,9 @@
     height: 3px;
     background: linear-gradient(90deg,
             transparent 0%,
-            rgba(139, 92, 246, 0.5) 20%,
-            rgba(139, 92, 246, 0.8) 50%,
-            rgba(139, 92, 246, 0.5) 80%,
+            color-mix(in srgb, var(--sky) 55%, transparent) 20%,
+            color-mix(in srgb, var(--hero-orb) 92%, white) 50%,
+            color-mix(in srgb, var(--sky) 55%, transparent) 80%,
             transparent 100%);
     animation: tape-move 2s linear infinite;
 }
@@ -298,7 +327,7 @@
 .eq-bar {
     width: 8px;
     border-radius: 4px 4px 2px 2px;
-    background: linear-gradient(to top, hsl(142 76% 36%), hsl(142 76% 50%));
+    background: linear-gradient(to top, color-mix(in srgb, var(--hero-orb) 78%, var(--emerald)), color-mix(in srgb, var(--hero-orb) 56%, white));
     transform-origin: bottom center;
     animation: eq-bounce var(--eq-speed, 0.8s) ease-in-out infinite alternate;
     animation-delay: var(--eq-delay, 0s);
@@ -345,12 +374,12 @@
 /* Color variation for some bars */
 .eq-bar:nth-child(2),
 .eq-bar:nth-child(5) {
-    background: linear-gradient(to top, hsl(142 76% 36%), hsl(160 76% 50%));
+    background: linear-gradient(to top, color-mix(in srgb, var(--emerald) 88%, var(--hero-orb)), color-mix(in srgb, var(--sky) 48%, white));
 }
 
 .eq-bar:nth-child(4),
 .eq-bar:nth-child(7) {
-    background: linear-gradient(to top, hsl(142 76% 30%), hsl(142 76% 42%));
+    background: linear-gradient(to top, color-mix(in srgb, var(--hero-orb) 66%, var(--background)), color-mix(in srgb, var(--hero-orb) 82%, white));
 }
 
 @keyframes eq-bounce {
@@ -411,13 +440,13 @@
 
 .waveform-line {
     fill: none;
-    stroke: hsl(142 76% 36%);
+    stroke: var(--hero-orb);
     stroke-width: 2.5;
     stroke-linecap: round;
     stroke-dasharray: 300;
     stroke-dashoffset: 300;
     animation: waveform-draw 2.5s ease-in-out infinite;
-    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.3));
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hero-orb) 30%, transparent));
 }
 
 .waveform-line-bg {
@@ -430,7 +459,7 @@
 /* Glow underneath */
 .waveform-glow {
     fill: none;
-    stroke: hsl(142 76% 36%);
+    stroke: var(--hero-orb);
     stroke-width: 6;
     stroke-linecap: round;
     stroke-dasharray: 300;
@@ -459,9 +488,90 @@
    ======================================== */
 .anim-label {
     text-align: center;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
+    color: color-mix(in srgb, var(--foreground) 78%, var(--muted-foreground));
+    margin-top: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.84;
+}
+
+:root[data-theme="frutiger-aero"] .converter-card {
+    background:
+        radial-gradient(circle at 18% 10%, var(--frutiger-converter-glow), transparent 32%),
+        radial-gradient(circle at 84% 16%, var(--frutiger-converter-orb), transparent 28%),
+        linear-gradient(180deg, var(--frutiger-converter-sheen), transparent 22%),
+        linear-gradient(160deg, var(--frutiger-converter-surface-top), var(--frutiger-converter-surface-mid) 42%, var(--frutiger-converter-surface-bottom) 100%);
+    border-color: var(--frutiger-converter-border);
+    box-shadow:
+        0 26px 60px var(--frutiger-converter-shadow),
+        0 1px 0 var(--frutiger-converter-inset) inset,
+        0 0 0 1px var(--frutiger-converter-outline) inset;
+}
+
+:root[data-theme="frutiger-aero"] .converter-card::before {
+    background:
+        radial-gradient(circle at 20% 0%, var(--frutiger-overlay-glow), transparent 26%),
+        linear-gradient(130deg, var(--frutiger-button-inset), transparent 25% 58%, var(--frutiger-overlay-accent) 100%);
+}
+
+:root[data-theme="frutiger-aero"] .input,
+:root[data-theme="frutiger-aero"] .paste-btn,
+:root[data-theme="frutiger-aero"] .format-btn,
+:root[data-theme="frutiger-aero"] .progress-section,
+:root[data-theme="frutiger-aero"] .conversion-animation {
+    background:
+        linear-gradient(180deg, var(--frutiger-control-top), var(--frutiger-control-bottom)),
+        var(--frutiger-control-surface);
+    border-color: var(--frutiger-control-border);
+    box-shadow:
+        0 1px 0 var(--frutiger-control-inset) inset,
+        0 16px 34px var(--frutiger-control-shadow);
+}
+
+:root[data-theme="frutiger-aero"] .format-btn.active {
+    background:
+        linear-gradient(180deg, var(--frutiger-active-top), var(--frutiger-active-bottom)),
+        linear-gradient(135deg, var(--frutiger-active-accent-1), var(--frutiger-active-accent-2));
+    color: color-mix(in srgb, var(--foreground) 88%, var(--primary));
+    border: 1px solid var(--frutiger-active-border);
+    box-shadow:
+        0 1px 0 var(--frutiger-active-inset) inset,
+        0 18px 30px var(--frutiger-active-shadow),
+        0 0 0 1px var(--frutiger-active-outline) inset;
+}
+
+:root[data-theme="frutiger-aero"] .format-btn.active svg,
+:root[data-theme="frutiger-aero"] .format-btn.active .reel-inner,
+:root[data-theme="frutiger-aero"] .format-btn.active .icon-mp3,
+:root[data-theme="frutiger-aero"] .format-btn.active .icon-mp4 {
+    color: inherit;
+    opacity: 1;
+    filter: drop-shadow(0 1px 0 var(--frutiger-active-icon-shadow));
+}
+
+:root[data-theme="frutiger-aero"] .format-btn:not(.active) {
     color: var(--muted-foreground);
-    margin-top: 0.5rem;
-    letter-spacing: 0.5px;
-    opacity: 0.7;
+}
+
+:root[data-theme="frutiger-aero"] .conversion-animation::before,
+:root[data-theme="frutiger-aero"] .convert-btn::after {
+    background:
+        radial-gradient(circle at 18% 8%, var(--frutiger-overlay-glow), transparent 24%),
+        linear-gradient(135deg, var(--frutiger-overlay-sheen), transparent 35% 62%, var(--frutiger-overlay-accent) 100%);
+}
+
+:root[data-theme="frutiger-aero"] .convert-btn {
+    background:
+        linear-gradient(180deg, var(--frutiger-button-top), transparent 45%),
+        linear-gradient(135deg, var(--frutiger-button-accent-1), var(--frutiger-button-accent-2) 58%, var(--frutiger-button-accent-3) 100%);
+    box-shadow:
+        0 18px 34px var(--frutiger-button-shadow),
+        0 1px 0 var(--frutiger-button-inset) inset;
+}
+
+:root[data-theme="frutiger-aero"] .progress-fill {
+    background:
+        linear-gradient(90deg, var(--frutiger-progress-sheen), transparent 20%),
+        linear-gradient(90deg, var(--frutiger-progress-accent-1), var(--frutiger-progress-accent-2) 48%, var(--frutiger-progress-accent-3) 100%);
 }

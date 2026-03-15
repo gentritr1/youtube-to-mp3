@@ -1,148 +1,210 @@
 /**
  * Karaoke Lyrics Controller
+ * Handles subtitle loading, parsing, and timed line updates.
  */
 
 export class LyricsController {
-    constructor(container) {
-        if (!container) {
-            console.error('LyricsController requires a valid DOM element as container');
-        }
-        this.container = container;
+    constructor() {
         this.active = false;
         this.lyrics = [];
         this.currentIndex = 0;
         this.intervalId = null;
+        this.listeners = new Map();
+        this.requestId = null;
     }
 
-    async loadSubtitles(subtitles) {
-        if (!subtitles || !subtitles.length) return false;
-        
-        // Try to find English, otherwise fallback to the first available
-        const sub = subtitles.find(s => s.lang?.startsWith('en')) || subtitles[0];
-        
+    on(eventName, callback) {
+        if (!this.listeners.has(eventName)) {
+            this.listeners.set(eventName, new Set());
+        }
+
+        this.listeners.get(eventName).add(callback);
+
+        return () => {
+            this.listeners.get(eventName)?.delete(callback);
+        };
+    }
+
+    emit(eventName, payload = {}) {
+        this.listeners.get(eventName)?.forEach((callback) => {
+            callback(payload);
+        });
+    }
+
+    getLyrics() {
+        return [...this.lyrics];
+    }
+
+    async loadSubtitles(subtitles, { requestId = null } = {}) {
+        this.stop({ preserveLyrics: false });
+        const reqId = requestId;
+        this.requestId = reqId;
+
+        if (!subtitles || !subtitles.length) {
+            if (this.requestId === reqId) {
+                this.emit('empty', { requestId: reqId });
+            }
+            return false;
+        }
+
+        // Try to find English, otherwise fallback to the first available.
+        const sub = subtitles.find((entry) => entry.lang?.startsWith('en')) || subtitles[0];
+
         try {
-            console.log(`[Lyrics] Fetching subtitles for lang: ${sub.lang}`);
             const response = await fetch(`/api/lyrics?url=${encodeURIComponent(sub.url)}`);
             if (!response.ok) throw new Error('Lyrics fetch failed');
-            
+
             const text = await response.text();
-            this.parseSubtitles(text, sub.ext);
+            const parsedLyrics = this.parseSubtitles(text, sub.ext);
+
+            if (this.requestId !== reqId) {
+                return false;
+            }
+
+            this.requestId = reqId;
+            this.lyrics = parsedLyrics;
+
+            if (!this.lyrics.length) {
+                this.emit('empty', { requestId: reqId });
+                return false;
+            }
+
+            this.emit('loaded', { lyrics: this.getLyrics(), requestId: reqId });
             return true;
         } catch (error) {
             console.error('[Lyrics] Error loading subtitles:', error);
+            if (this.requestId === reqId) {
+                this.emit('empty', { requestId: reqId });
+            }
             return false;
         }
     }
 
     parseSubtitles(text, ext) {
-        this.lyrics = [];
-        
+        const parsedLyrics = [];
+
         if (ext === 'json3') {
             try {
                 const data = JSON.parse(text);
                 if (data.events) {
-                    data.events.forEach(event => {
-                        if (event.segs && event.segs.length > 0) {
-                            const line = event.segs
-                                .filter(s => typeof s.utf8 === 'string')
-                                .map(s => s.utf8)
-                                .join('')
-                                .trim();
-                            if (line) {
-                                this.lyrics.push({ text: line, time: event.tStartMs });
-                            }
+                    data.events.forEach((event) => {
+                        if (!event.segs || !event.segs.length) return;
+
+                        const line = event.segs
+                            .filter((segment) => typeof segment.utf8 === 'string')
+                            .map((segment) => segment.utf8)
+                            .join('')
+                            .trim();
+
+                        if (line) {
+                            parsedLyrics.push({ text: line, time: event.tStartMs });
                         }
                     });
                 }
-            } catch (e) {
-                console.error('[Lyrics] Error parsing JSON3:', e);
+            } catch (error) {
+                console.error('[Lyrics] Error parsing JSON3:', error);
             }
-        } else {
-            // Basic VTT/SRT parsing fallback
-            const lines = text.split(/\r?\n/);
-            let currentTime = 0;
-            
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-                
-                // Very basic fallback logic for text segments
-                if (line && !line.includes('-->') && isNaN(parseInt(line, 10)) && line !== 'WEBVTT') {
-                    // Spread text out if no timestamps parsed properly yet
-                    this.lyrics.push({ text: line, time: currentTime });
-                    currentTime += 2000; // Fake 2 seconds per line for un-timestamped text
-                }
-            }
+            return parsedLyrics;
         }
-        
-        console.log(`[Lyrics] Parsed ${this.lyrics.length} lines`);
+
+        const lines = text.split(/\r?\n/);
+        let currentTime = 0;
+        const metadataPrefixes = ['Kind:', 'Language:', 'NOTE', 'X-TIMESTAMP-MAP', 'Region:'];
+
+        for (let i = 0; i < lines.length; i += 1) {
+            const line = lines[i].trim();
+            const isMetadata = metadataPrefixes.some((prefix) => line.startsWith(prefix));
+            const isCueId = /^\d+$/.test(line);
+            if (!line || line.includes('-->') || isCueId || line === 'WEBVTT' || isMetadata) {
+                continue;
+            }
+
+            parsedLyrics.push({ text: line, time: currentTime });
+            currentTime += 2000;
+        }
+
+        return parsedLyrics;
     }
 
     start() {
-        if (!this.container) return;
-        if (this.lyrics.length === 0) return;
-        
+        if (!this.lyrics.length) {
+            this.emit('empty', { requestId: this.requestId });
+            return false;
+        }
+
         this.active = true;
         this.currentIndex = 0;
-        this.container.innerHTML = '';
-        this.container.classList.remove('hidden');
-        
-        // Render all lines (hidden by default)
-        this.lyrics.forEach((lyric, index) => {
-            const el = document.createElement('p');
-            el.className = 'lyric-line';
-            el.textContent = lyric.text;
-            el.id = `lyric-${index}`;
-            this.container.appendChild(el);
-        });
+        this.emit('start', { lyrics: this.getLyrics(), requestId: this.requestId });
 
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
         }
 
-        // Simple mock playback - display one line every 2.5 seconds
-        // Real sync would need audio timing, but this provides the karaoke vibe during wait
+        this.advanceTarget();
+
+        // Approximate karaoke pacing while conversion runs.
         this.intervalId = setInterval(() => {
             this.advanceTarget();
         }, 2500);
 
-        this.advanceTarget(); // Show first line immediately
+        return true;
     }
-    
+
     advanceTarget() {
-        if (!this.active || this.currentIndex >= this.lyrics.length) {
-            this.stop();
+        if (!this.active) return;
+
+        if (this.currentIndex >= this.lyrics.length) {
+            this.stop({ preserveLyrics: true });
             return;
         }
 
-        // Mark previous as past
-        if (this.currentIndex > 0) {
-            const prev = this.container.querySelector(`#lyric-${this.currentIndex - 1}`);
-            if (prev) {
-                prev.classList.remove('active');
-                prev.classList.add('past');
-            }
-        }
+        this.emit('linechange', {
+            index: this.currentIndex,
+            lyric: this.lyrics[this.currentIndex],
+            previousIndex: this.currentIndex - 1,
+            requestId: this.requestId
+        });
 
-        // Mark current as active
-        const current = this.container.querySelector(`#lyric-${this.currentIndex}`);
-        if (current) {
-            current.classList.add('active');
-        }
-
-        this.currentIndex++;
+        this.currentIndex += 1;
     }
 
-    stop() {
-        if (!this.container) return;
-
+    stop({ preserveLyrics = true } = {}) {
+        const wasActive = this.active;
+        const stopRequestId = this.requestId;
         this.active = false;
+
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
         }
-        
-        this.container.classList.add('hidden');
-        this.container.innerHTML = '';
+
+        if (!preserveLyrics) {
+            this.lyrics = [];
+            this.currentIndex = 0;
+            this.requestId = null;
+        }
+
+        if (wasActive || !preserveLyrics) {
+            this.emit('stop', { lyrics: this.getLyrics(), preserveLyrics, requestId: stopRequestId });
+        }
+    }
+
+    finishPlayback() {
+        if (!this.lyrics.length) {
+            return false;
+        }
+
+        if (this.active) {
+            this.stop({ preserveLyrics: true });
+            return true;
+        }
+
+        this.emit('stop', {
+            lyrics: this.getLyrics(),
+            preserveLyrics: true,
+            requestId: this.requestId
+        });
+        return true;
     }
 }

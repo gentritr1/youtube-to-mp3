@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yt-converter-v6'; // AGENT: BUMP THIS VERSION on any UI/Logic change!
+const CACHE_NAME = 'yt-converter-v7'; // AGENT: BUMP THIS VERSION on any UI/Logic change!
 
 // Assets to cache for offline support
 const STATIC_ASSETS = [
@@ -9,10 +9,20 @@ const STATIC_ASSETS = [
     '/js/batch.js',
     '/js/snake-game.js',
     '/js/visualizer.js',
+    '/js/lyrics.js',
+    '/js/ui/themeRegistry.js',
+    '/js/ui/themeController.js',
+    '/js/ui/animationRegistry.js',
+    '/js/ui/animationController.js',
+    '/js/ui/karaokePanel.js',
     '/css/base.css',
     '/css/animations.css',
     '/css/layout/main.css',
+    '/css/layout/hero.css',
     '/css/components/form.css',
+    '/css/components/header.css',
+    '/css/components/theme-switcher.css',
+    '/css/components/karaoke-panel.css',
     '/css/components/results.css',
     '/css/components/conversion-animations.css',
     '/css/components/features.css',
@@ -23,6 +33,9 @@ const STATIC_ASSETS = [
     '/css/components/guess-track.css',
     '/js/guess-track.js',
     '/css/utils/helpers.css',
+    '/css/themes/space.css',
+    '/css/themes/green.css',
+    '/css/themes/frutiger-aero.css',
     '/manifest.json',
     '/assets/icons/icon-192x192.png',
     '/assets/icons/icon-512x512.png',

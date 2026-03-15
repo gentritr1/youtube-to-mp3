@@ -3,24 +3,21 @@
    ======================================== */
 .container {
     width: 100%;
-    max-width: 900px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem 2.25rem;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 1.75rem;
+    align-items: stretch;
+    gap: 1.35rem;
 }
 
 .header {
-    text-align: center;
     width: 100%;
-    max-width: 480px;
 }
 
 .converter-card {
-    max-width: 480px;
     width: 100%;
 }
 
@@ -30,13 +27,19 @@
 }
 
 .footer {
-    text-align: center;
+    text-align: left;
     width: 100%;
-    max-width: 480px;
 }
 
 .footer p {
     color: var(--muted-foreground);
-    font-size: 0.6875rem;
+    font-size: 0.72rem;
     letter-spacing: -0.01em;
+}
+
+@media (max-width: 720px) {
+    .container {
+        padding: 1rem 0.85rem 2rem;
+        gap: 1rem;
+    }
 }

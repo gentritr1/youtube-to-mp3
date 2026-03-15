@@ -1,5 +1,5 @@
 /* ========================================
-   Design Tokens — Modern Dark Palette
+   Design Tokens — Semantic Defaults
    ======================================== */
 :root {
     /* ---- Surface hierarchy ---- */
@@ -61,6 +61,45 @@
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
     --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.12);
+
+    /* ---- Theming / hero ---- */
+    --hero-surface: rgba(10, 15, 28, 0.76);
+    --hero-surface-strong: rgba(8, 12, 24, 0.94);
+    --hero-border: rgba(120, 143, 180, 0.26);
+    --hero-orb: rgba(16, 185, 129, 0.92);
+    --hero-orb-soft: rgba(16, 185, 129, 0.22);
+    --hero-glow: rgba(16, 185, 129, 0.18);
+    --hero-headlight: hsl(38 92% 50%);
+    --ambient-primary: rgba(16, 185, 129, 0.15);
+    --ambient-secondary: rgba(139, 92, 246, 0.15);
+    --glass-highlight: rgba(255, 255, 255, 0.08);
+    --glass-shadow: rgba(0, 0, 0, 0.22);
+    --liquid-tint: rgba(255, 255, 255, 0.04);
+    --surface-glass: color-mix(in srgb, var(--card) 84%, transparent);
+    --surface-glass-strong: color-mix(in srgb, var(--hero-surface-strong) 88%, transparent);
+    --surface-glass-soft: color-mix(in srgb, var(--secondary) 82%, transparent);
+    --surface-border: color-mix(in srgb, var(--hero-border) 82%, transparent);
+    --success-surface: color-mix(in srgb, var(--success) 12%, var(--card));
+    --success-border: color-mix(in srgb, var(--success) 36%, var(--hero-border));
+    --error-surface: color-mix(in srgb, var(--destructive) 14%, var(--card));
+    --error-border: color-mix(in srgb, var(--destructive) 36%, var(--hero-border));
+    --button-primary: linear-gradient(135deg, color-mix(in srgb, var(--sky) 88%, white), color-mix(in srgb, var(--emerald) 82%, var(--hero-orb)));
+    --button-primary-foreground: var(--primary-foreground);
+    --button-secondary: linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 100%), color-mix(in srgb, var(--card) 60%, transparent);
+    --button-secondary-foreground: var(--foreground);
+    --lyrics-overlay: radial-gradient(circle at center, color-mix(in srgb, var(--hero-orb-soft) 42%, transparent) 0%, transparent 70%);
+    --lyrics-text-muted: color-mix(in srgb, var(--foreground) 14%, transparent);
+    --lyrics-text-past: color-mix(in srgb, var(--foreground) 8%, transparent);
+    --lyrics-text-active: color-mix(in srgb, var(--foreground) 92%, white);
+    --lyrics-glow: color-mix(in srgb, var(--hero-orb) 34%, transparent);
+    --game-surface: rgba(12, 17, 27, 0.96);
+    --game-surface-strong: rgba(8, 12, 20, 0.98);
+    --game-surface-soft: rgba(18, 24, 36, 0.84);
+    --game-border: rgba(86, 104, 139, 0.34);
+    --game-border-strong: rgba(97, 118, 155, 0.46);
+    --game-shadow: rgba(0, 0, 0, 0.45);
+    --game-canvas: hsl(225 18% 4%);
+    --game-canvas-border: hsl(225 10% 13%);
 }
 
 /* ========================================
@@ -90,4 +129,11 @@ body {
     position: relative;
     overflow-x: hidden;
     letter-spacing: -0.011em;
+    transition: background var(--transition-smooth), color var(--transition-smooth);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body {
+        transition: none !important;
+    }
 }

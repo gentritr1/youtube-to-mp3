@@ -5,7 +5,7 @@
 
 .nerd-stats {
     width: 100%;
-    max-width: 900px;
+    max-width: 1280px;
     animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
@@ -19,8 +19,10 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    background: hsl(225 14% 7%);
-    border: 1px solid hsl(225 10% 13%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent 30%),
+        color-mix(in srgb, var(--game-surface-soft) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--game-border) 68%, transparent);
     border-radius: var(--radius-lg);
     color: var(--muted-foreground);
     font-family: var(--font-sans);
@@ -33,6 +35,11 @@
         color var(--transition-fast),
         border-color var(--transition-fast);
     letter-spacing: -0.01em;
+    box-shadow:
+        0 1px 0 color-mix(in srgb, white 14%, transparent) inset,
+        0 18px 34px color-mix(in srgb, var(--glass-shadow) 30%, transparent);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
 }
 
 .nerd-stats-label {
@@ -42,9 +49,9 @@
 }
 
 .nerd-stats-toggle:hover {
-    background-color: hsl(225 12% 10%);
+    background-color: color-mix(in srgb, var(--hero-orb) 10%, var(--game-surface-soft));
     color: var(--foreground);
-    border-color: hsl(225 10% 18%);
+    border-color: color-mix(in srgb, var(--game-border-strong) 82%, transparent);
 }
 
 .nerd-stats-chevron {
@@ -71,8 +78,10 @@
     gap: 0;
     max-height: 0;
     overflow: hidden;
-    background: hsl(225 14% 7%);
-    border: 1px solid hsl(225 10% 13%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 4%, transparent), transparent 24%),
+        color-mix(in srgb, var(--game-surface-soft) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--game-border) 68%, transparent);
     border-top: none;
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     transition: max-height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
@@ -106,7 +115,7 @@
     top: 25%;
     height: 50%;
     width: 1px;
-    background-color: hsl(225 10% 14%);
+    background-color: color-mix(in srgb, var(--game-border) 44%, transparent);
 }
 
 .nerd-stats-toggle[aria-expanded="true"]+.nerd-stats-grid .stat-chip {
@@ -115,7 +124,7 @@
 }
 
 .stat-chip:hover {
-    background-color: hsl(225 12% 10%);
+    background-color: color-mix(in srgb, var(--hero-orb) 8%, var(--game-surface-soft));
 }
 
 /* Value */
@@ -151,7 +160,7 @@
     }
 
     .stat-chip:nth-child(n+4) {
-        border-top: 1px solid hsl(225 10% 13%);
+        border-top: 1px solid color-mix(in srgb, var(--game-border) 54%, transparent);
     }
 }
 
@@ -169,6 +178,13 @@
     }
 
     .stat-chip:nth-child(n+3) {
-        border-top: 1px solid hsl(225 10% 13%);
+        border-top: 1px solid color-mix(in srgb, var(--game-border) 54%, transparent);
     }
+}
+
+:root[data-theme="frutiger-aero"] .nerd-stats-toggle,
+:root[data-theme="frutiger-aero"] .nerd-stats-grid {
+    box-shadow:
+        0 1px 0 color-mix(in srgb, white 76%, transparent) inset,
+        0 18px 34px color-mix(in srgb, var(--glass-shadow) 62%, transparent);
 }
