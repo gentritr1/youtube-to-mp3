@@ -2,7 +2,7 @@
 
 This document is intentionally transient.
 
-Use it for current verification output, environment-specific blockers, and rebuild instructions. Keep long-term architecture guidance in `docs/FRONTEND_THEME_ARCHITECTURE.md`.
+Use it for current verification output, environment-specific blockers, and rebuild instructions. Keep long-term architecture guidance in `docs/CODEBASE_GUIDE.md`.
 
 ## Current Verification Commands
 
