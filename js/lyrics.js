@@ -10,6 +10,7 @@ export class LyricsController {
         this.currentIndex = 0;
         this.intervalId = null;
         this.listeners = new Map();
+        this.requestId = null;
     }
 
     on(eventName, callback) {
@@ -34,11 +35,12 @@ export class LyricsController {
         return [...this.lyrics];
     }
 
-    async loadSubtitles(subtitles) {
+    async loadSubtitles(subtitles, { requestId = null } = {}) {
         this.stop({ preserveLyrics: false });
+        this.requestId = requestId;
 
         if (!subtitles || !subtitles.length) {
-            this.emit('empty');
+            this.emit('empty', { requestId: this.requestId });
             return false;
         }
 
@@ -53,15 +55,15 @@ export class LyricsController {
             this.parseSubtitles(text, sub.ext);
 
             if (!this.lyrics.length) {
-                this.emit('empty');
+                this.emit('empty', { requestId: this.requestId });
                 return false;
             }
 
-            this.emit('loaded', { lyrics: this.getLyrics() });
+            this.emit('loaded', { lyrics: this.getLyrics(), requestId: this.requestId });
             return true;
         } catch (error) {
             console.error('[Lyrics] Error loading subtitles:', error);
-            this.emit('empty');
+            this.emit('empty', { requestId: this.requestId });
             return false;
         }
     }
@@ -109,13 +111,13 @@ export class LyricsController {
 
     start() {
         if (!this.lyrics.length) {
-            this.emit('empty');
+            this.emit('empty', { requestId: this.requestId });
             return false;
         }
 
         this.active = true;
         this.currentIndex = 0;
-        this.emit('start', { lyrics: this.getLyrics() });
+        this.emit('start', { lyrics: this.getLyrics(), requestId: this.requestId });
 
         if (this.intervalId) {
             clearInterval(this.intervalId);
@@ -143,7 +145,8 @@ export class LyricsController {
         this.emit('linechange', {
             index: this.currentIndex,
             lyric: this.lyrics[this.currentIndex],
-            previousIndex: this.currentIndex - 1
+            previousIndex: this.currentIndex - 1,
+            requestId: this.requestId
         });
 
         this.currentIndex += 1;
@@ -151,6 +154,7 @@ export class LyricsController {
 
     stop({ preserveLyrics = true } = {}) {
         const wasActive = this.active;
+        const stopRequestId = this.requestId;
         this.active = false;
 
         if (this.intervalId) {
@@ -161,10 +165,11 @@ export class LyricsController {
         if (!preserveLyrics) {
             this.lyrics = [];
             this.currentIndex = 0;
+            this.requestId = null;
         }
 
         if (wasActive || !preserveLyrics) {
-            this.emit('stop', { lyrics: this.getLyrics(), preserveLyrics });
+            this.emit('stop', { lyrics: this.getLyrics(), preserveLyrics, requestId: stopRequestId });
         }
     }
 }

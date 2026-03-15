@@ -59,6 +59,7 @@ const state = {
     format: 'mp3',
     isLoading: false,
     videoInfo: null,
+    activeLyricsRequestId: 0,
 };
 
 const lyricsController = new LyricsController();
@@ -100,11 +101,13 @@ try {
     console.error('karaokePanel.init failed', error);
 }
 
-lyricsController.on('loaded', ({ lyrics }) => {
+lyricsController.on('loaded', ({ lyrics, requestId }) => {
+    if (requestId !== state.activeLyricsRequestId) return;
     karaokePanel.setLyrics(lyrics);
 });
 
-lyricsController.on('start', () => {
+lyricsController.on('start', ({ requestId }) => {
+    if (requestId !== state.activeLyricsRequestId) return;
     karaokePanel.setStatus(
         'Live',
         'Lyrics are moving now.',
@@ -113,17 +116,20 @@ lyricsController.on('start', () => {
     );
 });
 
-lyricsController.on('linechange', ({ index }) => {
+lyricsController.on('linechange', ({ index, requestId }) => {
+    if (requestId !== state.activeLyricsRequestId) return;
     karaokePanel.setActiveLine(index);
 });
 
-lyricsController.on('stop', ({ preserveLyrics }) => {
-    if (preserveLyrics) {
+lyricsController.on('stop', ({ preserveLyrics, lyrics, requestId }) => {
+    if (requestId !== null && requestId !== state.activeLyricsRequestId) return;
+    if (preserveLyrics && Array.isArray(lyrics) && lyrics.length > 0) {
         karaokePanel.finishPlayback();
     }
 });
 
-lyricsController.on('empty', () => {
+lyricsController.on('empty', ({ requestId }) => {
+    if (requestId !== state.activeLyricsRequestId) return;
     karaokePanel.setEmpty();
 });
 
@@ -167,6 +173,7 @@ const hideResults = () => {
     animationController.stop(elements.conversionAnimation);
 
     lyricsController.stop({ preserveLyrics: false });
+    state.activeLyricsRequestId = 0;
     karaokePanel.setIdle();
 
     // Clear background timers
@@ -530,10 +537,16 @@ const handleSubmit = async (e) => {
  * Handle karaoke lyrics fetch & start
  */
 const fetchLyricsAndStartKaraoke = async (subtitles) => {
+    const requestId = Date.now() + Math.random();
+    state.activeLyricsRequestId = requestId;
     karaokePanel.setLoading();
 
     try {
-        const loaded = await lyricsController.loadSubtitles(subtitles);
+        const loaded = await lyricsController.loadSubtitles(subtitles, { requestId });
+
+        if (requestId !== state.activeLyricsRequestId) {
+            return;
+        }
 
         if (loaded && state.isLoading) {
             lyricsController.start();
@@ -542,6 +555,9 @@ const fetchLyricsAndStartKaraoke = async (subtitles) => {
         }
     } catch (e) {
         console.warn('Silent fail for lyrics', e);
+        if (requestId !== state.activeLyricsRequestId) {
+            return;
+        }
         karaokePanel.setEmpty();
     }
 };

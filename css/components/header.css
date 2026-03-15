@@ -756,6 +756,32 @@
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .hero-eyebrow::before,
+    .hero-file-card,
+    .run-letter,
+    .hero-runner,
+    .runner-wheel,
+    .hero-art-wave,
+    .hero-float-icon {
+        animation: none !important;
+    }
+
+    .hero-file-card,
+    .run-letter,
+    .hero-runner,
+    .runner-wheel,
+    .hero-art-wave,
+    .hero-float-icon {
+        transform: none !important;
+        transition: none !important;
+    }
+
+    .hero-eyebrow::before {
+        box-shadow: none !important;
+    }
+}
+
 @media (max-width: 720px) {
     .hero-header {
         padding: 1.15rem;
