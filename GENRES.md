@@ -1,11 +1,11 @@
 # Genre Catalog Guide
 
-The Popular Music and Guess the Track features now load genres from JSON files in [server/data/genres](/Users/gentlegen/Desktop/youtube-to-mp3/server/data/genres).
+The Popular Music and Guess the Track features now load genres from JSON files in [server/data/genres](./server/data/genres).
 
 ## How to add a new genre
 
 1. Create a new file in `server/data/genres`, for example `funk.json`.
-2. Follow the same structure as [_template.genre.json](/Users/gentlegen/Desktop/youtube-to-mp3/server/data/genres/_template.genre.json).
+2. Follow the same structure as [_template.genre.json](./server/data/genres/_template.genre.json).
 3. Save the file.
 
 If `WATCH_GENRES=true` is enabled, or you are running in development mode, the server reloads the catalog automatically. Otherwise restart the server.

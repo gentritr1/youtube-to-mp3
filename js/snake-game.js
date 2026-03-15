@@ -463,6 +463,7 @@
             this.snakes = [];
             this.activeSnakeIndex = 0;
             this.isRunning = false;
+            this.isEnded = false;
             this.score = 0;
 
             this.lastTime = 0;
@@ -603,11 +604,12 @@
             this.displayHighScores();
 
             this.isRunning = true;
+            this.isEnded = false;
             this.lastTime = performance.now();
             this.timeAccumulator = 0;
 
             if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
-            requestAnimationFrame(this.gameLoop.bind(this));
+            this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
         }
 
         gameLoop(timestamp) {
@@ -813,7 +815,9 @@
 
         gameOver() {
             this.isRunning = false;
+            this.isEnded = true;
             cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
 
             this.saveHighScore(this.score);
             this.elements.restartBtn.classList.remove('hidden');
@@ -1017,12 +1021,12 @@
             this.elements.container.classList.remove('hidden');
             this.displayHighScores();
             if (!this.isRunning) {
-                if (this.snakes.length === 0) {
+                if (this.isEnded || this.snakes.length === 0) {
                     this.init();
                 } else {
                     this.isRunning = true;
                     this.lastTime = performance.now();
-                    requestAnimationFrame(this.gameLoop.bind(this));
+                    this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
                 }
             }
         }
@@ -1030,6 +1034,8 @@
         hide() {
             this.elements.container.classList.add('hidden');
             this.isRunning = false;
+            if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
         }
     }
 

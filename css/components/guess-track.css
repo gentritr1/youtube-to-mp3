@@ -283,7 +283,7 @@
     opacity: 0;
     animation: gt-burst-fly 920ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
     animation-delay: var(--gt-burst-delay, 0ms);
-    text-shadow: 0 0 20px currentColor;
+    text-shadow: 0 0 20px currentcolor;
 }
 
 .gt-burst-streak {

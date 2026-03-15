@@ -9,13 +9,12 @@ import { config } from '../config.js';
 const { RATE_LIMIT } = config;
 
 /**
- * Helper to skip rate limits on localhost or in development mode
+ * Helper to skip rate limits on explicit local development or localhost traffic
  */
-const skipOnLocalhost = (req: any) => {
-    // Disable rate limiting completely for local development
-    if (!config.IS_PROD) return true;
-    
-    const clientIp = req.ip || req.connection.remoteAddress;
+export const skipOnLocalhost = (req: any) => {
+    if (config.IS_DEV) return true;
+
+    const clientIp = req.ip || req.socket?.remoteAddress;
     return clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1';
 };
 

@@ -189,6 +189,13 @@
     transform: translateY(-1px);
 }
 
+.mini-game-btn.active {
+    background: hsl(225 12% 20%);
+    color: var(--foreground);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
 .mini-game-btn:active {
     transform: translateY(0);
 }
@@ -580,7 +587,7 @@
    Responsive
    ======================================== */
 @media (max-width: 768px) {
-    .game-container.game-floating {
+    .game-floating {
         width: 320px;
         bottom: 1rem;
         right: 1rem;
@@ -596,7 +603,7 @@
 }
 
 @media (max-width: 480px) {
-    .game-container.game-floating {
+    .game-floating {
         width: calc(100% - 1rem);
         left: 0.5rem;
         right: 0.5rem;
@@ -666,7 +673,7 @@
 
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
-    .game-container.game-floating {
+    .game-floating {
         animation: none;
     }
 

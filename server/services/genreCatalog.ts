@@ -3,7 +3,8 @@ import path from 'path';
 import { config } from '../config.js';
 import { GenreDefinition, parseGenreDefinition } from '../data/genres/schema.js';
 
-let genresCache: GenreDefinition[] = [];
+let genresCache: GenreDefinition[] | null = null;
+let loadPromise: Promise<GenreDefinition[]> | null = null;
 let watcher: fs.FSWatcher | null = null;
 let reloadTimer: NodeJS.Timeout | null = null;
 
@@ -21,48 +22,53 @@ const sortGenres = (genres: GenreDefinition[]): GenreDefinition[] =>
         return left.name.localeCompare(right.name);
     });
 
-export const loadGenreCatalog = (): GenreDefinition[] => {
-    if (!fs.existsSync(config.GENRES_DIR)) {
-        fs.mkdirSync(config.GENRES_DIR, { recursive: true });
-    }
+const reloadGenreCatalog = async (): Promise<GenreDefinition[]> => {
+    await fs.promises.mkdir(config.GENRES_DIR, { recursive: true });
 
-    const files = fs.readdirSync(config.GENRES_DIR);
-    const nextGenres: GenreDefinition[] = [];
+    const files = await fs.promises.readdir(config.GENRES_DIR);
+    const nextGenres = await Promise.all(
+        files
+            .filter(fileName => !shouldSkipFile(fileName))
+            .map(async (fileName) => {
+                const fullPath = path.join(config.GENRES_DIR, fileName);
 
-    files.forEach(fileName => {
-        if (shouldSkipFile(fileName)) {
-            return;
-        }
+                try {
+                    const raw = await fs.promises.readFile(fullPath, 'utf8');
+                    const parsed = JSON.parse(raw) as unknown;
+                    const genre = parseGenreDefinition(getGenreIdFromFile(fileName), parsed);
 
-        const fullPath = path.join(config.GENRES_DIR, fileName);
+                    return genre.enabled ? genre : null;
+                } catch (error: any) {
+                    console.error(`[GenreCatalog] Skipping ${fileName}: ${error.message}`);
+                    return null;
+                }
+            })
+    );
 
-        try {
-            const raw = fs.readFileSync(fullPath, 'utf8');
-            const parsed = JSON.parse(raw) as unknown;
-            const genre = parseGenreDefinition(getGenreIdFromFile(fileName), parsed);
-
-            if (!genre.enabled) {
-                return;
-            }
-
-            nextGenres.push(genre);
-        } catch (error: any) {
-            console.error(`[GenreCatalog] Skipping ${fileName}: ${error.message}`);
-        }
-    });
-
-    genresCache = sortGenres(nextGenres);
+    genresCache = sortGenres(nextGenres.filter((genre): genre is GenreDefinition => genre !== null));
     console.log(`[GenreCatalog] Loaded ${genresCache.length} genre files`);
     return genresCache;
 };
 
-export const initializeGenreCatalog = (): void => {
-    loadGenreCatalog();
+export const loadGenreCatalog = async (): Promise<GenreDefinition[]> => {
+    if (!loadPromise) {
+        loadPromise = reloadGenreCatalog().finally(() => {
+            loadPromise = null;
+        });
+    }
+
+    return loadPromise;
+};
+
+export const initializeGenreCatalog = async (): Promise<void> => {
+    await getGenres();
 
     if (!config.WATCH_GENRES || watcher) {
         return;
     }
 
+    // fs.watch is lightweight but can miss events on atomic-save editors,
+    // network filesystems, or containerized mounts. Keep reloads debounced.
     watcher = fs.watch(config.GENRES_DIR, (_eventType, fileName) => {
         if (!fileName || shouldSkipFile(fileName)) {
             return;
@@ -74,7 +80,9 @@ export const initializeGenreCatalog = (): void => {
 
         reloadTimer = setTimeout(() => {
             console.log(`[GenreCatalog] Detected change in ${fileName}, reloading catalog`);
-            loadGenreCatalog();
+            loadGenreCatalog().catch((error: Error) => {
+                console.error('[GenreCatalog] Reload failed:', error.message);
+            });
             reloadTimer = null;
         }, 100);
     });
@@ -98,12 +106,13 @@ export const stopGenreCatalogWatcher = (): void => {
     }
 };
 
-export const getGenres = (): GenreDefinition[] => {
-    if (genresCache.length === 0) {
-        return loadGenreCatalog();
+export const getGenres = async (): Promise<GenreDefinition[]> => {
+    if (genresCache !== null) {
+        return genresCache;
     }
-    return genresCache;
+
+    return loadGenreCatalog();
 };
 
-export const getGenreById = (genreId: string): GenreDefinition | undefined =>
-    getGenres().find(genre => genre.id === genreId.toLowerCase());
+export const getGenreById = async (genreId: string): Promise<GenreDefinition | undefined> =>
+    (await getGenres()).find(genre => genre.id === genreId.toLowerCase());

@@ -40,7 +40,6 @@ if (!fs.existsSync(config.DOWNLOADS_DIR)) {
 
 // Load persisted tasks (legacy support)
 loadTasks();
-initializeGenreCatalog();
 
 // Dependency Checks
 import { execSync } from 'child_process';
@@ -123,6 +122,8 @@ setInterval(runCleanup, config.CLEANUP_INTERVAL_MS);
 
 // Initialize and start server
 const startServer = async () => {
+    await initializeGenreCatalog();
+
     // Try to initialize job queue (optional, falls back to direct processing)
     if (config.USE_QUEUE) {
         await initializeQueue();

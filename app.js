@@ -669,9 +669,16 @@ const showGame = () => {
 // Mini-game toggles
 document.querySelectorAll('.mini-game-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
+        const nextGame = e.currentTarget?.dataset?.game;
+        const allowedGames = new Set(['snake', 'guesstrack']);
+
+        if (!nextGame || !allowedGames.has(nextGame)) {
+            return;
+        }
+
         document.querySelectorAll('.mini-game-btn').forEach(b => b.classList.remove('active'));
         e.currentTarget.classList.add('active');
-        activeMiniGame = e.currentTarget.dataset.game;
+        activeMiniGame = nextGame;
         showGame();
     });
 });

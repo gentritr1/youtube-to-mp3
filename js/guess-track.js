@@ -18,6 +18,8 @@ class GuessTrackGame {
         this.roundActive = false;
         this.isLoading = false;
         this.feedbackTimer = null;
+        this.retryTimeout = null;
+        this.nextRoundTimeout = null;
 
         this.bindEvents();
     }
@@ -59,9 +61,13 @@ class GuessTrackGame {
 
     hide() {
         this.elements.container.classList.add('hidden');
+        this.clearPendingTimeouts();
         if (this.audio) this.audio.pause();
         this.stopTimer();
         this.stopFeedback();
+        this.stopAudio();
+        this.roundActive = false;
+        this.isLoading = false;
         this.isActive = false;
     }
 
@@ -71,6 +77,7 @@ class GuessTrackGame {
         this.isActive = true;
         this.roundActive = false;
         this.isLoading = true;
+        this.clearPendingTimeouts();
         
         this.stopAudio();
         this.stopTimer();
@@ -98,14 +105,13 @@ class GuessTrackGame {
         const tracks = FeaturesModule.getRandomTracks(4);
         if (tracks.length === 0) {
              this.setStatus('loading', 'Waiting for music feed', 'No tracks yet. Retrying in a moment.');
-             // Retry in 1 second
-             setTimeout(() => this.startRound(), 1000);
+             this.scheduleRetry(1000);
              return;
         }
 
         if (tracks.length < 4) {
              this.setStatus('loading', 'Almost ready...', 'Fetching enough options for a fair round.');
-             setTimeout(() => this.startRound(), 1500);
+             this.scheduleRetry(1500);
              return;
         }
 
@@ -125,6 +131,15 @@ class GuessTrackGame {
             const data = await response.json();
             
             if (!data.success) throw new Error(data.message);
+            if (typeof data.previewUrl !== 'string' || data.previewUrl.trim() === '') {
+                throw new Error('Preview response missing data.previewUrl');
+            }
+
+            try {
+                new URL(data.previewUrl, window.location.origin);
+            } catch {
+                throw new Error('Preview response contains invalid data.previewUrl');
+            }
 
             this.audio = new Audio(data.previewUrl);
             this.audio.volume = 0.5; // reasonable volume
@@ -144,7 +159,7 @@ class GuessTrackGame {
                 if (!this.isActive) return;
                 this.setStatus('danger', 'Audio failed', 'Skipping to the next preview.');
                 this.isLoading = false;
-                setTimeout(() => this.startRound(), 1500);
+                this.scheduleRetry(1500);
             }, { once: true });
 
             this.audio.load();
@@ -159,7 +174,7 @@ class GuessTrackGame {
             if (this.isActive) {
                 this.setStatus('danger', 'Track unavailable', 'This preview could not be loaded. Skipping.');
                 this.isLoading = false;
-                setTimeout(() => this.startRound(), 1500);
+                this.scheduleRetry(1500);
             }
         }
     }
@@ -294,15 +309,18 @@ class GuessTrackGame {
     }
 
     scheduleNext() {
+        this.clearNextRoundTimeout();
         if (this.lives <= 0) {
-            setTimeout(() => {
+            this.nextRoundTimeout = setTimeout(() => {
                 this.setStatus('danger', `Game Over • ${this.score} pts`, 'Reset to start a new run and build a longer combo.');
                 this.elements.startBtn.classList.remove('hidden');
                 this.elements.startBtn.textContent = "Play Again";
+                this.nextRoundTimeout = null;
             }, 1500);
         } else {
-            setTimeout(() => {
+            this.nextRoundTimeout = setTimeout(() => {
                 this.startRound();
+                this.nextRoundTimeout = null;
             }, 1500);
         }
     }
@@ -404,5 +422,32 @@ class GuessTrackGame {
             }
             this.feedbackTimer = null;
         }, 1800);
+    }
+
+    clearPendingTimeouts() {
+        this.clearRetryTimeout();
+        this.clearNextRoundTimeout();
+    }
+
+    clearRetryTimeout() {
+        if (this.retryTimeout) {
+            clearTimeout(this.retryTimeout);
+            this.retryTimeout = null;
+        }
+    }
+
+    clearNextRoundTimeout() {
+        if (this.nextRoundTimeout) {
+            clearTimeout(this.nextRoundTimeout);
+            this.nextRoundTimeout = null;
+        }
+    }
+
+    scheduleRetry(delay) {
+        this.clearRetryTimeout();
+        this.retryTimeout = setTimeout(() => {
+            this.retryTimeout = null;
+            this.startRound();
+        }, delay);
     }
 }

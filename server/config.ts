@@ -12,6 +12,7 @@ const parsedPort = Number.parseInt(process.env.PORT ?? '', 10);
 export const config = {
     PORT: Number.isFinite(parsedPort) ? parsedPort : 3000,
     IS_PROD: !!process.env.RENDER || process.env.NODE_ENV === 'production',
+    IS_DEV: process.env.NODE_ENV === 'development',
 
     // Paths
     ROOT_DIR: path.resolve(__dirname, '..'),

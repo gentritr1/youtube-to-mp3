@@ -12,7 +12,7 @@ router.get('/', async (_req: Request, res: Response) => {
     try {
         res.json({
             success: true,
-            genres: getGenres(),
+            genres: await getGenres(),
             lastUpdated: new Date().toISOString()
         });
     } catch (error: any) {
@@ -28,13 +28,14 @@ router.get('/:genre', async (req: Request, res: Response) => {
     const genre = req.params.genre as string;
 
     try {
-        const genreData = getGenreById(genre);
+        const genreData = await getGenreById(genre);
 
         if (!genreData) {
+            const availableGenres = (await getGenres()).map(item => item.id);
             return res.status(404).json({
                 success: false,
                 message: `Genre '${genre}' not found`,
-                availableGenres: getGenres().map(item => item.id)
+                availableGenres
             });
         }
 
