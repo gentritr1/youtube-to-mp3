@@ -11,6 +11,18 @@ Use this document for:
 
 Use `docs/TESTING_STATUS.md` for transient build and environment notes only.
 
+## Table of Contents
+
+- [Product Summary](#product-summary)
+- [Project Shape](#project-shape)
+- [Frontend Module Ownership](#frontend-module-ownership)
+- [Styling Architecture](#styling-architecture)
+- [Theme System](#theme-system)
+- [Current UI System](#current-ui-system)
+- [Workflow For New Features](#workflow-for-new-features)
+- [Practical Checklist](#practical-checklist)
+- [Near-Term Next Steps](#near-term-next-steps)
+
 ## Product Summary
 
 YT Converter is a Node.js and vanilla JavaScript app for:

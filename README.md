@@ -65,6 +65,8 @@ npm run test:watch
 npm run build
 ```
 
+Optional Docker workflow: use these commands for containerized development and CI-style runs; otherwise run the app locally with `npm start`.
+
 Docker helpers:
 
 ```bash
