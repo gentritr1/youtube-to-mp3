@@ -542,16 +542,30 @@
     <script src="app.js" type="module" defer></script>
     <script>
         // Progressive Web App Support - Register Service Worker
+        // On localhost, require an explicit `?pwa=1` opt-in so this app does not
+        // interfere with unrelated projects that happen to use the same origin.
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
+            const isLocalhost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+            const enableLocalPwa = new URLSearchParams(window.location.search).get('pwa') === '1';
+            const shouldRegisterServiceWorker = !isLocalhost || enableLocalPwa;
+
+            if (shouldRegisterServiceWorker) {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
+                    .then((registration) => {
                         console.log('SW registered: ', registration);
                     })
-                    .catch(registrationError => {
+                    .catch((registrationError) => {
                         console.log('SW registration failed: ', registrationError);
                     });
-            });
+            } else {
+                navigator.serviceWorker.getRegistrations()
+                    .then((registrations) => Promise.all(
+                        registrations.map((registration) => registration.unregister())
+                    ))
+                    .catch((error) => {
+                        console.log('SW unregister failed: ', error);
+                    });
+            }
         }
     </script>
 </body>

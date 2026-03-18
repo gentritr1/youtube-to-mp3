@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yt-converter-v7'; // AGENT: BUMP THIS VERSION on any UI/Logic change!
+const CACHE_NAME = 'yt-converter-v8'; // AGENT: BUMP THIS VERSION on any UI/Logic change!
 
 // Assets to cache for offline support
 const STATIC_ASSETS = [

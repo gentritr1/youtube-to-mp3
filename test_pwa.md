@@ -1,6 +1,6 @@
 # How to Test PWA Locally
 
-1. Open http://localhost:3000 in Google Chrome
+1. Open `http://localhost:3000/?pwa=1` in Google Chrome to test the PWA locally
 2. Open Chrome DevTools (`Cmd + Option + J`)
 
 ## Verify Service Worker
