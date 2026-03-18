@@ -139,7 +139,7 @@ const FeaturesModule = (() => {
                     <div class="waveform-grid" aria-hidden="true"></div>
                     <div class="waveform-progress" id="waveform-progress"></div>
                     <div class="waveform-playhead" id="waveform-playhead"></div>
-                    <div class="waveform-scrub-hint">Scroll or drag the energy line</div>
+                    <div class="waveform-scrub-hint">Click or scroll the energy line</div>
                 </div>
                 <div class="preview-controls">
                     <button class="preview-play-btn" id="preview-play-btn" aria-label="Play/Pause">
@@ -694,7 +694,8 @@ const FeaturesModule = (() => {
         }
 
         const isSamePreview = elements.previewPlayer.classList.contains('active')
-            && state.previewVideoId === video.videoId;
+            && state.previewVideoId === video.videoId
+            && state.previewAudio !== null;
 
         if (isSamePreview) {
             updatePreviewMetadata(video);
@@ -705,7 +706,6 @@ const FeaturesModule = (() => {
         const requestId = state.previewRequestId + 1;
         abortPreviewRequest();
         const controller = new AbortController();
-        const shouldAutoplay = Boolean(state.previewAudio && state.isPreviewPlaying);
         const outgoingAudio = state.previewAudio;
 
         state.previewRequestId = requestId;
@@ -716,7 +716,7 @@ const FeaturesModule = (() => {
 
         state.isPreviewLoading = true;
         resetLoadingText();
-        updatePreviewStatus(shouldAutoplay ? 'Preparing next preview...' : 'Generating preview...');
+        updatePreviewStatus(outgoingAudio && state.isPreviewPlaying ? 'Preparing next preview...' : 'Generating preview...');
         emitPreviewStateChange();
         setPreviewLoadingState(true);
 
@@ -753,6 +753,13 @@ const FeaturesModule = (() => {
                 disposeAudio(incomingAudio);
                 return;
             }
+
+            const shouldAutoplay = Boolean(
+                outgoingAudio
+                && requestId === state.previewRequestId
+                && state.isPreviewPlaying
+                && state.previewAudio === outgoingAudio
+            );
 
             attachPreviewAudioEvents(incomingAudio);
             state.previewAudio = incomingAudio;
