@@ -483,8 +483,8 @@ const FeaturesModule = (() => {
                 return;
             }
 
-            state.fadingPreviewAudio = null;
             stopCrossfade();
+            state.fadingPreviewAudio = null;
             incomingAudio.volume = 1;
             updatePreviewStatus('Crossfade complete');
         };
