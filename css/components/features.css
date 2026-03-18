@@ -464,6 +464,7 @@
     --preview-playhead-ring:
         0 0 0 6px color-mix(in srgb, var(--hero-orb-soft) 46%, transparent),
         0 0 18px color-mix(in srgb, var(--hero-orb) 28%, transparent);
+
     position: relative;
     overflow: hidden;
     margin-top: 0.75rem;

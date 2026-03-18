@@ -353,12 +353,26 @@ const FeaturesModule = (() => {
 
     const disposeAudio = (audio) => {
         if (!audio) return;
+
+        if (Array.isArray(audio._previewListeners)) {
+            audio._previewListeners.forEach(({ type, handler }) => {
+                audio.removeEventListener(type, handler);
+            });
+            delete audio._previewListeners;
+        }
+
         audio.pause();
         audio.removeAttribute('src');
     };
 
     const attachPreviewAudioEvents = (audio) => {
-        audio.addEventListener('error', (e) => {
+        const listeners = [];
+        const addListener = (type, handler) => {
+            audio.addEventListener(type, handler);
+            listeners.push({ type, handler });
+        };
+
+        const onError = (e) => {
             console.error('[Preview] Audio load/play error:', e);
             if (state.previewAudio !== audio) return;
 
@@ -376,21 +390,21 @@ const FeaturesModule = (() => {
                 elements.previewLoadingText.textContent = '⚠️ Failed to load audio preview';
                 elements.previewLoadingText.style.color = 'var(--destructive)';
             }
-        });
+        };
 
-        audio.addEventListener('loadedmetadata', () => {
+        const onLoadedMetadata = () => {
             if (state.previewAudio !== audio) return;
             elements.previewTimeTotal.textContent = formatTime(audio.duration);
             drawWaveform();
             updatePreviewProgress();
-        });
+        };
 
-        audio.addEventListener('timeupdate', () => {
+        const onTimeUpdate = () => {
             if (state.previewAudio !== audio) return;
             updatePreviewProgress();
-        });
+        };
 
-        audio.addEventListener('ended', () => {
+        const onEnded = () => {
             if (state.previewAudio !== audio) return;
             state.isPreviewPlaying = false;
             elements.previewPlayBtn.classList.remove('playing');
@@ -398,7 +412,14 @@ const FeaturesModule = (() => {
             stopPreviewProgressLoop();
             updatePreviewStatus('Preview ended');
             emitPreviewStateChange();
-        });
+        };
+
+        addListener('error', onError);
+        addListener('loadedmetadata', onLoadedMetadata);
+        addListener('timeupdate', onTimeUpdate);
+        addListener('ended', onEnded);
+
+        audio._previewListeners = listeners;
     };
 
     const createPreviewAudio = (previewUrl) => new Promise((resolve, reject) => {
