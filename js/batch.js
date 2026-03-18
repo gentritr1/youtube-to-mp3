@@ -12,7 +12,7 @@ const getApiUrl = () => window.API_URL || '';
 // Batch state
 const batchState = {
     enabled: false,
-    items: [], // { videoId, format, title, url }
+    items: [], // { videoId, format, title, url, thumbnail, artist, duration, isLive }
     maxItems: 10,
     currentBatchId: null,
     isProcessing: false,
@@ -31,6 +31,7 @@ let batchElements = null;
 function initBatchDownloads() {
     createBatchUI();
     attachBatchEventListeners();
+    document.addEventListener('preview-state-change', handlePreviewStateChange);
     console.log('[Batch] Initialized with max items:', batchState.maxItems);
 }
 
@@ -195,6 +196,51 @@ function attachBatchEventListeners() {
     batchElements.newBatchBtn.addEventListener('click', resetBatch);
 }
 
+function handleBatchResultRemove(itemId) {
+    const resultItem = batchElements?.downloadsList?.querySelector(`.batch-download-item[data-id="${itemId}"]`);
+    if (!resultItem) return;
+
+    resultItem.classList.add('removing');
+    resultItem.addEventListener('animationend', () => {
+        const itemIndex = batchState.items.findIndex((item) => String(item.id) === String(itemId));
+        if (itemIndex !== -1) {
+            batchState.items.splice(itemIndex, 1);
+        }
+
+        resultItem.remove();
+
+        if (!batchElements.downloadsList.querySelector('.batch-download-item')) {
+            resetBatch();
+            return;
+        }
+
+        updateBatchResultsHeader();
+        updateBatchUI();
+    }, { once: true });
+}
+
+function updateBatchResultsHeader() {
+    if (!batchElements?.downloadsList || !batchElements?.resultsSection) return;
+
+    const heading = batchElements.resultsSection.querySelector('.batch-results-header h3');
+    if (!heading) return;
+
+    const totalItems = batchElements.downloadsList.querySelectorAll('.batch-download-item').length;
+    const failedItems = batchElements.downloadsList.querySelectorAll('.batch-download-item.failed').length;
+
+    if (failedItems > 0 && failedItems === totalItems) {
+        heading.textContent = 'Batch Finished';
+        return;
+    }
+
+    if (failedItems > 0) {
+        heading.textContent = 'Downloads Ready';
+        return;
+    }
+
+    heading.textContent = totalItems === 1 ? 'Download Ready!' : 'All Downloads Ready!';
+}
+
 /**
  * Toggle batch mode on/off
  */
@@ -221,7 +267,7 @@ function toggleBatchMode() {
 /**
  * Add a video to the batch
  */
-function addToBatch(videoId, format, title, url) {
+function addToBatch(videoId, format, title, url, metadata = {}) {
     // Block adds if clearing OR processing
     if (batchState.isClearing || batchState.isProcessing) {
         return false;
@@ -238,7 +284,17 @@ function addToBatch(videoId, format, title, url) {
         return false;
     }
 
-    const item = { videoId, format, title, url, id: Date.now() };
+    const item = {
+        videoId,
+        format,
+        title,
+        url,
+        id: Date.now(),
+        thumbnail: metadata.thumbnail || `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+        artist: metadata.artist || metadata.author || '',
+        duration: metadata.duration || '',
+        isLive: Boolean(metadata.isLive)
+    };
     batchState.items.push(item);
 
     // Add to UI with animation
@@ -264,29 +320,86 @@ function createBatchItemElement(item) {
     li.dataset.id = item.id;
     li.innerHTML = `
         <div class="batch-item-info">
-            <img src="https://i.ytimg.com/vi/${item.videoId}/mqdefault.jpg" 
+            <img src="${escapeHtml(item.thumbnail)}"
                  alt="Thumbnail" class="batch-item-thumb">
             <div class="batch-item-details">
                 <span class="batch-item-title">${escapeHtml(item.title)}</span>
-                <span class="batch-item-format">${item.format.toUpperCase()}</span>
+                <span class="batch-item-meta">
+                    <span class="batch-item-format">${item.format.toUpperCase()}</span>
+                    ${item.artist ? `<span class="batch-item-artist">${escapeHtml(item.artist)}</span>` : ''}
+                </span>
             </div>
         </div>
-        <button type="button" class="batch-item-remove" data-id="${item.id}" 
-                aria-label="Remove from batch">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
+        <div class="batch-item-actions">
+            <button type="button" class="batch-item-preview" data-id="${item.id}"
+                    aria-label="Preview track" ${item.isLive ? 'disabled' : ''}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>Preview</span>
+            </button>
+            <button type="button" class="batch-item-remove" data-id="${item.id}"
+                    aria-label="Remove from batch">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
     `;
 
+    li.querySelector('.batch-item-preview')?.addEventListener('click', () => {
+        previewBatchItem(item.id);
+    });
+
     // Add remove listener
-    li.querySelector('.batch-item-remove').addEventListener('click', (e) => {
+    li.querySelector('.batch-item-remove').addEventListener('click', () => {
         removeFromBatch(item.id);
     });
 
     return li;
+}
+
+function previewBatchItem(itemId) {
+    const item = batchState.items.find((candidate) => candidate.id === itemId);
+    const featuresModule = window.FeaturesModule;
+    if (!item || item.isLive || !featuresModule) return;
+
+    featuresModule.showPreview({
+        videoId: item.videoId,
+        title: item.title,
+        thumbnail: item.thumbnail,
+        artist: item.artist || 'Queued track',
+        duration: item.duration,
+        isLive: item.isLive,
+        previewSource: 'batch'
+    });
+}
+
+function handlePreviewStateChange(event) {
+    if (!batchElements?.list) return;
+
+    const { videoId, source, isPlaying, isLoading } = event.detail || {};
+    const batchItems = batchElements.list.querySelectorAll('.batch-item');
+
+    batchItems.forEach((node) => {
+        const item = batchState.items.find((candidate) => String(candidate.id) === node.dataset.id);
+        const isActive = source === 'batch' && item?.videoId === videoId;
+        node.classList.toggle('is-previewing', Boolean(isActive));
+
+        const previewButton = node.querySelector('.batch-item-preview');
+        if (previewButton) {
+            previewButton.classList.toggle('is-active', Boolean(isActive));
+            const label = previewButton.querySelector('span');
+            if (label) {
+                label.textContent = isActive
+                    ? (isLoading ? 'Loading...' : (isPlaying ? 'Playing' : 'Selected'))
+                    : 'Preview';
+            }
+        }
+    });
 }
 
 /**
@@ -531,7 +644,7 @@ function showBatchResults(progress) {
             }
 
             return `
-                <li class="batch-download-item completed">
+                <li class="batch-download-item completed" data-id="${originalItem?.id ?? index}">
                     <div class="download-item-info">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon">
@@ -539,20 +652,29 @@ function showBatchResults(progress) {
                         </svg>
                         <span>${escapeHtml(item.title || originalItem?.title || 'Video')}</span>
                     </div>
-                    <a href="${safeUrl}" class="download-item-btn" download rel="noopener noreferrer">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        Download
-                    </a>
+                    <div class="download-item-actions">
+                        <a href="${safeUrl}" class="download-item-btn" download rel="noopener noreferrer">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download
+                        </a>
+                        <button type="button" class="download-item-remove" data-id="${originalItem?.id ?? index}" aria-label="Remove completed download">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </li>
             `;
         } else {
             return `
-                <li class="batch-download-item failed">
+                <li class="batch-download-item failed" data-id="${originalItem?.id ?? index}">
                     <div class="download-item-info">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="error-icon">
@@ -562,11 +684,28 @@ function showBatchResults(progress) {
                         </svg>
                         <span>${escapeHtml(item.title || originalItem?.title || 'Video')}</span>
                     </div>
-                    <span class="download-item-error">${escapeHtml(item.error || 'Failed')}</span>
+                    <div class="download-item-actions">
+                        <span class="download-item-error">${escapeHtml(item.error || 'Failed')}</span>
+                        <button type="button" class="download-item-remove" data-id="${originalItem?.id ?? index}" aria-label="Remove failed download">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </li>
             `;
         }
     }).join('');
+
+    batchElements.downloadsList.querySelectorAll('.download-item-remove').forEach((button) => {
+        button.addEventListener('click', () => {
+            handleBatchResultRemove(button.dataset.id);
+        });
+    });
+
+    updateBatchResultsHeader();
 
     // Animate items in
     const items = batchElements.downloadsList.querySelectorAll('.batch-download-item');

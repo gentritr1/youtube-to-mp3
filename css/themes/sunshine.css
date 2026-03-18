@@ -1,0 +1,193 @@
+:root[data-theme="sunshine"] {
+    --background: hsl(28 100% 95%);
+    --foreground: hsl(20 38% 22%);
+    --card: hsl(35 100% 98% / 0.78);
+    --card-foreground: hsl(20 38% 22%);
+    --secondary: hsl(31 100% 96% / 0.84);
+    --secondary-foreground: hsl(20 38% 22%);
+    --muted: hsl(28 88% 90% / 0.82);
+    --muted-foreground: hsl(24 22% 42%);
+    --accent: hsl(23 92% 90% / 0.88);
+    --accent-foreground: hsl(18 38% 24%);
+    --primary: hsl(16 82% 42%);
+    --primary-foreground: hsl(34 100% 97%);
+    --destructive: hsl(0 72% 45%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --success: hsl(152 54% 40%);
+    --border: hsl(24 74% 74% / 0.76);
+    --input: hsl(24 74% 74% / 0.76);
+    --ring: hsl(18 88% 54%);
+    --emerald: hsl(156 55% 42%);
+    --emerald-soft: hsl(156 36% 68%);
+    --amber: hsl(38 97% 60%);
+    --amber-soft: hsl(38 78% 74%);
+    --rose: hsl(11 86% 62%);
+    --rose-soft: hsl(10 68% 78%);
+    --sky: hsl(193 78% 58%);
+    --sky-soft: hsl(192 70% 80%);
+    --violet: hsl(262 72% 68%);
+    --violet-soft: hsl(262 54% 82%);
+    --hero-surface: rgba(255, 241, 228, 0.78);
+    --hero-surface-strong: rgba(255, 248, 238, 0.92);
+    --hero-border: rgba(232, 141, 94, 0.36);
+    --hero-orb: rgba(249, 115, 22, 0.9);
+    --hero-orb-soft: rgba(251, 146, 60, 0.26);
+    --hero-glow: rgba(251, 191, 36, 0.34);
+    --hero-headlight: hsl(48 100% 72%);
+    --ambient-primary: rgba(251, 146, 60, 0.22);
+    --ambient-secondary: rgba(56, 189, 248, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.42);
+    --glass-shadow: rgba(163, 88, 46, 0.14);
+    --liquid-tint: rgba(255, 204, 153, 0.22);
+    --surface-glass: rgba(255, 248, 239, 0.64);
+    --surface-glass-strong: rgba(255, 250, 242, 0.88);
+    --surface-glass-soft: rgba(255, 237, 221, 0.74);
+    --surface-border: rgba(232, 141, 94, 0.32);
+    --success-surface: rgba(74, 222, 128, 0.18);
+    --success-border: rgba(74, 222, 128, 0.34);
+    --error-surface: rgba(248, 113, 113, 0.14);
+    --error-border: rgba(248, 113, 113, 0.34);
+    --button-primary: linear-gradient(135deg, rgba(249, 115, 22, 0.95), rgba(251, 191, 36, 0.88) 48%, rgba(56, 189, 248, 0.78));
+    --button-primary-foreground: hsl(24 42% 16%);
+    --button-secondary: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 235, 214, 0.3)), rgba(255, 248, 238, 0.36);
+    --button-secondary-foreground: hsl(20 38% 22%);
+    --lyrics-overlay: radial-gradient(circle at center, rgba(251, 146, 60, 0.22) 0%, transparent 72%);
+    --lyrics-text-muted: rgba(96, 55, 33, 0.16);
+    --lyrics-text-past: rgba(96, 55, 33, 0.1);
+    --lyrics-text-active: hsl(18 42% 24%);
+    --lyrics-glow: rgba(249, 115, 22, 0.26);
+    --game-surface: rgba(255, 244, 232, 0.82);
+    --game-surface-strong: rgba(255, 248, 238, 0.9);
+    --game-surface-soft: rgba(255, 235, 214, 0.72);
+    --game-border: rgba(232, 141, 94, 0.32);
+    --game-border-strong: rgba(232, 141, 94, 0.46);
+    --game-shadow: rgba(163, 88, 46, 0.16);
+    --game-canvas: hsl(192 32% 22%);
+    --game-canvas-border: rgba(232, 141, 94, 0.3);
+    --preview-waveform-bg:
+        radial-gradient(circle at 18% 50%, rgba(249, 115, 22, 0.2), transparent 36%),
+        radial-gradient(circle at 84% 16%, rgba(56, 189, 248, 0.12), transparent 22%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 22%),
+        hsl(191 28% 27%);
+    --preview-waveform-border: rgba(232, 141, 94, 0.38);
+    --preview-live-bar-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(249, 115, 22, 0.96) 46%, rgba(56, 189, 248, 0.82));
+    --preview-live-bar-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.16),
+        0 0 12px rgba(249, 115, 22, 0.22);
+    --preview-playhead-ring:
+        0 0 0 6px rgba(251, 191, 36, 0.24),
+        0 0 18px rgba(249, 115, 22, 0.22);
+}
+
+:root[data-theme="sunshine"] .hero-art-preview {
+    background:
+        radial-gradient(circle at top right, rgba(251, 191, 36, 0.22), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 30%),
+        rgba(255, 246, 236, 0.88);
+    border-color: rgba(232, 141, 94, 0.34);
+    box-shadow:
+        0 22px 38px rgba(163, 88, 46, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.46);
+}
+
+:root[data-theme="sunshine"] .hero-art-preview-screen {
+    background:
+        radial-gradient(circle at 28% 44%, rgba(251, 146, 60, 0.28), transparent 32%),
+        radial-gradient(circle at 74% 22%, rgba(56, 189, 248, 0.18), transparent 24%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 30%),
+        hsl(190 28% 25%);
+    border-color: rgba(232, 141, 94, 0.34);
+}
+
+:root[data-theme="sunshine"] .hero-art-preview-label {
+    color: hsl(22 46% 35%);
+}
+
+:root[data-theme="sunshine"] .hero-art-preview-copy strong {
+    color: hsl(19 42% 20%);
+}
+
+:root[data-theme="sunshine"] .hero-art-play {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 88%),
+        rgba(249, 115, 22, 0.22);
+    box-shadow: 0 10px 18px rgba(249, 115, 22, 0.16);
+}
+
+:root[data-theme="sunshine"] .batch-mode-btn.active {
+    color: hsl(24 42% 16%);
+}
+
+:root[data-theme="sunshine"] .batch-mode-btn.active::before {
+    background:
+        linear-gradient(135deg, rgba(249, 115, 22, 0.26), transparent 42%),
+        linear-gradient(120deg, rgba(251, 191, 36, 0.34), rgba(56, 189, 248, 0.22));
+}
+
+:root[data-theme="sunshine"] .preview-player {
+    border-color: rgba(232, 141, 94, 0.42);
+    background:
+        radial-gradient(circle at top right, rgba(251, 191, 36, 0.22), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.12), transparent 32%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 24%),
+        rgba(255, 248, 238, 0.88);
+    box-shadow:
+        0 30px 56px rgba(163, 88, 46, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.48),
+        0 0 0 1px rgba(249, 115, 22, 0.08);
+}
+
+:root[data-theme="sunshine"] .preview-source-badge {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 88%),
+        rgba(255, 215, 170, 0.52);
+    color: hsl(21 46% 26%);
+}
+
+:root[data-theme="sunshine"] .preview-transition-note,
+:root[data-theme="sunshine"] .waveform-scrub-hint {
+    color: hsl(23 28% 38%);
+}
+
+:root[data-theme="sunshine"] .preview-badge {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 88%),
+        rgba(255, 215, 170, 0.62);
+    color: hsl(22 44% 28%);
+}
+
+:root[data-theme="sunshine"] .preview-controls {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 88%),
+        rgba(255, 242, 229, 0.8);
+}
+
+:root[data-theme="sunshine"] .preview-loading {
+    background:
+        linear-gradient(180deg, rgba(255, 248, 238, 0.84), rgba(255, 235, 214, 0.72)),
+        radial-gradient(circle at center, rgba(251, 146, 60, 0.16), transparent 56%);
+    color: hsl(22 34% 34%);
+}
+
+:root[data-theme="sunshine"] .preview-loading-spinner {
+    border-color: rgba(232, 141, 94, 0.24);
+    border-top-color: hsl(16 82% 42%);
+}
+
+:root[data-theme="sunshine"] .theme-charm-sunshine {
+    display: inline-flex;
+}
+
+
+:root[data-theme="sunshine"] .theme-scene-sun,
+:root[data-theme="sunshine"] .theme-scene-cloud,
+:root[data-theme="sunshine"] .theme-mini-sun {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+:root[data-theme="sunshine"] .theme-scene-sun,
+:root[data-theme="sunshine"] .theme-mini-sun {
+    filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.2));
+}

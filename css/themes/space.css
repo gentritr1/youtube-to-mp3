@@ -65,3 +65,20 @@
     --game-canvas: hsl(225 18% 4%);
     --game-canvas-border: hsl(225 10% 13%);
 }
+
+:root[data-theme="space"] .theme-scene-moon,
+:root[data-theme="space"] .theme-scene-star,
+:root[data-theme="space"] .theme-mini-moon,
+:root[data-theme="space"] .theme-mini-stars {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+:root[data-theme="space"] .theme-scene-moon,
+:root[data-theme="space"] .theme-mini-moon {
+    filter: drop-shadow(0 0 16px rgba(96, 165, 250, 0.18));
+}
+
+:root[data-theme="space"] .theme-charm-space {
+    display: inline-flex;
+}

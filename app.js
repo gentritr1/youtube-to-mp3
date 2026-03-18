@@ -458,7 +458,13 @@ const handleSubmit = async (e) => {
                 videoId,
                 state.format,
                 videoInfo.title,
-                url
+                url,
+                {
+                    thumbnail: videoInfo.thumbnail,
+                    artist: videoInfo.author,
+                    duration: videoInfo.duration,
+                    isLive: videoInfo.duration === 'LIVE'
+                }
             );
 
             if (added) {

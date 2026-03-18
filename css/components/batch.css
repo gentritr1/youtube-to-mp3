@@ -47,7 +47,7 @@
     inset: 0;
     background:
         linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 18%, transparent), transparent 42%),
-        linear-gradient(120deg, color-mix(in srgb, var(--sky) 54%, transparent), color-mix(in srgb, var(--emerald) 46%, transparent));
+        linear-gradient(120deg, color-mix(in srgb, var(--hero-orb) 72%, transparent), color-mix(in srgb, var(--ambient-secondary) 88%, transparent));
     opacity: 0;
     transition: opacity var(--transition-base);
 }
@@ -93,12 +93,14 @@
     min-width: 1.55rem;
     height: 1.55rem;
     padding: 0 0.45rem;
-    background: linear-gradient(135deg, var(--sky), var(--emerald));
+    background:
+        linear-gradient(135deg, color-mix(in srgb, white 10%, transparent), transparent 82%),
+        var(--button-primary);
     border: 1px solid color-mix(in srgb, white 24%, transparent);
     border-radius: 999px;
     font-size: 0.76rem;
     font-weight: 700;
-    color: white;
+    color: var(--button-primary-foreground);
     box-shadow: 0 8px 20px color-mix(in srgb, var(--hero-orb) 26%, transparent);
     transition: transform 0.3s ease;
 }
@@ -241,8 +243,19 @@
     transform: translateX(0);
 }
 
+.batch-item.is-previewing {
+    border-color: color-mix(in srgb, var(--hero-orb) 54%, var(--hero-border));
+    box-shadow:
+        0 20px 36px color-mix(in srgb, var(--hero-orb) 14%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--hero-orb) 18%, transparent) inset;
+}
+
 .batch-item.removing {
     animation: slideOutLeft 0.3s ease forwards;
+}
+
+.batch-download-item.removing {
+    animation: slideOutLeft 0.24s ease forwards;
 }
 
 @keyframes slideOutLeft {
@@ -287,6 +300,13 @@
     min-width: 0;
 }
 
+.batch-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
 .batch-item-title,
 .progress-item-title,
 .download-item-info span {
@@ -306,7 +326,30 @@
     text-transform: uppercase;
 }
 
-.batch-item-remove {
+.batch-item-artist {
+    font-size: 0.76rem;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.batch-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.download-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+}
+
+.batch-item-preview,
+.batch-item-remove,
+.download-item-remove {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -322,7 +365,41 @@
     transition: all var(--transition-base);
 }
 
+.batch-item-preview {
+    gap: 0.38rem;
+    width: auto;
+    padding: 0 0.72rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+.batch-item-preview:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--hero-orb) 12%, transparent);
+    border-color: color-mix(in srgb, var(--hero-orb) 48%, var(--hero-border));
+    color: color-mix(in srgb, var(--hero-orb) 88%, white);
+    transform: translateY(-1px);
+}
+
+.batch-item-preview.is-active {
+    background: color-mix(in srgb, var(--hero-orb) 16%, transparent);
+    border-color: color-mix(in srgb, var(--hero-orb) 52%, var(--hero-border));
+    color: color-mix(in srgb, var(--hero-orb) 88%, var(--foreground));
+}
+
+.batch-item-preview:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 .batch-item-remove:hover {
+    background: color-mix(in srgb, var(--rose) 12%, transparent);
+    border-color: color-mix(in srgb, var(--rose) 48%, var(--hero-border));
+    color: var(--rose);
+    transform: translateY(-1px);
+}
+
+.download-item-remove:hover {
     background: color-mix(in srgb, var(--rose) 12%, transparent);
     border-color: color-mix(in srgb, var(--rose) 48%, var(--hero-border));
     color: var(--rose);
@@ -403,9 +480,8 @@
 .convert-batch-btn,
 .download-item-btn {
     border: 1px solid color-mix(in srgb, white 16%, transparent);
-    background:
-        linear-gradient(135deg, color-mix(in srgb, var(--sky) 88%, white), color-mix(in srgb, var(--emerald) 84%, var(--hero-orb)));
-    color: var(--primary-foreground);
+    background: var(--button-primary);
+    color: var(--button-primary-foreground);
     box-shadow:
         0 18px 36px color-mix(in srgb, var(--hero-orb) 24%, transparent),
         inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
@@ -652,6 +728,10 @@
 .download-item-btn {
     flex-shrink: 0;
     padding-inline: 0.95rem;
+}
+
+.download-item-remove {
+    flex-shrink: 0;
 }
 
 .download-item-error {

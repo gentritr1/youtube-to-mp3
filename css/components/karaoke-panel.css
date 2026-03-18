@@ -11,6 +11,13 @@
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
 }
 
+.karaoke-card.is-targeted {
+    box-shadow:
+        0 28px 70px color-mix(in srgb, var(--hero-orb) 18%, transparent),
+        0 0 0 2px color-mix(in srgb, var(--hero-orb) 18%, transparent);
+    transition: box-shadow var(--transition-smooth);
+}
+
 .karaoke-panel-header {
     display: flex;
     justify-content: space-between;
