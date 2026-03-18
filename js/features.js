@@ -252,11 +252,15 @@ const FeaturesModule = (() => {
     };
 
     const resetPreviewProgress = () => {
-        elements.previewProgressFill.style.transform = 'scaleX(0)';
-        elements.waveformProgress.style.transform = 'scaleX(0)';
-        elements.waveformPlayhead.style.left = '0%';
-        elements.previewTimeCurrent.textContent = '0:00';
-        elements.previewTimeTotal.textContent = '0:30';
+        elements.previewProgressFill?.style.setProperty('transform', 'scaleX(0)');
+        elements.waveformProgress?.style.setProperty('transform', 'scaleX(0)');
+        elements.waveformPlayhead?.style.setProperty('left', '0%');
+        if (elements.previewTimeCurrent) {
+            elements.previewTimeCurrent.textContent = '0:00';
+        }
+        if (elements.previewTimeTotal) {
+            elements.previewTimeTotal.textContent = '0:30';
+        }
     };
 
     const setPreviewLoadingState = (isLoading) => {
@@ -353,10 +357,11 @@ const FeaturesModule = (() => {
     const getAdaptiveCrossfadeDurationMs = (outgoingAudio, incomingAudio) => {
         const outgoingDuration = Number.isFinite(outgoingAudio?.duration) ? outgoingAudio.duration : 30;
         const incomingDuration = Number.isFinite(incomingAudio?.duration) ? incomingAudio.duration : 30;
+        const outgoingCurrentTime = outgoingAudio?.currentTime ?? 0;
         const outgoingRemaining = Number.isFinite(outgoingAudio?.duration)
-            ? Math.max(outgoingAudio.duration - outgoingAudio.currentTime, 0)
+            ? Math.max(outgoingAudio.duration - outgoingCurrentTime, 0)
             : 30;
-        const outgoingProgress = outgoingDuration > 0 ? outgoingAudio.currentTime / outgoingDuration : 0.5;
+        const outgoingProgress = outgoingDuration > 0 ? outgoingCurrentTime / outgoingDuration : 0.5;
 
         let duration = Math.min(outgoingRemaining, incomingDuration, 8) * 180;
 
@@ -379,6 +384,7 @@ const FeaturesModule = (() => {
 
         audio.pause();
         audio.removeAttribute('src');
+        audio.load();
     };
 
     const attachPreviewAudioEvents = (audio) => {
@@ -484,7 +490,6 @@ const FeaturesModule = (() => {
             }
 
             stopCrossfade();
-            state.fadingPreviewAudio = null;
             incomingAudio.volume = 1;
             updatePreviewStatus('Crossfade complete');
         };
@@ -643,7 +648,7 @@ const FeaturesModule = (() => {
                     </div>
                 </div>
                 <div class="video-card-info">
-                    <span class="video-card-rank">0${index + 1}</span>
+                    <span class="video-card-rank">${String(index + 1).padStart(2, '0')}</span>
                     <h3 class="video-card-title">${escapeHtml(video.title)}</h3>
                     <p class="video-card-artist">${escapeHtml(video.artist)}</p>
                 </div>
