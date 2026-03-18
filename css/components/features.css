@@ -1213,6 +1213,7 @@
 @media (prefers-reduced-motion: reduce) {
     .popular-section,
     .video-card,
+    .preview-player.active,
     .popular-pulse-dot,
     .popular-title-icon,
     .waveform-live-bar,
@@ -1226,8 +1227,7 @@
         animation-delay: 0s !important;
     }
 
-    .preview-player.is-playing .waveform-live-bar,
-    .preview-player.is-playing .waveform-playhead::before {
+    .preview-player.is-playing .waveform-live-bar {
         transform: none !important;
     }
 }

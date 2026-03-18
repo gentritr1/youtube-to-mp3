@@ -15,6 +15,7 @@ const FeaturesModule = (() => {
         isPreviewPlaying: false,
         isPreviewLoading: false,
         previewRequestId: 0,
+        previewRequestController: null,
         crossfadeFrameId: null,
         playbackProgressFrameId: null
     };
@@ -299,10 +300,25 @@ const FeaturesModule = (() => {
         elements.previewLoadingText.style.color = '';
     };
 
+    const abortPreviewRequest = () => {
+        if (state.previewRequestController) {
+            state.previewRequestController.abort();
+            state.previewRequestController = null;
+        }
+    };
+
     const stopCrossfade = () => {
         if (state.crossfadeFrameId) {
             cancelAnimationFrame(state.crossfadeFrameId);
             state.crossfadeFrameId = null;
+        }
+
+        if (state.fadingPreviewAudio) {
+            if (typeof state.fadingPreviewAudio.currentTime === 'number') {
+                state.fadingPreviewAudio.currentTime = 0;
+            }
+            disposeAudio(state.fadingPreviewAudio);
+            state.fadingPreviewAudio = null;
         }
     };
 
@@ -467,10 +483,8 @@ const FeaturesModule = (() => {
                 return;
             }
 
-            stopCrossfade();
-            outgoingAudio.volume = 0;
-            disposeAudio(outgoingAudio);
             state.fadingPreviewAudio = null;
+            stopCrossfade();
             incomingAudio.volume = 1;
             updatePreviewStatus('Crossfade complete');
         };
@@ -479,14 +493,14 @@ const FeaturesModule = (() => {
     };
 
     const stopAllPreviewAudio = () => {
+        abortPreviewRequest();
         state.previewRequestId += 1;
         stopCrossfade();
         stopPreviewProgressLoop();
         disposeAudio(state.previewAudio);
-        disposeAudio(state.fadingPreviewAudio);
         state.previewAudio = null;
-        state.fadingPreviewAudio = null;
         state.isPreviewPlaying = false;
+        state.isPreviewLoading = false;
         emitPreviewStateChange();
     };
 
@@ -689,10 +703,13 @@ const FeaturesModule = (() => {
         }
 
         const requestId = state.previewRequestId + 1;
+        abortPreviewRequest();
+        const controller = new AbortController();
         const shouldAutoplay = Boolean(state.previewAudio && state.isPreviewPlaying);
         const outgoingAudio = state.previewAudio;
 
         state.previewRequestId = requestId;
+        state.previewRequestController = controller;
         elements.previewPlayer.classList.add('active');
         updatePreviewMetadata(video);
         resetPreviewProgress();
@@ -707,7 +724,8 @@ const FeaturesModule = (() => {
             const response = await fetch('/api/preview', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videoId: video.videoId })
+                body: JSON.stringify({ videoId: video.videoId }),
+                signal: controller.signal
             });
 
             // Check HTTP status before parsing JSON
@@ -772,6 +790,9 @@ const FeaturesModule = (() => {
                 emitPreviewStateChange();
             }
         } catch (error) {
+            if (error.name === 'AbortError') {
+                return;
+            }
             if (requestId !== state.previewRequestId) return;
             console.error('[Preview] Error:', error);
             if (elements.previewLoadingText) {
@@ -779,9 +800,12 @@ const FeaturesModule = (() => {
                 elements.previewLoadingText.style.color = 'var(--destructive)';
             }
         } finally {
-            state.isPreviewLoading = false;
-            setPreviewLoadingState(false);
             if (requestId === state.previewRequestId) {
+                state.isPreviewLoading = false;
+                setPreviewLoadingState(false);
+                if (state.previewRequestController === controller) {
+                    state.previewRequestController = null;
+                }
                 emitPreviewStateChange();
             }
         }
