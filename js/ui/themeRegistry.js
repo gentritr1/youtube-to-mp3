@@ -19,6 +19,13 @@ export const themes = [
         shortLabel: 'Aero',
         description: 'Glossy cyan-green glass with brighter, airy atmospheric color.',
         metaColor: '#bfeff7'
+    },
+    {
+        id: 'sunshine',
+        label: 'Sunshine',
+        shortLabel: 'Breeze',
+        description: 'Warm sunset glass with coral light, sea-breeze blue, and brighter contrast.',
+        metaColor: '#fff2e4'
     }
 ];
 

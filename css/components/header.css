@@ -378,6 +378,162 @@
     z-index: 2;
 }
 
+.hero-theme-scene {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.theme-scene-moon,
+.theme-scene-star,
+.theme-scene-sun,
+.theme-scene-cloud,
+.theme-scene-tree,
+.theme-scene-wave,
+.theme-mini-moon,
+.theme-mini-stars,
+.theme-mini-sun,
+.theme-mini-tree,
+.theme-mini-wave {
+    position: absolute;
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+    transition:
+        opacity var(--transition-smooth),
+        transform var(--transition-smooth),
+        filter var(--transition-smooth);
+}
+
+.theme-scene-moon,
+.theme-scene-sun,
+.theme-mini-moon,
+.theme-mini-sun {
+    border-radius: 999px;
+}
+
+.theme-scene-moon {
+    top: 1rem;
+    right: 3.3rem;
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), rgba(191, 219, 254, 0.94) 58%, rgba(96, 165, 250, 0.25));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--hero-orb) 16%, transparent);
+}
+
+.theme-scene-moon::after,
+.theme-mini-moon::after {
+    content: '';
+    position: absolute;
+    inset: 2px 0 0 5px;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--game-canvas) 74%, transparent);
+}
+
+.theme-scene-star {
+    color: color-mix(in srgb, white 86%, var(--sky));
+    text-shadow: 0 0 12px color-mix(in srgb, var(--sky) 36%, transparent);
+    animation: hero-twinkle 2.8s ease-in-out infinite;
+}
+
+.theme-scene-star::before {
+    content: '✦';
+}
+
+.theme-scene-star-a {
+    top: 1.2rem;
+    right: 1.5rem;
+    font-size: 0.85rem;
+}
+
+.theme-scene-star-b {
+    top: 2.2rem;
+    right: 4.8rem;
+    font-size: 0.65rem;
+    animation-delay: 0.8s;
+}
+
+.theme-scene-sun {
+    top: 0.9rem;
+    right: 2.4rem;
+    width: 22px;
+    height: 22px;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.98), rgba(251, 191, 36, 0.96) 45%, rgba(249, 115, 22, 0.9) 72%, rgba(249, 115, 22, 0.28));
+    box-shadow:
+        0 0 0 6px color-mix(in srgb, var(--hero-glow) 34%, transparent),
+        0 0 18px color-mix(in srgb, var(--hero-orb) 34%, transparent);
+    animation: hero-sun-sway 5.6s ease-in-out infinite;
+}
+
+.theme-scene-cloud {
+    top: 1.2rem;
+    right: 4.2rem;
+    width: 42px;
+    height: 14px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, color-mix(in srgb, white 86%, transparent), color-mix(in srgb, white 54%, var(--surface-glass-soft)));
+    box-shadow:
+        13px -4px 0 1px color-mix(in srgb, white 74%, transparent),
+        24px 1px 0 -2px color-mix(in srgb, white 64%, transparent);
+    filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--glass-shadow) 10%, transparent));
+    animation: hero-cloud-drift 7s ease-in-out infinite;
+}
+
+.theme-scene-tree {
+    bottom: 0.86rem;
+    width: 22px;
+    height: 38px;
+}
+
+.theme-scene-tree::before,
+.theme-scene-tree::after,
+.theme-mini-tree::before,
+.theme-mini-tree::after {
+    content: '';
+    position: absolute;
+}
+
+.theme-scene-tree::before {
+    left: 8px;
+    bottom: 0;
+    width: 4px;
+    height: 13px;
+    border-radius: 999px;
+    background: color-mix(in srgb, hsl(28 48% 28%) 82%, transparent);
+}
+
+.theme-scene-tree::after {
+    inset: 0;
+    clip-path: polygon(50% 0, 100% 62%, 72% 62%, 100% 100%, 0 100%, 28% 62%, 0 62%);
+    border-radius: 10px;
+    background: linear-gradient(180deg, color-mix(in srgb, white 12%, var(--emerald)), color-mix(in srgb, var(--hero-orb) 84%, hsl(130 48% 18%)));
+    box-shadow: 0 10px 18px color-mix(in srgb, var(--hero-orb) 18%, transparent);
+}
+
+.theme-scene-tree-a {
+    left: 11rem;
+}
+
+.theme-scene-tree-b {
+    left: 13.1rem;
+    transform: translateY(6px) scale(0.78);
+}
+
+.theme-scene-wave {
+    left: 10.6rem;
+    right: 1.6rem;
+    bottom: 0.92rem;
+    height: 18px;
+    border-radius: 999px 999px 0 0;
+    background:
+        radial-gradient(circle at 10% 110%, color-mix(in srgb, white 42%, transparent) 0 14%, transparent 15%),
+        linear-gradient(180deg, color-mix(in srgb, white 22%, transparent), transparent 42%),
+        linear-gradient(135deg, color-mix(in srgb, var(--sky) 84%, white), color-mix(in srgb, var(--emerald) 74%, transparent));
+    clip-path: polygon(0 70%, 10% 44%, 20% 68%, 31% 36%, 43% 72%, 56% 42%, 69% 70%, 80% 48%, 90% 68%, 100% 38%, 100% 100%, 0 100%);
+    filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--sky) 16%, transparent));
+    animation: hero-wave-roll 3.8s ease-in-out infinite;
+}
+
 .hero-runner::before {
     content: '';
     position: absolute;
@@ -556,6 +712,81 @@
         radial-gradient(circle at center, color-mix(in srgb, var(--hero-orb-soft) 78%, transparent), transparent 60%),
         color-mix(in srgb, var(--game-canvas) 82%, transparent);
     overflow: hidden;
+}
+
+.hero-theme-mini-scene {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.theme-mini-moon,
+.theme-mini-sun,
+.theme-mini-tree,
+.theme-mini-wave,
+.theme-mini-stars {
+    z-index: 0;
+}
+
+.theme-mini-moon,
+.theme-mini-sun {
+    top: 8px;
+    left: 10px;
+    width: 12px;
+    height: 12px;
+}
+
+.theme-mini-moon {
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.96), rgba(191, 219, 254, 0.88) 58%, rgba(96, 165, 250, 0.2));
+}
+
+.theme-mini-stars {
+    top: 8px;
+    left: 28px;
+    color: color-mix(in srgb, white 84%, var(--sky));
+    font-size: 0.56rem;
+    text-shadow: 0 0 10px color-mix(in srgb, var(--sky) 28%, transparent);
+    animation: hero-twinkle 2.4s ease-in-out infinite;
+}
+
+.theme-mini-sun {
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.98), rgba(251, 191, 36, 0.96) 45%, rgba(249, 115, 22, 0.88) 74%, rgba(249, 115, 22, 0.2));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--hero-glow) 28%, transparent);
+}
+
+.theme-mini-tree {
+    left: 10px;
+    bottom: 10px;
+    width: 12px;
+    height: 22px;
+}
+
+.theme-mini-tree::before {
+    left: 5px;
+    bottom: 0;
+    width: 2px;
+    height: 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, hsl(28 48% 28%) 82%, transparent);
+}
+
+.theme-mini-tree::after {
+    inset: 0;
+    clip-path: polygon(50% 0, 100% 62%, 72% 62%, 100% 100%, 0 100%, 28% 62%, 0 62%);
+    border-radius: 8px;
+    background: linear-gradient(180deg, color-mix(in srgb, white 12%, var(--emerald)), color-mix(in srgb, var(--hero-orb) 84%, hsl(130 48% 18%)));
+}
+
+.theme-mini-wave {
+    left: 7px;
+    right: 28px;
+    bottom: 10px;
+    height: 10px;
+    border-radius: 999px 999px 0 0;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 22%, transparent), transparent 42%),
+        linear-gradient(135deg, color-mix(in srgb, var(--sky) 84%, white), color-mix(in srgb, var(--emerald) 74%, transparent));
+    clip-path: polygon(0 72%, 18% 44%, 36% 70%, 53% 40%, 68% 72%, 84% 46%, 100% 68%, 100% 100%, 0 100%);
 }
 
 .hero-art-wave {
@@ -756,6 +987,48 @@
     }
 }
 
+@keyframes hero-twinkle {
+    0%, 100% {
+        transform: translateY(0) scale(0.92);
+        opacity: 0.54;
+    }
+
+    50% {
+        transform: translateY(-2px) scale(1.08);
+        opacity: 1;
+    }
+}
+
+@keyframes hero-sun-sway {
+    0%, 100% {
+        transform: translateY(0) scale(0.98);
+    }
+
+    50% {
+        transform: translateY(-3px) scale(1.04);
+    }
+}
+
+@keyframes hero-cloud-drift {
+    0%, 100% {
+        transform: translateX(0) translateY(0);
+    }
+
+    50% {
+        transform: translateX(5px) translateY(-1px);
+    }
+}
+
+@keyframes hero-wave-roll {
+    0%, 100% {
+        transform: translateY(0) scaleX(1);
+    }
+
+    50% {
+        transform: translateY(-2px) scaleX(1.02);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .hero-eyebrow::before,
     .hero-file-card,
@@ -763,7 +1036,12 @@
     .hero-runner,
     .runner-wheel,
     .hero-art-wave,
-    .hero-float-icon {
+    .hero-float-icon,
+    .theme-scene-star,
+    .theme-scene-sun,
+    .theme-scene-cloud,
+    .theme-scene-wave,
+    .theme-mini-stars {
         animation: none !important;
     }
 
@@ -772,7 +1050,18 @@
     .hero-runner,
     .runner-wheel,
     .hero-art-wave,
-    .hero-float-icon {
+    .hero-float-icon,
+    .theme-scene-moon,
+    .theme-scene-star,
+    .theme-scene-sun,
+    .theme-scene-cloud,
+    .theme-scene-tree,
+    .theme-scene-wave,
+    .theme-mini-moon,
+    .theme-mini-stars,
+    .theme-mini-sun,
+    .theme-mini-tree,
+    .theme-mini-wave {
         transform: none !important;
         transition: none !important;
     }

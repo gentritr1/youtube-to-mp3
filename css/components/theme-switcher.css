@@ -90,6 +90,10 @@
     background: linear-gradient(135deg, #d9f9ff, #6ee7f9 55%, #22c55e);
 }
 
+.theme-option[data-theme-value="sunshine"] .theme-option-swatch {
+    background: linear-gradient(135deg, #fff1cf, #fb923c 48%, #38bdf8);
+}
+
 @media (max-width: 720px) {
     .theme-switcher-label {
         text-align: left;
