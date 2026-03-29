@@ -55,6 +55,9 @@ export class LyricsController {
             if (!response.ok) throw new Error('Lyrics fetch failed');
 
             const text = await response.text();
+            if (this.looksLikeHtml(text)) {
+                throw new Error('Unexpected HTML response instead of subtitles');
+            }
             const parsedLyrics = this.parseSubtitles(text, sub.ext);
 
             if (this.requestId !== reqId) {
@@ -97,7 +100,12 @@ export class LyricsController {
                             .trim();
 
                         if (line) {
-                            parsedLyrics.push({ text: line, time: event.tStartMs });
+                            parsedLyrics.push({
+                                text: line,
+                                time: event.tStartMs,
+                                hasTiming: Number.isFinite(event.tStartMs),
+                                isApproximate: false
+                            });
                         }
                     });
                 }
@@ -108,22 +116,96 @@ export class LyricsController {
         }
 
         const lines = text.split(/\r?\n/);
-        let currentTime = 0;
         const metadataPrefixes = ['Kind:', 'Language:', 'NOTE', 'X-TIMESTAMP-MAP', 'Region:'];
+        let currentTime = 0;
+        let fallbackIndex = 0;
+        let lastCueTime = -Infinity;
 
         for (let i = 0; i < lines.length; i += 1) {
             const line = lines[i].trim();
             const isMetadata = metadataPrefixes.some((prefix) => line.startsWith(prefix));
             const isCueId = /^\d+$/.test(line);
-            if (!line || line.includes('-->') || isCueId || line === 'WEBVTT' || isMetadata) {
+            if (!line || isCueId || line === 'WEBVTT' || isMetadata) {
                 continue;
             }
 
-            parsedLyrics.push({ text: line, time: currentTime });
+            if (line.includes('-->')) {
+                const [startToken] = line.split('-->');
+                const parsedTime = this.parseTimestampToMs(startToken.trim());
+                currentTime = Number.isFinite(parsedTime)
+                    ? parsedTime
+                    : Math.max(lastCueTime + 2000, fallbackIndex * 2000);
+
+                const cueLines = [];
+                let cursor = i + 1;
+                while (cursor < lines.length) {
+                    const cueLine = lines[cursor].trim();
+                    if (!cueLine) break;
+                    if (/^\d+$/.test(cueLine)) break;
+                    if (cueLine.includes('-->')) break;
+                    cueLines.push(cueLine);
+                    cursor += 1;
+                }
+
+                const textContent = cueLines.join(' ').trim();
+                if (textContent) {
+                    parsedLyrics.push({
+                        text: textContent,
+                        time: currentTime,
+                        hasTiming: Number.isFinite(parsedTime),
+                        isApproximate: !Number.isFinite(parsedTime)
+                    });
+                    lastCueTime = currentTime;
+                    fallbackIndex += 1;
+                }
+                i = cursor - 1;
+                continue;
+            }
+
+            parsedLyrics.push({
+                text: line,
+                time: currentTime,
+                hasTiming: false,
+                isApproximate: true
+            });
+            lastCueTime = currentTime;
             currentTime += 2000;
+            fallbackIndex += 1;
         }
 
         return parsedLyrics;
+    }
+
+    looksLikeHtml(text) {
+        const sample = String(text || '').slice(0, 1200).toLowerCase();
+        return sample.includes('<!doctype html')
+            || sample.includes('<html')
+            || sample.includes('ytcfg.set(')
+            || sample.includes('window.ytplayer');
+    }
+
+    parseTimestampToMs(token) {
+        if (!token) return null;
+
+        const normalized = token.replace(',', '.');
+        const parts = normalized.split(':');
+        if (parts.length < 2 || parts.length > 3) {
+            return null;
+        }
+
+        const secondsPart = parts.pop();
+        const minutesPart = parts.pop();
+        const hoursPart = parts.pop() ?? '0';
+
+        const seconds = Number.parseFloat(secondsPart);
+        const minutes = Number.parseInt(minutesPart, 10);
+        const hours = Number.parseInt(hoursPart, 10);
+
+        if (![seconds, minutes, hours].every(Number.isFinite)) {
+            return null;
+        }
+
+        return Math.round(((hours * 60 * 60) + (minutes * 60) + seconds) * 1000);
     }
 
     start() {
@@ -137,16 +219,11 @@ export class LyricsController {
         this.emit('start', { lyrics: this.getLyrics(), requestId: this.requestId });
 
         if (this.intervalId) {
-            clearInterval(this.intervalId);
+            clearTimeout(this.intervalId);
             this.intervalId = null;
         }
 
         this.advanceTarget();
-
-        // Approximate karaoke pacing while conversion runs.
-        this.intervalId = setInterval(() => {
-            this.advanceTarget();
-        }, 2500);
 
         return true;
     }
@@ -166,7 +243,25 @@ export class LyricsController {
             requestId: this.requestId
         });
 
+        const currentLyric = this.lyrics[this.currentIndex];
+        const nextLyric = this.lyrics[this.currentIndex + 1];
         this.currentIndex += 1;
+
+        if (!nextLyric) {
+            return;
+        }
+
+        const hasRealTimestamps = Number.isFinite(nextLyric.time) && Number.isFinite(currentLyric?.time);
+        const rawDelay = hasRealTimestamps
+            ? nextLyric.time - currentLyric.time
+            : 2500;
+        const delay = hasRealTimestamps
+            ? Math.max(rawDelay, 900)
+            : Math.min(Math.max(rawDelay, 900), 5000);
+
+        this.intervalId = setTimeout(() => {
+            this.advanceTarget();
+        }, delay);
     }
 
     stop({ preserveLyrics = true } = {}) {
@@ -175,7 +270,7 @@ export class LyricsController {
         this.active = false;
 
         if (this.intervalId) {
-            clearInterval(this.intervalId);
+            clearTimeout(this.intervalId);
             this.intervalId = null;
         }
 

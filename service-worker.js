@@ -1,45 +1,38 @@
-const CACHE_NAME = 'yt-converter-v8'; // AGENT: BUMP THIS VERSION on any UI/Logic change!
+try {
+    importScripts('/service-worker-assets.js');
+} catch (error) {
+    console.error('[Service Worker] Failed to load generated asset manifest.', error);
+}
 
-// Assets to cache for offline support
-const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/app.js',
-    '/js/features.js',
-    '/js/batch.js',
-    '/js/snake-game.js',
-    '/js/visualizer.js',
-    '/js/lyrics.js',
-    '/js/ui/themeRegistry.js',
-    '/js/ui/themeController.js',
-    '/js/ui/animationRegistry.js',
-    '/js/ui/animationController.js',
-    '/js/ui/karaokePanel.js',
-    '/css/base.css',
-    '/css/animations.css',
-    '/css/layout/main.css',
-    '/css/layout/hero.css',
-    '/css/components/form.css',
-    '/css/components/header.css',
-    '/css/components/theme-switcher.css',
-    '/css/components/karaoke-panel.css',
-    '/css/components/results.css',
-    '/css/components/conversion-animations.css',
-    '/css/components/features.css',
-    '/css/components/batch.css',
-    '/css/components/nerd-stats.css',
-    '/css/components/lyrics.css',
-    '/css/components/game.css',
-    '/css/components/guess-track.css',
-    '/js/guess-track.js',
-    '/css/utils/helpers.css',
-    '/css/themes/space.css',
-    '/css/themes/green.css',
-    '/css/themes/frutiger-aero.css',
-    '/manifest.json',
-    '/assets/icons/icon-192x192.png',
-    '/assets/icons/icon-512x512.png',
-];
+const CACHE_NAME = `yt-converter-${self.__STATIC_ASSET_VERSION || 'dev'}`;
+const STATIC_ASSETS = Array.isArray(self.__STATIC_ASSETS)
+    ? self.__STATIC_ASSETS
+    : ['/', '/index.html', '/manifest.json'];
+const OFFLINE_HTML = `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Offline</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0a0a0f; color: #f4f7fb; }
+        main { width: min(32rem, calc(100vw - 2rem)); padding: 1.5rem; border-radius: 1rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+        h1 { margin: 0 0 0.75rem; font-size: 1.5rem; }
+        p { margin: 0 0 1rem; line-height: 1.6; color: rgba(244,247,251,0.82); }
+        button { border: 0; border-radius: 999px; padding: 0.8rem 1.1rem; font: inherit; font-weight: 700; cursor: pointer; background: #38bdf8; color: #041018; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>You are offline</h1>
+        <p>This page is not available from cache yet. Check your connection and try loading it again.</p>
+        <button type="button" id="retry-btn">Retry</button>
+    </main>
+    <script>
+        document.getElementById('retry-btn')?.addEventListener('click', () => window.location.reload());
+    </script>
+</body>
+</html>`;
 
 self.addEventListener('install', (event) => {
     // Precache static assets
@@ -65,9 +58,44 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+async function clearAppCaches() {
+    const cacheNames = await caches.keys();
+    await Promise.all(
+        cacheNames
+            .filter((name) => name.startsWith('yt-converter-'))
+            .map((cacheName) => caches.delete(cacheName))
+    );
+}
+
+async function unregisterIfForeignDocument(response) {
+    if (!response || !response.ok) {
+        return false;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/html')) {
+        return false;
+    }
+
+    const html = await response.clone().text();
+    if (hasAppMeta(html)) {
+        return false;
+    }
+
+    console.log('[Service Worker] Foreign HTML detected, unregistering.');
+    await clearAppCaches();
+    await self.registration.unregister();
+    return true;
+}
+
+function hasAppMeta(html) {
+    return /<meta\b[^>]*\bname\s*=\s*["']sw-app-id["'][^>]*\bcontent\s*=\s*["']youtube-to-mp3["'][^>]*>|<meta\b[^>]*\bcontent\s*=\s*["']youtube-to-mp3["'][^>]*\bname\s*=\s*["']sw-app-id["'][^>]*>/i.test(html);
+}
+
 self.addEventListener('fetch', (event) => {
     // Ignore API calls and non-GET requests
-    const pathname = new URL(event.request.url).pathname;
+    const requestUrl = new URL(event.request.url);
+    const pathname = requestUrl.pathname;
     if (event.request.method !== 'GET' || pathname === '/api' || pathname.startsWith('/api/')) {
         return;
     }
@@ -79,27 +107,41 @@ self.addEventListener('fetch', (event) => {
     const acceptHeader = event.request.headers.get('accept');
     if (event.request.mode === 'navigate' || (acceptHeader && acceptHeader.includes('text/html'))) {
         event.respondWith(
-            fetch(event.request)
-                .then((networkResponse) => {
-                    return caches.open(CACHE_NAME).then((cache) => {
-                        if (networkResponse && networkResponse.ok) {
-                            cache.put(event.request, networkResponse.clone());
+            (async () => {
+                try {
+                    const networkResponse = await fetch(event.request);
+
+                    try {
+                        if (requestUrl.origin === self.location.origin) {
+                            const foreignDocument = await unregisterIfForeignDocument(networkResponse);
+                            if (foreignDocument) {
+                                return networkResponse;
+                            }
                         }
-                        return networkResponse;
-                    });
-                })
-                .catch(() => {
+
+                        const cache = await caches.open(CACHE_NAME);
+                        if (networkResponse && networkResponse.ok) {
+                            await cache.put(event.request, networkResponse.clone());
+                        }
+                    } catch (cacheError) {
+                        console.warn('[Service Worker] Cache maintenance failed.', cacheError);
+                    }
+
+                    return networkResponse;
+                } catch {
                     // Fallback to cache
-                    return caches.match(event.request).then((cachedResponse) => {
-                        if (cachedResponse) return cachedResponse;
-                        // If we had an offline.html, we'd return it here
-                        return new Response('Offline', {
-                            status: 503,
-                            statusText: 'Service Unavailable',
-                            headers: { 'Content-Type': 'text/html' }
-                        });
+                    const cachedResponse = await caches.match(event.request);
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+
+                    return new Response(OFFLINE_HTML, {
+                        status: 503,
+                        statusText: 'Service Unavailable',
+                        headers: { 'Content-Type': 'text/html' }
                     });
-                })
+                }
+            })()
         );
         return;
     }

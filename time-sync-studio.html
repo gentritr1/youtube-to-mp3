@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="space">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Sync Studio | YT Converter</title>
+    <meta name="description" content="Standalone point-based lyrics sync studio">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="sw-app-id" content="youtube-to-mp3">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+            rel="stylesheet">
+    </noscript>
+
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout/main.css">
+    <link rel="stylesheet" href="css/components/header.css">
+    <link rel="stylesheet" href="css/components/theme-switcher.css">
+    <link rel="stylesheet" href="css/components/form.css">
+    <link rel="stylesheet" href="css/components/karaoke-panel.css">
+    <link rel="stylesheet" href="css/components/time-sync-page.css">
+    <link rel="stylesheet" href="css/themes/space.css">
+    <link rel="stylesheet" href="css/themes/green.css">
+    <link rel="stylesheet" href="css/themes/frutiger-aero.css">
+    <link rel="stylesheet" href="css/themes/sunshine.css">
+</head>
+
+<body>
+    <main class="container studio-page">
+        <noscript>
+            <section class="karaoke-card" role="status" aria-live="polite">
+                <div class="karaoke-status">
+                    <span class="karaoke-status-badge" data-tone="muted">JavaScript required</span>
+                    <div>
+                        <p class="karaoke-status-title">Time Sync Studio needs JavaScript to run.</p>
+                        <p class="karaoke-status-detail">Enable JavaScript to load lyric points, review timing, and export the sync pass. You can still return to the main converter now.</p>
+                    </div>
+                </div>
+                <p><a href="/" class="studio-back-link">Back to converter</a></p>
+            </section>
+        </noscript>
+
+        <header class="studio-topbar">
+            <a href="/" class="studio-back-link">← Back to converter</a>
+            <div id="theme-switcher" class="theme-switcher" aria-label="Theme switcher"></div>
+        </header>
+
+        <section class="studio-hero">
+            <div class="studio-hero-copy">
+                <span class="studio-hero-eyebrow">Standalone feature</span>
+                <h1 class="studio-hero-title">Time Sync Studio</h1>
+                <p class="studio-hero-text">Load caption lines from a YouTube video or paste your own lyrics, then work through point-by-point timing without cluttering the main converter UI.</p>
+            </div>
+            <div class="studio-hero-meta">
+                <span class="studio-hero-chip">1 point = 1 lyric line start</span>
+                <span class="studio-hero-chip">Single-next-action assistant</span>
+                <span class="studio-hero-chip">Export timing JSON</span>
+            </div>
+        </section>
+
+        <section class="studio-workbench">
+            <div class="studio-control-card">
+                <div class="studio-control-header">
+                    <div>
+                        <span class="studio-control-eyebrow">Source</span>
+                        <h2 class="studio-control-title">Create a point pass</h2>
+                    </div>
+                    <p id="studio-project-title" class="studio-project-title">UNSPECIFIED</p>
+                </div>
+
+                <label for="studio-url-input" class="studio-field-label">YouTube URL</label>
+                <div class="studio-inline-form">
+                    <input type="url" id="studio-url-input" class="input studio-input" placeholder="Paste YouTube URL for caption import">
+                    <button type="button" id="studio-load-video-btn" class="studio-primary-btn">Load Captions</button>
+                </div>
+
+                <label for="studio-lyrics-input" class="studio-field-label">Or paste lyrics</label>
+                <textarea id="studio-lyrics-input" class="studio-lyrics-input" rows="8" placeholder="Paste one lyric line per row"></textarea>
+
+                <label for="estimate-gap-input" class="studio-field-label">Estimated gap for rough auto-sync</label>
+                <div class="studio-inline-form">
+                    <input type="number" id="estimate-gap-input" class="input studio-input" min="0.2" max="10" step="0.1" value="2.2">
+                    <span class="studio-inline-note">seconds</span>
+                </div>
+
+                <div class="studio-action-row">
+                    <button type="button" id="studio-load-lyrics-btn" class="studio-secondary-btn">Use Pasted Lyrics</button>
+                    <button type="button" id="studio-demo-btn" class="studio-secondary-btn">Load Demo Project</button>
+                </div>
+
+                <p id="studio-source-note" class="studio-source-note">Caption import uses available subtitle tracks. Pasted lyrics create approximate points until you sync them.</p>
+            </div>
+
+            <section class="karaoke-card studio-canvas" id="karaoke-card">
+                <div class="karaoke-panel-header">
+                    <div>
+                        <span class="karaoke-eyebrow">Point flow</span>
+                        <h2 class="karaoke-panel-title">Sync one point at a time</h2>
+                    </div>
+                </div>
+
+                <div class="karaoke-status">
+                    <span id="karaoke-status-badge" class="karaoke-status-badge" data-tone="idle">Setup</span>
+                    <div>
+                        <p id="karaoke-status-title" class="karaoke-status-title">Paste a video to build sync points.</p>
+                        <p id="karaoke-status-detail" class="karaoke-status-detail">If captions are available, the studio will turn each lyric line into a point you can review one at a time.</p>
+                    </div>
+                </div>
+
+                <div class="karaoke-panel-body">
+                    <div id="studio-view" class="karaoke-view">
+                        <div class="sync-stage">
+                            <div>
+                                <span id="sync-stage-badge" class="sync-stage-badge">Setup</span>
+                                <p id="sync-stage-label" class="sync-stage-label">Add media and lyric lines first.</p>
+                            </div>
+                            <p id="sync-progress-label" class="sync-progress-label">0/0 points confirmed</p>
+                        </div>
+
+                        <div id="point-rail" class="point-rail" role="navigation" aria-label="Sync points" tabindex="0">
+                            <div id="point-rail-window" class="point-rail-window"></div>
+                        </div>
+                        <div class="sync-progress-bar" aria-hidden="true">
+                            <span id="sync-progress-fill" class="sync-progress-fill"></span>
+                        </div>
+
+                        <div class="sync-count-grid" aria-label="Point counts">
+                            <article class="sync-count-card">
+                                <span class="sync-count-label">Pending</span>
+                                <strong id="sync-count-pending" class="sync-count-value">0</strong>
+                            </article>
+                            <article class="sync-count-card">
+                                <span class="sync-count-label">Synced</span>
+                                <strong id="sync-count-synced" class="sync-count-value">0</strong>
+                            </article>
+                            <article class="sync-count-card">
+                                <span class="sync-count-label">Review</span>
+                                <strong id="sync-count-review" class="sync-count-value">0</strong>
+                            </article>
+                        </div>
+
+                        <section class="assistant-card" aria-label="Sync assistant">
+                            <p id="assistant-text" class="assistant-text">Add a video or pasted lyrics to create your first point rail.</p>
+                            <button type="button" id="assistant-action-btn" class="assistant-action-btn" hidden>Continue</button>
+                            <p id="assistant-hint" class="assistant-hint" hidden></p>
+                        </section>
+
+                        <div id="point-tooltip" class="point-tooltip" hidden></div>
+
+                        <section class="review-player" aria-label="Review playback">
+                            <div class="review-player-copy">
+                                <span class="sync-editor-eyebrow">Review mode</span>
+                                <p id="review-player-summary" class="review-player-summary">Load a captioned YouTube video to review timing against playback.</p>
+                            </div>
+                            <div class="review-player-stage">
+                                <div id="review-player-frame" class="review-player-frame" aria-hidden="true"></div>
+                                <div class="review-player-controls">
+                                    <button type="button" id="review-play-toggle-btn" class="studio-secondary-btn" disabled>Play</button>
+                                    <button type="button" id="review-jump-btn" class="studio-secondary-btn" disabled>Jump to point</button>
+                                    <button type="button" id="review-loop-btn" class="studio-secondary-btn" disabled aria-pressed="false">Loop selected</button>
+                                    <span id="review-time-readout" class="review-time-readout">0:00.000</span>
+                                </div>
+                                <p id="review-loop-range" class="review-loop-range">Loop range appears when the selected point has timing.</p>
+                            </div>
+                        </section>
+
+                        <section class="sync-editor" aria-label="Selected point editor">
+                            <div class="sync-editor-copy">
+                                <span class="sync-editor-eyebrow">Selected point</span>
+                                <p id="selected-point-summary" class="sync-editor-summary">Select a point to edit its exact start time.</p>
+                            </div>
+                            <div class="sync-editor-row">
+                                <div class="sync-time-group" aria-label="Selected point time">
+                                    <input type="number" id="selected-point-minute-input" class="input studio-input sync-time-part" min="0" step="1" placeholder="0" aria-label="Minutes">
+                                    <span class="sync-time-separator">:</span>
+                                    <input type="number" id="selected-point-second-input" class="input studio-input sync-time-part" min="0" max="59" step="1" placeholder="00" aria-label="Seconds">
+                                    <span class="sync-time-separator">.</span>
+                                    <input type="number" id="selected-point-millisecond-input" class="input studio-input sync-time-part sync-time-part-ms" min="0" max="999" step="10" placeholder="000" aria-label="Milliseconds">
+                                </div>
+                                <button type="button" id="apply-point-time-btn" class="studio-secondary-btn">Set time</button>
+                                <button type="button" id="nudge-back-btn" class="studio-secondary-btn">-100ms</button>
+                                <button type="button" id="nudge-forward-btn" class="studio-secondary-btn">+100ms</button>
+                            </div>
+                            <p id="selected-point-feedback" class="sync-editor-feedback" hidden></p>
+                        </section>
+
+                        <div id="point-list" class="point-list"></div>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script type="module" src="js/time-sync-page.js"></script>
+</body>
+
+</html>

@@ -21,7 +21,7 @@ A Node.js and vanilla JavaScript YouTube converter with themable UI, batch downl
 brew install yt-dlp ffmpeg
 ```
 
-## Local Setup
+## Installation
 
 ```bash
 npm install
@@ -30,6 +30,37 @@ npm start
 
 App URL:
 - [http://localhost:3000](http://localhost:3000)
+
+## Testing
+
+```bash
+npm test
+npm run test:watch
+npm run build
+```
+
+Use `docs/TESTING_STATUS.md` for transient environment blockers and verification notes.
+
+## Docker
+
+Optional Docker workflow: use these commands for containerized development and CI-style runs; otherwise run the app locally with `npm start`.
+
+```bash
+npm run docker:build
+npm run docker:test
+npm run docker:up
+npm run preflight
+```
+
+## Architecture
+
+The app uses:
+
+- Node.js + Express on the backend
+- vanilla JavaScript feature modules on the frontend
+- themed CSS tokens and component styles
+- yt-dlp + ffmpeg for media processing
+- SQLite-backed task persistence
 
 ## Canonical Docs
 
@@ -63,17 +94,6 @@ npm start
 npm test
 npm run test:watch
 npm run build
-```
-
-Optional Docker workflow: use these commands for containerized development and CI-style runs; otherwise run the app locally with `npm start`.
-
-Docker helpers:
-
-```bash
-npm run docker:build
-npm run docker:test
-npm run docker:up
-npm run preflight
 ```
 
 ## Notes

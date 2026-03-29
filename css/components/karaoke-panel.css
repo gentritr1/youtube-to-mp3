@@ -1,14 +1,16 @@
 .karaoke-card {
     display: grid;
-    gap: 1rem;
-    padding: 1.15rem;
-    border-radius: 1.5rem;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    border-radius: 1.75rem;
     min-height: 100%;
-    border: 1px solid color-mix(in srgb, var(--hero-border) 86%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 60%, transparent);
     background:
-        radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb-soft) 80%, transparent), transparent 36%),
+        radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb-soft) 80%, transparent), transparent 45%),
         linear-gradient(180deg, color-mix(in srgb, var(--hero-surface-strong) 88%, transparent), color-mix(in srgb, var(--card) 96%, transparent));
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+    box-shadow: 
+        0 32px 80px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 color-mix(in srgb, var(--foreground) 5%, transparent);
 }
 
 .karaoke-card.is-targeted {
@@ -85,12 +87,13 @@
 .karaoke-status {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0.75rem;
+    gap: 0.85rem;
     align-items: start;
-    padding: 0.9rem 1rem;
-    border-radius: 1.1rem;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 1rem 1.15rem;
+    border-radius: 1.25rem;
+    background: color-mix(in srgb, var(--foreground) 3%, color-mix(in srgb, var(--secondary) 40%, transparent));
+    border: 1px solid color-mix(in srgb, var(--hero-border) 40%, transparent);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .karaoke-status-badge {
@@ -140,46 +143,408 @@
 
 .karaoke-view {
     display: grid;
+    gap: 0.85rem;
 }
 
-.karaoke-lines {
+.sync-stage {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.sync-stage-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.33rem 0.62rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--hero-orb) 16%, rgba(255, 255, 255, 0.05));
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 44%, transparent);
+    color: var(--foreground);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sync-stage-label,
+.sync-progress-label {
+    margin: 0.35rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+    line-height: 1.55;
+}
+
+.sync-progress-label {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+}
+
+.sync-progress-bar {
+    position: relative;
+    height: 0.42rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sync-progress-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    transform-origin: left center;
+    transform: scaleX(0);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--hero-orb) 92%, white), color-mix(in srgb, var(--success) 70%, white));
+    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sync-count-grid {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.35rem;
+    background: color-mix(in srgb, var(--secondary) 60%, transparent);
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--hero-border) 40%, transparent);
+}
+
+.sync-count-card {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    background: transparent;
+    border: none;
+    position: relative;
+}
+
+.sync-count-card:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -0.2rem;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.sync-count-label {
+    color: var(--muted-foreground);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.sync-count-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+}
+
+.assistant-card {
     display: grid;
-    gap: 0.55rem;
+    gap: 0.75rem;
+    padding: 1.25rem 1.4rem;
+    border-radius: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 40%, color-mix(in srgb, var(--foreground) 10%, transparent));
+    background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--hero-orb) 20%, transparent), transparent 70%),
+        color-mix(in srgb, var(--card) 70%, transparent);
+    box-shadow: 
+        0 12px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 color-mix(in srgb, var(--foreground) 8%, transparent);
+    position: relative;
+    overflow: hidden;
+}
+
+.assistant-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--hero-orb), transparent);
+    opacity: 0.6;
+}
+
+.assistant-text {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--foreground);
+}
+
+.assistant-action-btn {
+    justify-self: start;
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 46%, transparent);
+    background: color-mix(in srgb, var(--hero-orb) 20%, rgba(255, 255, 255, 0.08));
+    color: var(--foreground);
+    padding: 0.72rem 1rem;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1), background 100ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.assistant-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.assistant-hint {
+    margin: 0;
+    color: var(--muted-foreground);
+    font-size: 0.76rem;
+    line-height: 1.55;
+}
+
+.studio-teaser-card {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border-radius: 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 28%, rgba(255, 255, 255, 0.08));
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 14%, transparent), rgba(255, 255, 255, 0.03)),
+        rgba(255, 255, 255, 0.04);
+}
+
+.studio-teaser-copy {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 0.88rem;
+    line-height: 1.65;
+}
+
+.studio-teaser-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 44%, transparent);
+    background: color-mix(in srgb, var(--hero-orb) 14%, rgba(255, 255, 255, 0.06));
+    color: var(--foreground);
+    text-decoration: none;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    transition:
+        transform var(--transition-fast),
+        background var(--transition-fast),
+        border-color var(--transition-fast);
+}
+
+.studio-teaser-link:hover {
+    transform: translateY(-1px);
+}
+
+.point-rail {
+    position: relative;
+    overflow: hidden;
+    padding: 0.65rem 0.8rem 0.85rem;
+    border-radius: 1.35rem;
+    border: 1px solid color-mix(in srgb, var(--hero-border) 50%, transparent);
+    background: color-mix(in srgb, var(--secondary) 84%, color-mix(in srgb, var(--foreground) 4%, transparent));
+    box-shadow: inset 0 6px 24px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+.point-rail.is-empty {
+    display: none;
+}
+
+.point-rail:focus-visible {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--hero-orb) 44%, transparent);
+}
+
+.point-rail-window {
+    display: flex;
+    align-items: stretch;
+    gap: 0.45rem;
+    min-height: 6rem;
+    overflow: hidden;
+    padding: 0;
+}
+
+.point-rail-empty {
+    margin: 0;
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+}
+
+.point-hit {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 5rem;
+    display: grid;
+    grid-template-rows: minmax(1.9rem, auto) auto auto;
+    align-items: center;
+    justify-items: center;
+    gap: 0.34rem;
+    padding: 0.55rem 0.45rem 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--card) 42%, transparent);
+    cursor: pointer;
+    opacity: 1;
+    transition:
+        transform 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        background 100ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.point-hit:hover,
+.point-hit:focus-visible {
+    opacity: 1;
+    transform: scale(1.03);
+    outline: none;
+    border-color: color-mix(in srgb, var(--hero-orb) 32%, transparent);
+    background: color-mix(in srgb, var(--hero-orb) 10%, rgba(255, 255, 255, 0.04));
+}
+
+.point-label,
+.point-time {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.point-label {
+    color: var(--foreground);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.point-time {
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-align: center;
+}
+
+.point-dot {
+    width: 0.94rem;
+    height: 0.94rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--foreground) 48%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 0 0 3px color-mix(in srgb, var(--background) 24%, transparent);
+}
+
+.point-hit.pending .point-dot {
+    background: color-mix(in srgb, var(--foreground) 62%, white);
+    border-color: color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+.point-hit.synced .point-dot {
+    background: color-mix(in srgb, var(--success) 78%, white);
+    border-color: color-mix(in srgb, var(--success) 54%, transparent);
+}
+
+.point-hit.needs_review .point-dot {
+    background: color-mix(in srgb, #f59e0b 82%, white);
+    border-color: color-mix(in srgb, #f59e0b 52%, transparent);
+}
+
+.point-hit.is-selected .point-dot {
+    transform: scale(1.22);
+    box-shadow:
+        0 0 0 5px color-mix(in srgb, var(--hero-orb) 18%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--hero-orb) 32%, transparent);
+}
+
+.point-hit.is-selected {
+    border-color: color-mix(in srgb, var(--hero-orb) 48%, transparent);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--hero-orb) 18%, transparent), transparent),
+        color-mix(in srgb, var(--card) 56%, transparent);
+}
+
+.point-hit.is-now-playing .point-dot {
+    box-shadow:
+        0 0 0 7px color-mix(in srgb, var(--hero-orb) 12%, transparent),
+        0 0 18px color-mix(in srgb, var(--hero-orb) 26%, transparent);
+}
+
+.point-tooltip {
+    position: fixed;
+    z-index: 4;
+    display: grid;
+    gap: 0.2rem;
+    max-width: 16rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.9rem;
+    background: color-mix(in srgb, var(--card) 96%, black);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+
+.point-tooltip strong,
+.point-tooltip span {
+    font-size: 0.74rem;
+    line-height: 1.45;
+}
+
+.point-list {
+    display: grid;
+    gap: 0.6rem;
     max-height: 24rem;
     overflow-y: auto;
     padding-right: 0.25rem;
 }
 
-.karaoke-lines::-webkit-scrollbar {
+.point-list::-webkit-scrollbar {
     width: 5px;
 }
 
-.karaoke-lines::-webkit-scrollbar-thumb {
+.point-list::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.12);
     border-radius: 999px;
 }
 
-.karaoke-line-card {
+.point-card {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.7rem;
-    align-items: start;
-    padding: 0.8rem 0.9rem;
+    gap: 0.55rem;
+    padding: 0.85rem 0.95rem;
+    cursor: pointer;
     border-radius: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.06);
     background: rgba(255, 255, 255, 0.03);
     transition:
-        transform var(--transition-fast),
-        border-color var(--transition-fast),
-        background var(--transition-fast),
-        box-shadow var(--transition-fast);
+        transform 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        background 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 100ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.karaoke-line-card.placeholder {
-    opacity: 0.8;
+.point-card.placeholder {
+    opacity: 0.82;
+    cursor: default;
 }
 
-.karaoke-line-card.active {
+.point-card.is-selected {
     background:
         linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 22%, transparent), rgba(255, 255, 255, 0.05)),
         rgba(255, 255, 255, 0.04);
@@ -190,29 +555,64 @@
     transform: translateX(4px);
 }
 
-.karaoke-line-card.past {
-    opacity: 0.62;
+.point-card:hover:not(.placeholder) {
+    border-color: color-mix(in srgb, var(--hero-orb) 28%, transparent);
 }
 
-.karaoke-line-card.upcoming {
-    opacity: 0.9;
+.point-card.is-now-playing {
+    border-color: color-mix(in srgb, var(--success) 40%, transparent);
 }
 
-.karaoke-line-index {
-    display: inline-flex;
-    min-width: 2.1rem;
-    justify-content: center;
+.point-card-meta,
+.point-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.point-card-index,
+.point-card-time,
+.point-card-status,
+.point-card-issues {
+    font-size: 0.74rem;
+}
+
+.point-card-index,
+.point-card-time {
     color: var(--muted-foreground);
     font-family: var(--font-mono);
-    font-size: 0.72rem;
-    padding-top: 0.15rem;
 }
 
-.karaoke-line-text {
+.point-card-text {
     margin: 0;
     font-size: 0.92rem;
     line-height: 1.55;
     color: var(--foreground);
+}
+
+.point-card-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    text-transform: capitalize;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--foreground);
+}
+
+.point-card-status[data-status="synced"] {
+    background: color-mix(in srgb, var(--success) 14%, rgba(255, 255, 255, 0.06));
+}
+
+.point-card-status[data-status="needs_review"] {
+    background: color-mix(in srgb, #f59e0b 14%, rgba(255, 255, 255, 0.06));
+}
+
+.point-card-issues {
+    color: var(--muted-foreground);
+    text-transform: lowercase;
 }
 
 .arcade-grid {
@@ -273,6 +673,22 @@
     border-color: color-mix(in srgb, var(--hero-orb) 46%, transparent);
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .sync-progress-fill,
+    .point-hit,
+    .point-card,
+    .assistant-action-btn {
+        transition-duration: 1ms;
+    }
+
+    .point-hit:hover,
+    .point-hit:focus-visible,
+    .assistant-action-btn:hover,
+    .point-card.is-selected {
+        transform: none;
+    }
+}
+
 @media (max-width: 720px) {
     .karaoke-card {
         padding: 1rem;
@@ -280,5 +696,34 @@
 
     .karaoke-status {
         grid-template-columns: 1fr;
+    }
+
+    .sync-count-grid {
+        flex-direction: column;
+        border-radius: 1.25rem;
+    }
+
+    .sync-count-card {
+        justify-content: space-between;
+    }
+
+    .sync-count-card:not(:last-child)::after {
+        right: 12%;
+        left: 12%;
+        top: auto;
+        bottom: -0.2rem;
+        width: auto;
+        height: 1px;
+    }
+
+    .point-rail-window {
+        gap: 0.3rem;
+        min-height: 5.25rem;
+        overflow-x: auto;
+        padding-bottom: 0.1rem;
+    }
+
+    .point-hit {
+        min-width: 5rem;
     }
 }
