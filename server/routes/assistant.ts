@@ -10,6 +10,10 @@ router.post('/', (req, res) => {
         return res.status(400).json({ message: 'sessionId is required' });
     }
 
+    if (typeof userText !== 'string') {
+        return res.status(400).json({ error: 'userText must be a string' });
+    }
+
     if (!uiSnapshot || typeof uiSnapshot !== 'object') {
         return res.status(400).json({ message: 'uiSnapshot is required' });
     }

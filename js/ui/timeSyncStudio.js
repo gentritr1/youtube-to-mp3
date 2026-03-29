@@ -772,15 +772,16 @@ export class TimeSyncStudio {
             }
             : null;
         const changed = JSON.stringify(this.mediaSource) !== JSON.stringify(nextSource);
-        const requestId = this.reviewPlayerRequestId + 1;
-        this.reviewPlayerRequestId = requestId;
-        this.mediaSource = nextSource;
-        this.reviewLoopEnabled = false;
 
         if (!changed) {
             this.renderReviewPlayer();
             return;
         }
+
+        const requestId = this.reviewPlayerRequestId + 1;
+        this.reviewPlayerRequestId = requestId;
+        this.mediaSource = nextSource;
+        this.reviewLoopEnabled = false;
 
         await this.ensureReviewPlayer(requestId);
         this.renderReviewPlayer();
@@ -889,6 +890,16 @@ export class TimeSyncStudio {
             return acc;
         }, { pending: 0, synced: 0, needs_review: 0 });
 
+        const playerSeconds = this.reviewPlayerReady && typeof this.reviewPlayer?.getCurrentTime === 'function'
+            ? this.reviewPlayer.getCurrentTime()
+            : null;
+        const playerState = this.reviewPlayerReady && typeof this.reviewPlayer?.getPlayerState === 'function'
+            ? this.reviewPlayer.getPlayerState()
+            : null;
+        const selectedPoint = this.getSelectedPoint();
+        const loopStart = selectedPoint?.timeMs ?? selectedPoint?.draftTimeMs ?? 0;
+        const loopEnd = this.getLoopEndTime(selectedPoint?.id);
+
         return {
             schemaVersion: '1.0',
             stage: this.stage,
@@ -917,12 +928,12 @@ export class TimeSyncStudio {
                 issues: [...point.issues]
             })),
             playback: {
-                playheadMs: this.getSelectedPoint()?.timeMs ?? 0,
-                isPlaying: Boolean(this.nowPlayingPointId),
+                playheadMs: Number.isFinite(playerSeconds) ? Math.round(playerSeconds * 1000) : 0,
+                isPlaying: playerState === window.YT?.PlayerState?.PLAYING,
                 loop: {
-                    on: false,
-                    startMs: this.getSelectedPoint()?.timeMs ?? 0,
-                    endMs: this.getSelectedPoint()?.timeMs ?? 0
+                    on: this.reviewLoopEnabled,
+                    startMs: Number.isFinite(loopStart) ? loopStart : 0,
+                    endMs: Number.isFinite(loopEnd) ? loopEnd : (Number.isFinite(loopStart) ? loopStart : 0)
                 }
             },
             autosync: {

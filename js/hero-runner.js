@@ -101,6 +101,7 @@
       this.observer     = null;
       this._resizeHandler = null;
       this._motionChangeHandler = null;
+      this._reducedMotionQuery = null;
       this.reducedMotion = false;
     }
 
@@ -117,13 +118,17 @@
       this.runway    = document.querySelector('.hero-runway');
 
       // Check reduced-motion preference
-      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-      this.reducedMotion = mq.matches;
+      this._reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      this.reducedMotion = this._reducedMotionQuery.matches;
       this._motionChangeHandler = (e) => {
         this.reducedMotion = e.matches;
         this._syncMotionMode();
       };
-      mq.addEventListener('change', this._motionChangeHandler);
+      if (typeof this._reducedMotionQuery.addEventListener === 'function') {
+        this._reducedMotionQuery.addEventListener('change', this._motionChangeHandler);
+      } else if (typeof this._reducedMotionQuery.addListener === 'function') {
+        this._reducedMotionQuery.addListener(this._motionChangeHandler);
+      }
 
       this._measureTrack();
       this._resizeHandler = () => this._measureTrack();
@@ -133,7 +138,17 @@
       this.observer = new IntersectionObserver(
         ([entry]) => {
           this.isVisible = entry.isIntersecting;
-          if (!this.reducedMotion && this.isVisible && !this._loopActive) this._startRAFLoop();
+          if (!entry.isIntersecting) {
+            this._stopRAFLoop();
+            this._stopSwayInterval();
+            return;
+          }
+
+          if (this.reducedMotion) {
+            this._startSwayInterval();
+          } else if (!this._loopActive) {
+            this._startRAFLoop();
+          }
         },
         { threshold: 0.05 }
       );
@@ -148,9 +163,12 @@
       this._stopSwayInterval();
       if (this.observer) this.observer.disconnect();
       if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
-      if (this._motionChangeHandler) {
-        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-        mq.removeEventListener('change', this._motionChangeHandler);
+      if (this._motionChangeHandler && this._reducedMotionQuery) {
+        if (typeof this._reducedMotionQuery.removeEventListener === 'function') {
+          this._reducedMotionQuery.removeEventListener('change', this._motionChangeHandler);
+        } else if (typeof this._reducedMotionQuery.removeListener === 'function') {
+          this._reducedMotionQuery.removeListener(this._motionChangeHandler);
+        }
       }
     }
 
@@ -209,6 +227,11 @@
     _stopSwayInterval() {
       if (this._reducedMotionInterval) clearInterval(this._reducedMotionInterval);
       this._reducedMotionInterval = null;
+    }
+
+    _frameLerp(baseFactor, dt) {
+      const frameScale = clamp(dt * 60, 0, 4);
+      return 1 - Math.pow(1 - baseFactor, frameScale);
     }
 
     _syncMotionMode() {
@@ -284,7 +307,7 @@
 
     _tickIdle(dt) {
       // Fade car in gently while idling
-      this.opacity = lerp(this.opacity, 0.95, 0.06);
+      this.opacity = lerp(this.opacity, 0.95, this._frameLerp(0.06, dt));
       // Tiny idle oscillation (engine rumble)
       this.suspY = Math.sin(this.elapsed * 6) * 0.25;
 
@@ -294,14 +317,14 @@
     }
 
     _tickAccel(dt) {
-      this.opacity = lerp(this.opacity, 1, 0.1);
+      this.opacity = lerp(this.opacity, 1, this._frameLerp(0.1, dt));
       // Accelerate with an ease-out feel (force decreases as we approach cruise)
       const speedDelta = this.cruiseTarget - this.velocity;
       const accelFactor = clamp(speedDelta / this.cruiseTarget, 0.15, 1);
       this.velocity += CFG.accelForce * accelFactor * dt;
 
       // Body pitches backward (nose up) during acceleration
-      this.bodyPitch = lerp(this.bodyPitch, CFG.pitchAccel, CFG.pitchLerp);
+      this.bodyPitch = lerp(this.bodyPitch, CFG.pitchAccel, this._frameLerp(CFG.pitchLerp, dt));
 
       if (this.velocity >= this.cruiseTarget * 0.95) {
         this._setState(STATES.CRUISE);
@@ -312,10 +335,10 @@
       // Maintain velocity with a very gentle sine variation for organic feel
       const driftSpeed = this.cruiseTarget +
                          Math.sin(this.elapsed * 0.9) * (this.cruiseTarget * 0.06);
-      this.velocity = lerp(this.velocity, driftSpeed, 0.08);
+      this.velocity = lerp(this.velocity, driftSpeed, this._frameLerp(0.08, dt));
 
       // Body levels out
-      this.bodyPitch = lerp(this.bodyPitch, CFG.pitchCruise, CFG.pitchLerp);
+      this.bodyPitch = lerp(this.bodyPitch, CFG.pitchCruise, this._frameLerp(CFG.pitchLerp, dt));
 
       // Start braking when we reach the decel zone
       if (this.x >= this.trackWidth * CFG.decelZone) {
@@ -330,7 +353,7 @@
       this.velocity  = Math.max(this.velocity, 8); // keep a gentle crawl
 
       // Body pitches forward (nose down) during braking
-      this.bodyPitch = lerp(this.bodyPitch, CFG.pitchDecel, CFG.pitchLerp);
+      this.bodyPitch = lerp(this.bodyPitch, CFG.pitchDecel, this._frameLerp(CFG.pitchLerp, dt));
 
       if (this.x >= this.trackWidth * CFG.exitZone) {
         this._setState(STATES.EXIT);
@@ -339,15 +362,15 @@
 
     _tickExit(dt) {
       // Keep rolling at low speed
-      this.velocity = lerp(this.velocity, 8, 0.03);
+      this.velocity = lerp(this.velocity, 8, this._frameLerp(0.03, dt));
       // Fade out
-      this.opacity = lerp(this.opacity, 0, 0.06);
+      this.opacity = lerp(this.opacity, 0, this._frameLerp(0.06, dt));
       // Slight upward drift as it "leaves"
-      this.suspY = lerp(this.suspY, -2, 0.03);
+      this.suspY = lerp(this.suspY, -2, this._frameLerp(0.03, dt));
       // Body returns level
-      this.bodyPitch = lerp(this.bodyPitch, 0, 0.04);
+      this.bodyPitch = lerp(this.bodyPitch, 0, this._frameLerp(0.04, dt));
 
-      if (this.opacity < 0.02) {
+      if (this.opacity <= 0.02) {
         this._setState(STATES.RESET);
       }
     }

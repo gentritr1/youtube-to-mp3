@@ -43,7 +43,10 @@ export const config = {
         CONVERSION_WINDOW_MS: 60 * 60 * 1000, // 1 hour
         CONVERSION_MAX_REQUESTS: 10,         // per window
         INFO_WINDOW_MS: 60 * 1000,           // 1 minute
-        INFO_MAX_REQUESTS: 30                // per window
+        INFO_MAX_REQUESTS: 30,               // per window
+        ASSISTANT_WINDOW_MS: 5 * 60 * 1000,
+        ASSISTANT_MAX_REQUESTS: 15,
+        ASSISTANT_RETRY_AFTER: '5 minutes'
     },
 
     // Queue settings

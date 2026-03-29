@@ -75,6 +75,11 @@ const pageState = {
     currentRequestId: 0
 };
 
+const invalidatePendingSubtitleRequests = () => {
+    pageState.currentRequestId = Date.now() + Math.random();
+    return pageState.currentRequestId;
+};
+
 const lyricsController = new LyricsController();
 const themeController = new ThemeController({
     mount: elements.themeSwitcher,
@@ -265,6 +270,7 @@ const loadManualLyrics = async () => {
         setProjectTitle('Manual lyric draft');
     }
 
+    invalidatePendingSubtitleRequests();
     let attached = false;
     try {
         attached = await attachMediaSourceFromUrlIfPresent();
@@ -278,6 +284,7 @@ const loadManualLyrics = async () => {
 };
 
 const loadDemoProject = () => {
+    invalidatePendingSubtitleRequests();
     elements.lyricsInput.value = demoLyrics.join('\n');
     setProjectTitle('Demo point pass');
     studio.setLyrics(parseManualLyrics(elements.lyricsInput.value));

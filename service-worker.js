@@ -5,7 +5,6 @@ try {
 }
 
 const CACHE_NAME = `yt-converter-${self.__STATIC_ASSET_VERSION || 'dev'}`;
-const APP_ID_META_MARKER = '<meta name="sw-app-id" content="youtube-to-mp3">';
 const STATIC_ASSETS = Array.isArray(self.__STATIC_ASSETS)
     ? self.__STATIC_ASSETS
     : ['/', '/index.html', '/manifest.json'];
@@ -79,7 +78,7 @@ async function unregisterIfForeignDocument(response) {
     }
 
     const html = await response.clone().text();
-    if (html.includes(APP_ID_META_MARKER)) {
+    if (hasAppMeta(html)) {
         return false;
     }
 
@@ -87,6 +86,10 @@ async function unregisterIfForeignDocument(response) {
     await clearAppCaches();
     await self.registration.unregister();
     return true;
+}
+
+function hasAppMeta(html) {
+    return /<meta\b[^>]*\bname\s*=\s*["']sw-app-id["'][^>]*\bcontent\s*=\s*["']youtube-to-mp3["'][^>]*>|<meta\b[^>]*\bcontent\s*=\s*["']youtube-to-mp3["'][^>]*\bname\s*=\s*["']sw-app-id["'][^>]*>/i.test(html);
 }
 
 self.addEventListener('fetch', (event) => {
@@ -108,17 +111,22 @@ self.addEventListener('fetch', (event) => {
                 try {
                     const networkResponse = await fetch(event.request);
 
-                    if (requestUrl.origin === self.location.origin) {
-                        const foreignDocument = await unregisterIfForeignDocument(networkResponse);
-                        if (foreignDocument) {
-                            return networkResponse;
+                    try {
+                        if (requestUrl.origin === self.location.origin) {
+                            const foreignDocument = await unregisterIfForeignDocument(networkResponse);
+                            if (foreignDocument) {
+                                return networkResponse;
+                            }
                         }
+
+                        const cache = await caches.open(CACHE_NAME);
+                        if (networkResponse && networkResponse.ok) {
+                            await cache.put(event.request, networkResponse.clone());
+                        }
+                    } catch (cacheError) {
+                        console.warn('[Service Worker] Cache maintenance failed.', cacheError);
                     }
 
-                    const cache = await caches.open(CACHE_NAME);
-                    if (networkResponse && networkResponse.ok) {
-                        await cache.put(event.request, networkResponse.clone());
-                    }
                     return networkResponse;
                 } catch {
                     // Fallback to cache

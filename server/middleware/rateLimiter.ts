@@ -85,11 +85,11 @@ export const downloadLimiter = rateLimit({
  * Assistant rate limiter
  */
 export const assistantLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 15,
+    windowMs: RATE_LIMIT.ASSISTANT_WINDOW_MS,
+    max: RATE_LIMIT.ASSISTANT_MAX_REQUESTS,
     message: {
         error: 'Assistant request limit reached, please try again shortly.',
-        retryAfter: '5 minutes'
+        retryAfter: RATE_LIMIT.ASSISTANT_RETRY_AFTER
     },
     standardHeaders: true,
     legacyHeaders: false,

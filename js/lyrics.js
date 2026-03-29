@@ -119,6 +119,7 @@ export class LyricsController {
         const metadataPrefixes = ['Kind:', 'Language:', 'NOTE', 'X-TIMESTAMP-MAP', 'Region:'];
         let currentTime = 0;
         let fallbackIndex = 0;
+        let lastCueTime = -Infinity;
 
         for (let i = 0; i < lines.length; i += 1) {
             const line = lines[i].trim();
@@ -131,7 +132,9 @@ export class LyricsController {
             if (line.includes('-->')) {
                 const [startToken] = line.split('-->');
                 const parsedTime = this.parseTimestampToMs(startToken.trim());
-                currentTime = Number.isFinite(parsedTime) ? parsedTime : fallbackIndex * 2000;
+                currentTime = Number.isFinite(parsedTime)
+                    ? parsedTime
+                    : Math.max(lastCueTime + 2000, fallbackIndex * 2000);
 
                 const cueLines = [];
                 let cursor = i + 1;
@@ -152,6 +155,7 @@ export class LyricsController {
                         hasTiming: Number.isFinite(parsedTime),
                         isApproximate: !Number.isFinite(parsedTime)
                     });
+                    lastCueTime = currentTime;
                     fallbackIndex += 1;
                 }
                 i = cursor - 1;
@@ -164,6 +168,7 @@ export class LyricsController {
                 hasTiming: false,
                 isApproximate: true
             });
+            lastCueTime = currentTime;
             currentTime += 2000;
             fallbackIndex += 1;
         }
@@ -246,10 +251,13 @@ export class LyricsController {
             return;
         }
 
-        const rawDelay = Number.isFinite(nextLyric.time) && Number.isFinite(currentLyric?.time)
+        const hasRealTimestamps = Number.isFinite(nextLyric.time) && Number.isFinite(currentLyric?.time);
+        const rawDelay = hasRealTimestamps
             ? nextLyric.time - currentLyric.time
             : 2500;
-        const delay = Math.min(Math.max(rawDelay, 900), 5000);
+        const delay = hasRealTimestamps
+            ? Math.max(rawDelay, 900)
+            : Math.min(Math.max(rawDelay, 900), 5000);
 
         this.intervalId = setTimeout(() => {
             this.advanceTarget();
