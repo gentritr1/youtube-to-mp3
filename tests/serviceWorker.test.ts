@@ -96,7 +96,13 @@ const collectJsDependencies = (entryWebPath: string, refs: Set<string>, visited:
 };
 
 const collectManifestAssets = (manifestFile: string, refs: Set<string>) => {
-    const manifest = JSON.parse(read(manifestFile));
+    let manifest: { icons?: Array<{ src: string }> };
+    try {
+        manifest = JSON.parse(read(manifestFile));
+    } catch (error) {
+        throw new Error(`Failed to read or parse manifest ${manifestFile}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
     const manifestWebPath = toWebPath(manifestFile);
     if (manifestWebPath) {
         refs.add(manifestWebPath);
