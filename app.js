@@ -3,10 +3,8 @@
  * Minimal ES6+ implementation with backend integration
  */
 
-import { LyricsController } from './js/lyrics.js';
 import { AnimationController } from './js/ui/animationController.js';
 import { animationRegistry } from './js/ui/animationRegistry.js';
-import { KaraokePanel } from './js/ui/karaokePanel.js';
 import { ThemeController } from './js/ui/themeController.js';
 
 // Configuration
@@ -35,7 +33,6 @@ const elements = {
     conversionAnimation: document.getElementById('conversion-animation'),
     nerdStats: document.getElementById('nerd-stats'),
     nerdStatsToggle: document.getElementById('nerd-stats-toggle'),
-    nerdStatsGrid: document.getElementById('nerd-stats-grid'),
     statBitrate: document.getElementById('stat-bitrate'),
     statSampleRate: document.getElementById('stat-sample-rate'),
     statLufs: document.getElementById('stat-lufs'),
@@ -43,14 +40,12 @@ const elements = {
     statDuration: document.getElementById('stat-duration'),
     statFilesize: document.getElementById('stat-filesize'),
     themeSwitcher: document.getElementById('theme-switcher'),
-    karaokeCard: document.getElementById('karaoke-card'),
     karaokeTabs: document.querySelectorAll('.karaoke-tab'),
-    karaokeView: document.getElementById('karaoke-view'),
-    arcadeView: document.getElementById('arcade-view'),
-    karaokeLines: document.getElementById('karaoke-lines'),
     karaokeStatusBadge: document.getElementById('karaoke-status-badge'),
     karaokeStatusTitle: document.getElementById('karaoke-status-title'),
     karaokeStatusDetail: document.getElementById('karaoke-status-detail'),
+    studioView: document.getElementById('studio-view'),
+    arcadeView: document.getElementById('arcade-view'),
     arcadeLaunchButtons: document.querySelectorAll('[data-game-launch]')
 };
 
@@ -58,29 +53,13 @@ const elements = {
 const state = {
     format: 'mp3',
     isLoading: false,
-    isConverting: false,
-    videoInfo: null,
-    activeLyricsRequestId: 0,
+    videoInfo: null
 };
 
-const lyricsController = new LyricsController();
 const animationController = new AnimationController(animationRegistry);
 const themeController = new ThemeController({
     mount: elements.themeSwitcher,
     metaThemeColor: document.querySelector('meta[name="theme-color"]')
-});
-const karaokePanel = new KaraokePanel({
-    root: elements.karaokeCard,
-    tabs: elements.karaokeTabs,
-    views: {
-        karaoke: elements.karaokeView,
-        arcade: elements.arcadeView
-    },
-    linesContainer: elements.karaokeLines,
-    statusBadge: elements.karaokeStatusBadge,
-    statusTitle: elements.karaokeStatusTitle,
-    statusDetail: elements.karaokeStatusDetail,
-    launchButtons: elements.arcadeLaunchButtons
 });
 
 // Module-level timers
@@ -95,44 +74,6 @@ try {
 } catch (error) {
     console.error('themeController.init failed', error);
 }
-
-try {
-    karaokePanel.init();
-} catch (error) {
-    console.error('karaokePanel.init failed', error);
-}
-
-lyricsController.on('loaded', ({ lyrics, requestId }) => {
-    if (requestId !== state.activeLyricsRequestId) return;
-    karaokePanel.setLyrics(lyrics);
-});
-
-lyricsController.on('start', ({ requestId }) => {
-    if (requestId !== state.activeLyricsRequestId) return;
-    karaokePanel.setStatus(
-        'Live',
-        'Lyrics are moving now.',
-        'The current line will stay highlighted here while your file finishes preparing.',
-        'live'
-    );
-});
-
-lyricsController.on('linechange', ({ index, requestId }) => {
-    if (requestId !== state.activeLyricsRequestId) return;
-    karaokePanel.setActiveLine(index);
-});
-
-lyricsController.on('stop', ({ preserveLyrics, lyrics, requestId }) => {
-    if (requestId !== null && requestId !== state.activeLyricsRequestId) return;
-    if (preserveLyrics && Array.isArray(lyrics) && lyrics.length > 0) {
-        karaokePanel.finishPlayback();
-    }
-});
-
-lyricsController.on('empty', ({ requestId }) => {
-    if (requestId !== state.activeLyricsRequestId) return;
-    karaokePanel.setEmpty();
-});
 
 /**
  * Extract video ID from YouTube URL
@@ -167,18 +108,10 @@ const hideResults = () => {
     elements.preview.classList.remove('loading');
     elements.progressSection.classList.add('hidden');
     elements.downloadSection.classList.add('hidden');
-    // Reset download animation classes
     elements.downloadSection.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
     elements.errorSection.classList.add('hidden');
-    // Stop any running conversion animation
     animationController.stop(elements.conversionAnimation);
 
-    lyricsController.stop({ preserveLyrics: false });
-    state.isConverting = false;
-    state.activeLyricsRequestId = 0;
-    karaokePanel.setIdle();
-
-    // Clear background timers
     if (nerdStatsTimeout) {
         clearTimeout(nerdStatsTimeout);
         nerdStatsTimeout = null;
@@ -188,10 +121,8 @@ const hideResults = () => {
         statsIntervalId = null;
     }
 
-    // Reset nerd stats
     elements.nerdStats.classList.add('hidden');
     elements.nerdStatsToggle.setAttribute('aria-expanded', 'false');
-    // We DO NOT hide game container here to allow playing across sessions
 };
 
 /**
@@ -200,9 +131,11 @@ const hideResults = () => {
 const setLoading = (loading) => {
     state.isLoading = loading;
     elements.convertBtn.disabled = loading;
-    elements.urlInput.disabled = loading; // Disable input
-    elements.pasteBtn.disabled = loading; // Disable paste
-    elements.formatBtns.forEach(btn => btn.disabled = loading); // Disable format toggle
+    elements.urlInput.disabled = loading;
+    elements.pasteBtn.disabled = loading;
+    elements.formatBtns.forEach((btn) => {
+        btn.disabled = loading;
+    });
 
     elements.btnText.classList.toggle('hidden', loading);
     elements.btnLoader.classList.toggle('hidden', !loading);
@@ -248,11 +181,10 @@ const populateNerdStats = (stats) => {
     elements.statLufs.textContent = formatLufs(stats.lufs);
     elements.statPeak.textContent = formatPeak(stats.peakDb);
 
-    // Format duration nicely (e.g. 3:42)
-    const d = stats.duration;
-    if (Number.isFinite(d)) {
-        const mins = Math.floor(d / 60);
-        const secs = Math.floor(d % 60).toString().padStart(2, '0');
+    const duration = stats.duration;
+    if (Number.isFinite(duration)) {
+        const mins = Math.floor(duration / 60);
+        const secs = Math.floor(duration % 60).toString().padStart(2, '0');
         elements.statDuration.textContent = `${mins}:${secs}`;
     } else {
         elements.statDuration.textContent = 'N/A';
@@ -275,7 +207,6 @@ const fetchVideoInfo = async (videoId) => {
 
         return await response.json();
     } catch (error) {
-        // Fallback to oEmbed if backend is unavailable
         console.warn('Backend unavailable, using oEmbed fallback');
         const response = await fetch(
             `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
@@ -289,7 +220,7 @@ const fetchVideoInfo = async (videoId) => {
             title: data.title,
             thumbnail: data.thumbnail_url,
             author: data.author_name,
-            duration: null,
+            duration: null
         };
     }
 };
@@ -304,7 +235,7 @@ const convertVideo = async (videoId, format, title) => {
         const response = await fetch(`${API_URL}/api/convert`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ videoId, format, title }),
+            body: JSON.stringify({ videoId, format, title })
         });
 
         if (!response.ok) {
@@ -312,10 +243,8 @@ const convertVideo = async (videoId, format, title) => {
             throw new Error(error.message || 'Conversion failed');
         }
 
-        // Poll for progress
         const { taskId } = await response.json();
         return await pollProgress(taskId);
-
     } catch (error) {
         if (error.message.includes('fetch')) {
             throw new Error('Backend server not running. Start with: npm start');
@@ -328,7 +257,7 @@ const convertVideo = async (videoId, format, title) => {
  * Poll conversion progress
  */
 const pollProgress = async (taskId) => {
-    const maxAttempts = 600; // 10 minutes max (at 1s interval)
+    const maxAttempts = 600;
     let attempts = 0;
 
     while (attempts < maxAttempts) {
@@ -338,31 +267,34 @@ const pollProgress = async (taskId) => {
         updateProgress(data.progress, data.status);
 
         if (data.state === 'completed') {
-            // Populate stats if present
             if (data.audioStats) {
                 populateNerdStats(data.audioStats);
             } else {
-                // Fire a background poll loop to get stats after UI is unblocked
                 if (statsIntervalId) clearInterval(statsIntervalId);
                 let statsAttempts = 0;
                 statsIntervalId = setInterval(async () => {
-                    if (statsAttempts > 10) { clearInterval(statsIntervalId); statsIntervalId = null; return; }
+                    if (statsAttempts > 10) {
+                        clearInterval(statsIntervalId);
+                        statsIntervalId = null;
+                        return;
+                    }
+
                     try {
-                        const r = await fetch(`${API_URL}/api/progress/${taskId}`);
-                        const d = await r.json();
-                        if (d.audioStats) {
-                            populateNerdStats(d.audioStats);
+                        const progressResponse = await fetch(`${API_URL}/api/progress/${taskId}`);
+                        const progressData = await progressResponse.json();
+                        if (progressData.audioStats) {
+                            populateNerdStats(progressData.audioStats);
                             clearInterval(statsIntervalId);
                             statsIntervalId = null;
                         }
-                    } catch (e) {
-                        console.debug("background polling error", e);
+                    } catch (backgroundError) {
+                        console.debug('background polling error', backgroundError);
                     }
-                    statsAttempts++;
+
+                    statsAttempts += 1;
                 }, 1000);
             }
 
-            // Ensure download URL is absolute if it starts with /
             const url = data.downloadUrl.startsWith('/')
                 ? `${API_URL}${data.downloadUrl}`
                 : data.downloadUrl;
@@ -377,8 +309,8 @@ const pollProgress = async (taskId) => {
             throw new Error(data.error || 'Conversion failed');
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        attempts++;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        attempts += 1;
     }
 
     throw new Error('Conversion timed out');
@@ -387,30 +319,25 @@ const pollProgress = async (taskId) => {
 /**
  * Handle format button click
  */
-const handleFormatChange = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+const handleFormatChange = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-    const btn = e.currentTarget;
-    const format = btn.dataset.format;
-
-    if (!format) return; // Only guard against missing data
+    const button = event.currentTarget;
+    const format = button.dataset.format;
+    if (!format) return;
 
     state.format = format;
-
-    // Update UI - Always force update to ensure sync
-    elements.formatBtns.forEach(b => {
-        b.classList.toggle('active', b.dataset.format === format);
+    elements.formatBtns.forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.format === format);
     });
-
-    console.log('Format changed to:', state.format);
 };
 
 /**
  * Handle paste button click
  */
-const handlePaste = async (e) => {
-    e.preventDefault();
+const handlePaste = async (event) => {
+    event.preventDefault();
     try {
         const text = await navigator.clipboard.readText();
         elements.urlInput.value = text;
@@ -423,8 +350,8 @@ const handlePaste = async (e) => {
 /**
  * Handle form submission
  */
-const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (state.isLoading) return;
 
@@ -441,15 +368,12 @@ const handleSubmit = async (e) => {
     }
 
     const videoId = extractVideoId(url);
-
     if (!videoId) {
         showError('Could not extract video ID');
         return;
     }
 
-    // Check if batch mode is enabled
     if (window.batchDownloads && window.batchDownloads.isEnabled()) {
-        // Batch mode: fetch info and add to batch
         setLoading(true);
 
         try {
@@ -468,7 +392,6 @@ const handleSubmit = async (e) => {
             );
 
             if (added) {
-                // Clear input for next URL
                 elements.urlInput.value = '';
                 elements.urlInput.focus();
             }
@@ -480,30 +403,21 @@ const handleSubmit = async (e) => {
         return;
     }
 
-    // Single video mode: original behavior
     hideResults();
     setLoading(true);
-    state.isConverting = true;
-    karaokePanel.setLoading();
 
-    // Show progress section with fun animation immediately
     elements.progressSection.classList.remove('hidden');
     animationController.start('conversionProgress', elements.conversionAnimation);
     updateProgress(0, 'Fetching video info...');
-
-    // START THE GAME!
     showGame();
 
     try {
-        // Fetch video info
         const videoInfo = await fetchVideoInfo(videoId);
         state.videoInfo = videoInfo;
 
-        // Now show preview with data (no skeleton needed — data is ready)
         elements.thumbnail.src = videoInfo.thumbnail;
         elements.videoTitle.textContent = videoInfo.title;
 
-        // Safely format duration and author to avoid "By undefined"
         if (videoInfo.duration && videoInfo.author) {
             elements.videoDuration.textContent = `${videoInfo.duration} • ${videoInfo.author}`;
         } else if (videoInfo.duration) {
@@ -515,105 +429,49 @@ const handleSubmit = async (e) => {
         }
         elements.preview.classList.remove('hidden', 'loading');
 
-        // Check for subtitles and start karaoke
-        if (videoInfo.subtitles && videoInfo.subtitles.length > 0) {
-            fetchLyricsAndStartKaraoke(videoInfo.subtitles);
-        } else {
-            karaokePanel.setEmpty();
-        }
-
-        // Convert video
         const { url: downloadUrl } = await convertVideo(videoId, state.format, videoInfo.title);
 
-        // Stop conversion animation and hide progress
         animationController.stop(elements.conversionAnimation);
         elements.progressSection.classList.add('hidden');
-        state.isConverting = false;
-        lyricsController.finishPlayback();
         elements.downloadLink.href = downloadUrl;
 
-        // Start orchestrated download animation
         await showDownloadAnimation();
-
     } catch (error) {
         hideResults();
         showError(error.message || 'An error occurred');
     } finally {
-        state.isConverting = false;
         setLoading(false);
     }
 };
 
 /**
- * Handle karaoke lyrics fetch & start
- */
-const fetchLyricsAndStartKaraoke = async (subtitles) => {
-    const requestId = Date.now() + Math.random();
-    state.activeLyricsRequestId = requestId;
-    karaokePanel.setLoading();
-
-    try {
-        const loaded = await lyricsController.loadSubtitles(subtitles, { requestId });
-
-        if (requestId !== state.activeLyricsRequestId) {
-            return;
-        }
-
-        if (loaded && state.isConverting) {
-            lyricsController.start();
-        } else if (loaded) {
-            lyricsController.finishPlayback();
-        } else if (!loaded) {
-            karaokePanel.setEmpty();
-        }
-    } catch (e) {
-        console.warn('Silent fail for lyrics', e);
-        if (requestId !== state.activeLyricsRequestId) {
-            return;
-        }
-        karaokePanel.setEmpty();
-    }
-};
-
-/**
  * Orchestrated download section animation
- * 1. Show section & animate border filling left-to-right (2.5s)
- * 2. Pop in checkmark with draw animation
- * 3. Fade in "Ready to download!" text
- * 4. Pop in download button
  */
 const showDownloadAnimation = () => {
     return new Promise((resolve) => {
         const section = elements.downloadSection;
 
-        // Reset all classes first
         section.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
         section.classList.remove('hidden');
 
-        // Force browser to register the initial state, then trigger animation
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                // Step 1: Start border sweep animation (2.5s)
                 section.classList.add('animating');
 
-                // Step 2: After border fully fills (2.5s), complete and show icon
                 setTimeout(() => {
                     section.classList.remove('animating');
                     section.classList.add('complete', 'show-icon');
                 }, 2500);
 
-                // Step 3: After icon appears (400ms after step 2), show content
                 setTimeout(() => {
                     section.classList.add('show-content');
                 }, 2900);
 
-                // Step 4: After content (300ms after step 3), show download button
                 setTimeout(() => {
                     section.classList.add('show-button');
                     resolve();
                 }, 3200);
 
-                // Step 5: Show nerd stats toggle bar
                 if (nerdStatsTimeout) {
                     clearTimeout(nerdStatsTimeout);
                 }
@@ -676,17 +534,59 @@ const gtElements = {
     startBtn: document.getElementById('gt-start-btn')
 };
 
-// Initialize the Mini Games
 let snakeGame = null;
 let guessTrackGame = null;
 let activeMiniGame = 'snake';
+let sidecarMode = 'studio';
 const allowedGames = new Set(['snake', 'guesstrack']);
+
+const setSidecarMode = (mode) => {
+    sidecarMode = mode === 'arcade' ? 'arcade' : 'studio';
+
+    elements.karaokeTabs.forEach((tab) => {
+        const isActive = tab.dataset.panelMode === sidecarMode;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+
+    elements.studioView?.classList.toggle('hidden', sidecarMode !== 'studio');
+    elements.arcadeView?.classList.toggle('hidden', sidecarMode !== 'arcade');
+
+    if (sidecarMode === 'arcade') {
+        if (elements.karaokeStatusBadge) {
+            elements.karaokeStatusBadge.textContent = 'Arcade';
+            elements.karaokeStatusBadge.dataset.tone = 'ready';
+        }
+        if (elements.karaokeStatusTitle) {
+            elements.karaokeStatusTitle.textContent = 'Mini games are still here while your file is processing.';
+        }
+        if (elements.karaokeStatusDetail) {
+            elements.karaokeStatusDetail.textContent = 'Launch Snake or Guess the Track from this tab without leaving the converter flow.';
+        }
+        return;
+    }
+
+    if (elements.karaokeStatusBadge) {
+        elements.karaokeStatusBadge.textContent = 'Studio';
+        elements.karaokeStatusBadge.dataset.tone = 'ready';
+    }
+    if (elements.karaokeStatusTitle) {
+        elements.karaokeStatusTitle.textContent = 'Open Time Sync Studio in its own screen.';
+    }
+    if (elements.karaokeStatusDetail) {
+        elements.karaokeStatusDetail.textContent = 'The converter stays focused on downloads here. If you want point-by-point lyric syncing, open the dedicated studio page instead.';
+    }
+};
 
 const syncMiniGameControls = () => {
     document.querySelectorAll('.mini-game-btn').forEach((button) => {
         button.classList.toggle('active', button.dataset.game === activeMiniGame);
     });
-    karaokePanel.setActiveGame(activeMiniGame);
+    elements.arcadeLaunchButtons.forEach((button) => {
+        const isActive = button.dataset.gameLaunch === activeMiniGame;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
 };
 
 const showGame = () => {
@@ -711,22 +611,33 @@ const launchMiniGame = (gameId) => {
     }
 
     activeMiniGame = gameId;
+    setSidecarMode('arcade');
     syncMiniGameControls();
     showGame();
 };
 
-karaokePanel.setOnLaunchGame(launchMiniGame);
 syncMiniGameControls();
+setSidecarMode(sidecarMode);
 
-// Mini-game toggles
-document.querySelectorAll('.mini-game-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        const nextGame = e.currentTarget?.dataset?.game;
+document.querySelectorAll('.mini-game-btn').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+        const nextGame = event.currentTarget?.dataset?.game;
         launchMiniGame(nextGame);
     });
 });
 
-// Game panel minimize toggle
+elements.karaokeTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+        setSidecarMode(tab.dataset.panelMode);
+    });
+});
+
+elements.arcadeLaunchButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+        launchMiniGame(button.dataset.gameLaunch);
+    });
+});
+
 const gameMinimizeBtn = document.getElementById('game-minimize');
 if (gameMinimizeBtn) {
     gameMinimizeBtn.addEventListener('click', () => {
@@ -751,14 +662,12 @@ if (elements.nerdStatsToggle) {
     });
 }
 
-// Fix: Use explicit click handlers for format buttons, Removed mousedown preventDefault to fix click issues
-elements.formatBtns.forEach(btn => {
+elements.formatBtns.forEach((btn) => {
     btn.addEventListener('click', handleFormatChange);
 });
 
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.urlInput) {
+document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'v' && document.activeElement !== elements.urlInput) {
         elements.urlInput.focus();
     }
 });

@@ -8,6 +8,7 @@
     <meta name="description" content="Fast, minimal YouTube to MP3 and MP4 converter">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0a0a0f">
+    <meta name="sw-app-id" content="youtube-to-mp3">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
     <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -161,9 +162,12 @@
                                 </div>
                             </div>
                             <div class="hero-floating-icons" aria-hidden="true">
-                                <span class="hero-float-icon hero-float-icon-note">🎵</span>
-                                <span class="hero-float-icon hero-float-icon-star">✦</span>
-                                <span class="hero-float-icon hero-float-icon-spark">💿</span>
+                                <span class="hero-air-streak hero-air-streak-1"></span>
+                                <span class="hero-air-streak hero-air-streak-2"></span>
+                                <span class="hero-air-streak hero-air-streak-3"></span>
+                                <span class="hero-air-streak hero-air-streak-4"></span>
+                                <span class="hero-air-streak hero-air-streak-5"></span>
+                                <span class="hero-air-streak hero-air-streak-6"></span>
                             </div>
                         </div>
                     </aside>
@@ -316,28 +320,31 @@
 
                 <aside class="hero-sidecar">
                     <section class="karaoke-card" id="karaoke-card">
-                            <div class="karaoke-panel-header">
+                        <div class="karaoke-panel-header">
                             <div>
-                                <span class="karaoke-eyebrow">🎧 While you wait</span>
-                                <h2 class="karaoke-panel-title">Lyrics and mini games</h2>
+                                <span class="karaoke-eyebrow">🎚️ Standalone tool</span>
+                                <h2 class="karaoke-panel-title">Need detailed lyric timing?</h2>
                             </div>
-                            <div class="karaoke-panel-tabs" role="group" aria-label="Lounge mode">
-                                <button type="button" class="karaoke-tab active" data-panel-mode="karaoke" aria-pressed="true">Karaoke</button>
+                            <div class="karaoke-panel-tabs" role="group" aria-label="Sidecar mode">
+                                <button type="button" class="karaoke-tab active" data-panel-mode="studio" aria-pressed="true">Studio</button>
                                 <button type="button" class="karaoke-tab" data-panel-mode="arcade" aria-pressed="false">Arcade</button>
                             </div>
                         </div>
 
                         <div class="karaoke-status">
-                            <span id="karaoke-status-badge" class="karaoke-status-badge" data-tone="idle">Waiting</span>
+                            <span id="karaoke-status-badge" class="karaoke-status-badge" data-tone="ready">Studio</span>
                             <div>
-                                <p id="karaoke-status-title" class="karaoke-status-title">Paste a video to get started.</p>
-                                <p id="karaoke-status-detail" class="karaoke-status-detail">If the video has subtitles, the lyrics will show up here while your file is being prepared.</p>
+                                <p id="karaoke-status-title" class="karaoke-status-title">Open Time Sync Studio in its own screen.</p>
+                                <p id="karaoke-status-detail" class="karaoke-status-detail">The converter stays focused on downloads here. If you want point-by-point lyric syncing, open the dedicated studio page instead.</p>
                             </div>
                         </div>
 
                         <div class="karaoke-panel-body">
-                            <div id="karaoke-view" class="karaoke-view">
-                                <div id="karaoke-lines" class="karaoke-lines"></div>
+                            <div id="studio-view" class="karaoke-view">
+                                <div class="studio-teaser-card">
+                                    <p class="studio-teaser-copy">Use the standalone screen to load captions from a YouTube video, paste your own lyrics, review only flagged points, and export a timing JSON pass.</p>
+                                    <a href="/time-sync-studio.html" class="studio-teaser-link">Open Time Sync Studio</a>
+                                </div>
                             </div>
 
                             <div id="arcade-view" class="karaoke-view hidden">
@@ -552,6 +559,7 @@
         </div>
     </div>
 
+    <script src="js/hero-runner.js" defer></script>
     <script src="js/snake-game.js" defer></script>
     <script src="js/guess-track.js" defer></script>
     <script src="js/visualizer.js" defer></script>
@@ -560,12 +568,16 @@
     <script src="app.js" type="module" defer></script>
     <script>
         // Progressive Web App Support - Register Service Worker
-        // On localhost, require an explicit `?pwa=1` opt-in so this app does not
-        // interfere with unrelated projects that happen to use the same origin.
         if ('serviceWorker' in navigator) {
+            const allowedLocalOrigins = new Set([
+                'http://localhost:3000',
+                'http://127.0.0.1:3000',
+                'http://[::1]:3000',
+            ]);
             const isLocalhost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
-            const enableLocalPwa = new URLSearchParams(window.location.search).get('pwa') === '1';
-            const shouldRegisterServiceWorker = !isLocalhost || enableLocalPwa;
+            const shouldRegisterServiceWorker = isLocalhost
+                ? allowedLocalOrigins.has(window.location.origin)
+                : true;
             const serviceWorkerScriptUrl = new URL('/service-worker.js', window.location.origin).href;
 
             if (shouldRegisterServiceWorker) {

@@ -132,6 +132,10 @@ body {
     transition: background var(--transition-smooth), color var(--transition-smooth);
 }
 
+[hidden] {
+    display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
     body {
         transition: none !important;
