@@ -80,3 +80,18 @@ export const downloadLimiter = rateLimit({
     legacyHeaders: false,
     skip: skipOnLocalhost
 });
+
+/**
+ * Assistant rate limiter
+ */
+export const assistantLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 15,
+    message: {
+        error: 'Assistant request limit reached, please try again shortly.',
+        retryAfter: '5 minutes'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: skipOnLocalhost
+});

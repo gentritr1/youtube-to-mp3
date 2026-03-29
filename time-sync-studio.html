@@ -37,6 +37,19 @@
 
 <body>
     <main class="container studio-page">
+        <noscript>
+            <section class="karaoke-card" role="status" aria-live="polite">
+                <div class="karaoke-status">
+                    <span class="karaoke-status-badge" data-tone="muted">JavaScript required</span>
+                    <div>
+                        <p class="karaoke-status-title">Time Sync Studio needs JavaScript to run.</p>
+                        <p class="karaoke-status-detail">Enable JavaScript to load lyric points, review timing, and export the sync pass. You can still return to the main converter now.</p>
+                    </div>
+                </div>
+                <p><a href="/" class="studio-back-link">Back to converter</a></p>
+            </section>
+        </noscript>
+
         <header class="studio-topbar">
             <a href="/" class="studio-back-link">← Back to converter</a>
             <div id="theme-switcher" class="theme-switcher" aria-label="Theme switcher"></div>

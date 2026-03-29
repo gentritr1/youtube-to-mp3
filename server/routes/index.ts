@@ -14,7 +14,7 @@ import batchConvertRoute from './batchConvert.js';
 import batchProgressRoute from './batchProgress.js';
 import lyricsRoute from './lyrics.js';
 import assistantRoute from './assistant.js';
-import { conversionLimiter, infoLimiter, downloadLimiter } from '../middleware/rateLimiter.js';
+import { conversionLimiter, infoLimiter, downloadLimiter, assistantLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
@@ -27,7 +27,7 @@ router.use('/download', downloadLimiter, downloadRoute);
 router.use('/popular', infoLimiter, popularRoute);
 router.use('/preview', conversionLimiter, previewRoute);
 router.use('/lyrics', infoLimiter, lyricsRoute);
-router.use('/assistant', infoLimiter, assistantRoute);
+router.use('/assistant', assistantLimiter, assistantRoute);
 
 // Batch downloads - uses conversion limiter since it creates tasks
 router.use('/batch-convert', conversionLimiter, batchConvertRoute);
@@ -37,4 +37,3 @@ router.use('/batch-progress', batchProgressRoute);
 router.use(progressRoute);
 
 export default router;
-

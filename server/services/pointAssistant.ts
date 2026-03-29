@@ -104,6 +104,7 @@ interface AssistantResponse {
 }
 
 const buildResponse = (
+    sessionId: string,
     snapshot: UiSnapshot,
     assistantText: string,
     tone: Tone,
@@ -122,6 +123,7 @@ const buildResponse = (
         {
             event: 'assistant_next_action_shown',
             properties: {
+                sessionId,
                 stage: snapshot.stage,
                 type: nextAction.type,
                 pointId: nextAction.targetPointId
@@ -195,7 +197,8 @@ const getNudgeReason = (point: PointWindowEntry | null): string => {
 
 const getNudgeDirection = (deltaMs: number): 'earlier' | 'later' => (deltaMs < 0 ? 'earlier' : 'later');
 
-const selectPointAction = (snapshot: UiSnapshot, point: PointWindowEntry): AssistantResponse => buildResponse(
+const selectPointAction = (sessionId: string, snapshot: UiSnapshot, point: PointWindowEntry): AssistantResponse => buildResponse(
+    sessionId,
     snapshot,
     `${formatPointLabel(snapshot, point)} is the next point to inspect. Select it so the rail and lyric preview stay aligned.`,
     'calm',
@@ -204,18 +207,19 @@ const selectPointAction = (snapshot: UiSnapshot, point: PointWindowEntry): Assis
         label: `Select Point ${point.index + 1}`,
         why: 'Staying locked to one point prevents accidental multi-point edits.',
         requiresConfirmation: false,
-        targetPointId: null,
+        targetPointId: point.id,
         payload: { pointId: point.id },
         confirmUI: null
     }
 );
 
-export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = ''): AssistantResponse => {
+export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '', sessionId = 'anonymous'): AssistantResponse => {
     const normalizedText = userText.trim().toLowerCase();
 
     if (snapshot.errors.length > 0) {
         const error = snapshot.errors[0];
         return buildResponse(
+            sessionId,
             snapshot,
             `${error.message} Open the help panel for the smallest fix. Your point data stays intact.`,
             'calm',
@@ -233,6 +237,7 @@ export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '')
 
     if (normalizedText.includes('messy') && snapshot.stage !== 'setup' && snapshot.pointFlow.counts.needsReview > 1) {
         return buildResponse(
+            sessionId,
             snapshot,
             'A single cleanup pass on the flagged points will remove the roughest timing estimates without changing confirmed lines.',
             'neutral',
@@ -255,6 +260,7 @@ export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '')
     switch (snapshot.stage) {
     case 'setup':
         return buildResponse(
+            sessionId,
             snapshot,
             'Open the lyrics panel first so the point rail has source lines to work from.',
             'neutral',
@@ -271,6 +277,7 @@ export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '')
 
     case 'lyrics':
         return buildResponse(
+            sessionId,
             snapshot,
             `The lyrics are parsed into ${snapshot.pointFlow.totalPoints} points. Run Auto-sync next so the line starts prefill before review.`,
             'calm',
@@ -296,6 +303,7 @@ export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '')
 
     case 'autosync':
         return buildResponse(
+            sessionId,
             snapshot,
             'Auto-sync is running. Keep this panel open while the point rail fills in.',
             'neutral',
@@ -315,6 +323,7 @@ export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '')
         const reviewPoint = findReviewPoint(snapshot);
         if (!reviewPoint) {
             return buildResponse(
+                sessionId,
                 snapshot,
                 'All visible points look stable. Export the timing JSON when you are ready.',
                 'calm',
@@ -335,13 +344,14 @@ export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '')
         }
 
         if (snapshot.pointFlow.currentPointId !== reviewPoint.id) {
-            return selectPointAction(snapshot, reviewPoint);
+            return selectPointAction(sessionId, snapshot, reviewPoint);
         }
 
         const deltaMs = getNudgeDelta(reviewPoint);
         const direction = getNudgeDirection(deltaMs);
 
         return buildResponse(
+            sessionId,
             snapshot,
             `${formatPointLabel(snapshot, reviewPoint)} looks slightly ${direction === 'earlier' ? 'late' : 'early'}. Make one small nudge ${direction}, then replay your loop once. Undo is available if it feels worse.`,
             'calm',
@@ -369,6 +379,7 @@ export const buildPointAssistantResponse = (snapshot: UiSnapshot, userText = '')
     case 'export':
     default:
         return buildResponse(
+            sessionId,
             snapshot,
             'The point pass is ready. Export the timing JSON when you want a clean handoff.',
             'neutral',

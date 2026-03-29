@@ -699,7 +699,21 @@
     }
 
     .sync-count-grid {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        border-radius: 1.25rem;
+    }
+
+    .sync-count-card {
+        justify-content: space-between;
+    }
+
+    .sync-count-card:not(:last-child)::after {
+        right: 12%;
+        left: 12%;
+        top: auto;
+        bottom: -0.2rem;
+        width: auto;
+        height: 1px;
     }
 
     .point-rail-window {

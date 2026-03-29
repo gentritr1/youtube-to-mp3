@@ -93,10 +93,14 @@
       this.stateTime    = 0;   // time spent in current state
       this.lastFrame    = 0;
       this.rafId        = null;
+      this._loopActive  = false;
+      this._reducedMotionInterval = null;
 
       // Visibility
       this.isVisible    = true;
       this.observer     = null;
+      this._resizeHandler = null;
+      this._motionChangeHandler = null;
       this.reducedMotion = false;
     }
 
@@ -115,37 +119,39 @@
       // Check reduced-motion preference
       const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
       this.reducedMotion = mq.matches;
-      mq.addEventListener('change', (e) => {
+      this._motionChangeHandler = (e) => {
         this.reducedMotion = e.matches;
-        if (this.reducedMotion) this._applyReducedMotion();
-      });
-
-      if (this.reducedMotion) {
-        this._applyReducedMotion();
-        return;
-      }
+        this._syncMotionMode();
+      };
+      mq.addEventListener('change', this._motionChangeHandler);
 
       this._measureTrack();
-      window.addEventListener('resize', () => this._measureTrack());
+      this._resizeHandler = () => this._measureTrack();
+      window.addEventListener('resize', this._resizeHandler);
 
       // Pause off-screen
       this.observer = new IntersectionObserver(
         ([entry]) => {
           this.isVisible = entry.isIntersecting;
-          if (this.isVisible && !this.rafId) this._startLoop();
+          if (!this.reducedMotion && this.isVisible && !this._loopActive) this._startRAFLoop();
         },
         { threshold: 0.05 }
       );
       this.observer.observe(this.runner);
 
       this._resetCycle();
-      this._startLoop();
+      this._syncMotionMode();
     }
 
     destroy() {
-      if (this.rafId) cancelAnimationFrame(this.rafId);
-      this.rafId = null;
+      this._stopRAFLoop();
+      this._stopSwayInterval();
       if (this.observer) this.observer.disconnect();
+      if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
+      if (this._motionChangeHandler) {
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        mq.removeEventListener('change', this._motionChangeHandler);
+      }
     }
 
     /* ── internal ───────────────────────────────────────── */
@@ -156,11 +162,15 @@
       this.trackWidth = this.runway.offsetWidth - 16;
     }
 
-    _startLoop() {
+    _startRAFLoop() {
+      if (this._loopActive) return;
+      this._loopActive = true;
       this.lastFrame = performance.now();
       const loop = (now) => {
         const dt = Math.min((now - this.lastFrame) / 1000, 0.06); // cap spike
         this.lastFrame = now;
+
+        if (!this._loopActive) return;
 
         if (this.isVisible) {
           this._tick(dt);
@@ -170,6 +180,53 @@
         this.rafId = requestAnimationFrame(loop);
       };
       this.rafId = requestAnimationFrame(loop);
+    }
+
+    _stopRAFLoop() {
+      this._loopActive = false;
+      if (this.rafId) cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+
+    _startSwayInterval() {
+      if (this._reducedMotionInterval || !this.runner) return;
+
+      let forward = true;
+      const sway = () => {
+        if (!this.reducedMotion || !this.runner) {
+          return;
+        }
+
+        const target = forward ? this.trackWidth * 0.4 : 0;
+        this.runner.style.transform = `translateX(${target}px)`;
+        forward = !forward;
+      };
+
+      sway();
+      this._reducedMotionInterval = setInterval(sway, 4200);
+    }
+
+    _stopSwayInterval() {
+      if (this._reducedMotionInterval) clearInterval(this._reducedMotionInterval);
+      this._reducedMotionInterval = null;
+    }
+
+    _syncMotionMode() {
+      if (!this.runner) return;
+
+      if (this.reducedMotion) {
+        this._stopRAFLoop();
+        this._applyReducedMotion();
+        this._startSwayInterval();
+        return;
+      }
+
+      this._stopSwayInterval();
+      this.runner.style.transition = '';
+      this.runner.style.opacity = '';
+      this._resetCycle();
+      this._render();
+      if (this.isVisible) this._startRAFLoop();
     }
 
     _resetCycle() {
@@ -345,20 +402,8 @@
 
     _applyReducedMotion() {
       if (!this.runner) return;
-      // Simple gentle side-to-side transition, no rapid motion
       this.runner.style.transition = 'transform 4s ease-in-out';
       this.runner.style.opacity = '0.85';
-
-      let forward = true;
-      const sway = () => {
-        if (this.reducedMotion && this.runner) {
-          const target = forward ? this.trackWidth * 0.4 : 0;
-          this.runner.style.transform = `translateX(${target}px)`;
-          forward = !forward;
-        }
-      };
-      sway();
-      this._reducedMotionInterval = setInterval(sway, 4200);
     }
   }
 

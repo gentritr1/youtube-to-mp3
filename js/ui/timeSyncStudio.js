@@ -79,6 +79,10 @@ const getTimePartsError = (minutesValue, secondsValue, millisecondsValue) => {
 };
 
 let youTubeApiPromise = null;
+const resetYouTubeApiPromise = (error, reject) => {
+    youTubeApiPromise = null;
+    reject(error);
+};
 
 const loadYouTubeApi = () => {
     if (typeof window === 'undefined') {
@@ -102,7 +106,7 @@ const loadYouTubeApi = () => {
             if (window.YT?.Player) {
                 resolve(window.YT);
             } else {
-                reject(new Error('YouTube API loaded without player support.'));
+                resetYouTubeApiPromise(new Error('YouTube API loaded without player support.'), reject);
             }
         };
 
@@ -111,7 +115,7 @@ const loadYouTubeApi = () => {
             script.src = 'https://www.youtube.com/iframe_api';
             script.async = true;
             script.dataset.youtubeIframeApi = 'true';
-            script.onerror = () => reject(new Error('Could not load YouTube player API.'));
+            script.onerror = () => resetYouTubeApiPromise(new Error('Could not load YouTube player API.'), reject);
             document.head.appendChild(script);
         }
     });
@@ -457,8 +461,13 @@ export class TimeSyncStudio {
             this.reviewLoopButton.addEventListener('click', this._boundReviewLoop);
         }
 
-        this._boundDocumentPointer = () => {
-            this.lastInputMode = 'touch';
+        this._boundDocumentPointer = (event) => {
+            const pointerType = event?.pointerType;
+            this.lastInputMode = pointerType === 'touch'
+                ? 'touch'
+                : pointerType === 'pen'
+                    ? 'mouse'
+                    : 'mouse';
         };
         document.addEventListener('pointerdown', this._boundDocumentPointer, { passive: true });
 
@@ -555,6 +564,24 @@ export class TimeSyncStudio {
             if (!view) return;
             view.classList.toggle('hidden', viewMode !== this.mode);
         });
+    }
+
+    openPanel(panel) {
+        const messages = {
+            setup_help: 'Add a captioned video or paste lyric lines to create your first sync points.',
+            sync_help: 'Select the next point on the rail, then nudge it or set the exact time in the editor.'
+        };
+        const message = messages[panel];
+
+        if (this.assistantHint && message) {
+            this.assistantHint.textContent = message;
+            this.assistantHint.hidden = false;
+        }
+
+        const focusTarget = panel === 'setup_help'
+            ? this.assistantAction
+            : this.pointRail;
+        focusTarget?.focus?.();
     }
 
     setStatus(badge, title, detail, tone = 'idle') {
@@ -964,7 +991,11 @@ export class TimeSyncStudio {
         switch (action.type) {
         case 'OPEN_PANEL':
             this.setMode('studio');
-            this.pointRail?.focus();
+            if (action.payload?.panel) {
+                this.openPanel(action.payload.panel);
+            } else {
+                this.pointRail?.focus();
+            }
             break;
         case 'SELECT_POINT':
             this.selectPoint(action.payload?.pointId || action.targetPointId, { focus: true });

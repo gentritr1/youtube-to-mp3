@@ -38,6 +38,8 @@
     --destructive: hsl(0 63% 31%);
     --destructive-foreground: hsl(0 0% 98%);
     --success: hsl(160 84% 39%);
+    --warning: hsl(38 72% 42%);
+    --error: hsl(0 63% 31%);
     --border: hsl(225 10% 14%);
     --input: hsl(225 10% 14%);
     --ring: hsl(220 14% 30%);

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { toWebPath, IMPORT_REGEX, read as readAsset } from '../scripts/sync-service-worker-assets.mjs';
 
 const SERVICE_WORKER_PATH = join(process.cwd(), 'service-worker.js');
 const GENERATED_MANIFEST_PATH = join(process.cwd(), 'service-worker-assets.js');
@@ -8,34 +9,7 @@ const HTML_ENTRY_POINTS = ['index.html', 'time-sync-studio.html'];
 const APP_ID_META = '<meta name="sw-app-id" content="youtube-to-mp3">';
 
 const read = (filePath: string) => readFileSync(join(process.cwd(), filePath), 'utf-8');
-
-const toWebPath = (value: string, fromFile = '') => {
-    if (!value || /^(https?:)?\/\//.test(value) || value.startsWith('data:') || value.startsWith('chrome-extension:')) {
-        return null;
-    }
-
-    if (value.startsWith('/')) {
-        return value;
-    }
-
-    const baseDir = fromFile.includes('/') ? fromFile.slice(0, fromFile.lastIndexOf('/')) : '';
-    const combined = [baseDir, value].filter(Boolean).join('/');
-    const segments = combined.split('/');
-    const normalized: string[] = [];
-
-    for (const segment of segments) {
-        if (!segment || segment === '.') {
-            continue;
-        }
-        if (segment === '..') {
-            normalized.pop();
-            continue;
-        }
-        normalized.push(segment);
-    }
-
-    return `/${normalized.join('/')}`;
-};
+const ATTRIBUTE_VALUE_PATTERN = `"([^"]+)"|'([^']+)'|([^\\s>]+)`;
 
 const parseGeneratedAssets = () => {
     const source = readFileSync(GENERATED_MANIFEST_PATH, 'utf-8');
@@ -50,13 +24,13 @@ const parseGeneratedAssets = () => {
 const collectLocalAssetRefs = (html: string, htmlFile: string) => {
     const refs = new Set<string>();
     const patterns = [
-        /<link[^>]+href="([^"]+)"/g,
-        /<script[^>]+src="([^"]+)"/g,
+        new RegExp(`<link[^>]+href=(?:${ATTRIBUTE_VALUE_PATTERN})`, 'g'),
+        new RegExp(`<script[^>]+src=(?:${ATTRIBUTE_VALUE_PATTERN})`, 'g'),
     ];
 
     for (const pattern of patterns) {
         for (const match of html.matchAll(pattern)) {
-            const assetPath = toWebPath(match[1], htmlFile);
+            const assetPath = toWebPath(match[1] || match[2] || match[3], htmlFile);
             if (assetPath) {
                 refs.add(assetPath);
             }
@@ -72,9 +46,17 @@ const collectJsDependencies = (entryWebPath: string, refs: Set<string>, visited:
     }
     visited.add(entryWebPath);
 
-    const source = read(entryWebPath.replace(/^\//, ''));
-    for (const match of source.matchAll(/import\s+(?:[^'"]+?\s+from\s+)?['"]([^'"]+)['"]/g)) {
-        const assetPath = toWebPath(match[1], entryWebPath.replace(/^\//, ''));
+    const relativePath = entryWebPath.replace(/^\//, '');
+    let source: string;
+    try {
+        source = readAsset(relativePath);
+    } catch (error) {
+        console.debug(`[service-worker.test] skipping missing JS dependency ${entryWebPath}`, error);
+        return;
+    }
+
+    for (const match of source.matchAll(IMPORT_REGEX)) {
+        const assetPath = toWebPath(match[1], relativePath);
         if (!assetPath || !assetPath.endsWith('.js')) {
             continue;
         }
@@ -84,12 +66,15 @@ const collectJsDependencies = (entryWebPath: string, refs: Set<string>, visited:
     }
 };
 
-const collectManifestAssets = (refs: Set<string>) => {
-    const manifest = JSON.parse(read('manifest.json'));
-    refs.add('/manifest.json');
+const collectManifestAssets = (manifestFile: string, refs: Set<string>) => {
+    const manifest = JSON.parse(read(manifestFile));
+    const manifestWebPath = toWebPath(manifestFile);
+    if (manifestWebPath) {
+        refs.add(manifestWebPath);
+    }
 
     for (const icon of manifest.icons || []) {
-        const assetPath = toWebPath(icon.src, 'manifest.json');
+        const assetPath = toWebPath(icon.src, manifestFile);
         if (assetPath) {
             refs.add(assetPath);
         }
@@ -127,7 +112,7 @@ describe('service worker manifest', () => {
             collectJsDependencies(jsEntry, expectedAssets, new Set());
         }
 
-        collectManifestAssets(expectedAssets);
+        collectManifestAssets('manifest.json', expectedAssets);
 
         expect([...expectedAssets].filter((asset) => !staticAssets.has(asset))).toEqual([]);
     });

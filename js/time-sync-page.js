@@ -15,50 +15,59 @@ const demoLyrics = [
     'Leave the last word hanging in the dark'
 ];
 
+const getRequiredElement = (id) => {
+    const element = document.getElementById(id);
+    if (!element) {
+        throw new Error(`Missing required element: #${id}`);
+    }
+
+    return element;
+};
+
 const elements = {
-    urlInput: document.getElementById('studio-url-input'),
-    loadVideoBtn: document.getElementById('studio-load-video-btn'),
-    lyricsInput: document.getElementById('studio-lyrics-input'),
-    estimateGapInput: document.getElementById('estimate-gap-input'),
-    loadLyricsBtn: document.getElementById('studio-load-lyrics-btn'),
-    demoBtn: document.getElementById('studio-demo-btn'),
-    sourceNote: document.getElementById('studio-source-note'),
-    projectTitle: document.getElementById('studio-project-title'),
-    themeSwitcher: document.getElementById('theme-switcher'),
-    karaokeCard: document.getElementById('karaoke-card'),
-    studioView: document.getElementById('studio-view'),
-    karaokeStatusBadge: document.getElementById('karaoke-status-badge'),
-    karaokeStatusTitle: document.getElementById('karaoke-status-title'),
-    karaokeStatusDetail: document.getElementById('karaoke-status-detail'),
-    syncStageBadge: document.getElementById('sync-stage-badge'),
-    syncStageLabel: document.getElementById('sync-stage-label'),
-    syncProgressLabel: document.getElementById('sync-progress-label'),
-    syncProgressFill: document.getElementById('sync-progress-fill'),
-    syncCountPending: document.getElementById('sync-count-pending'),
-    syncCountSynced: document.getElementById('sync-count-synced'),
-    syncCountReview: document.getElementById('sync-count-review'),
-    assistantText: document.getElementById('assistant-text'),
-    assistantActionBtn: document.getElementById('assistant-action-btn'),
-    assistantHint: document.getElementById('assistant-hint'),
-    pointRail: document.getElementById('point-rail'),
-    pointRailWindow: document.getElementById('point-rail-window'),
-    pointTooltip: document.getElementById('point-tooltip'),
-    pointList: document.getElementById('point-list'),
-    reviewPlayerSummary: document.getElementById('review-player-summary'),
-    reviewPlayerFrame: document.getElementById('review-player-frame'),
-    reviewPlayToggleBtn: document.getElementById('review-play-toggle-btn'),
-    reviewJumpBtn: document.getElementById('review-jump-btn'),
-    reviewLoopBtn: document.getElementById('review-loop-btn'),
-    reviewTimeReadout: document.getElementById('review-time-readout'),
-    reviewLoopRange: document.getElementById('review-loop-range'),
-    selectedPointSummary: document.getElementById('selected-point-summary'),
-    selectedPointFeedback: document.getElementById('selected-point-feedback'),
-    selectedPointMinuteInput: document.getElementById('selected-point-minute-input'),
-    selectedPointSecondInput: document.getElementById('selected-point-second-input'),
-    selectedPointMillisecondInput: document.getElementById('selected-point-millisecond-input'),
-    applyPointTimeBtn: document.getElementById('apply-point-time-btn'),
-    nudgeBackBtn: document.getElementById('nudge-back-btn'),
-    nudgeForwardBtn: document.getElementById('nudge-forward-btn')
+    urlInput: getRequiredElement('studio-url-input'),
+    loadVideoBtn: getRequiredElement('studio-load-video-btn'),
+    lyricsInput: getRequiredElement('studio-lyrics-input'),
+    estimateGapInput: getRequiredElement('estimate-gap-input'),
+    loadLyricsBtn: getRequiredElement('studio-load-lyrics-btn'),
+    demoBtn: getRequiredElement('studio-demo-btn'),
+    sourceNote: getRequiredElement('studio-source-note'),
+    projectTitle: getRequiredElement('studio-project-title'),
+    themeSwitcher: getRequiredElement('theme-switcher'),
+    karaokeCard: getRequiredElement('karaoke-card'),
+    studioView: getRequiredElement('studio-view'),
+    karaokeStatusBadge: getRequiredElement('karaoke-status-badge'),
+    karaokeStatusTitle: getRequiredElement('karaoke-status-title'),
+    karaokeStatusDetail: getRequiredElement('karaoke-status-detail'),
+    syncStageBadge: getRequiredElement('sync-stage-badge'),
+    syncStageLabel: getRequiredElement('sync-stage-label'),
+    syncProgressLabel: getRequiredElement('sync-progress-label'),
+    syncProgressFill: getRequiredElement('sync-progress-fill'),
+    syncCountPending: getRequiredElement('sync-count-pending'),
+    syncCountSynced: getRequiredElement('sync-count-synced'),
+    syncCountReview: getRequiredElement('sync-count-review'),
+    assistantText: getRequiredElement('assistant-text'),
+    assistantActionBtn: getRequiredElement('assistant-action-btn'),
+    assistantHint: getRequiredElement('assistant-hint'),
+    pointRail: getRequiredElement('point-rail'),
+    pointRailWindow: getRequiredElement('point-rail-window'),
+    pointTooltip: getRequiredElement('point-tooltip'),
+    pointList: getRequiredElement('point-list'),
+    reviewPlayerSummary: getRequiredElement('review-player-summary'),
+    reviewPlayerFrame: getRequiredElement('review-player-frame'),
+    reviewPlayToggleBtn: getRequiredElement('review-play-toggle-btn'),
+    reviewJumpBtn: getRequiredElement('review-jump-btn'),
+    reviewLoopBtn: getRequiredElement('review-loop-btn'),
+    reviewTimeReadout: getRequiredElement('review-time-readout'),
+    reviewLoopRange: getRequiredElement('review-loop-range'),
+    selectedPointSummary: getRequiredElement('selected-point-summary'),
+    selectedPointFeedback: getRequiredElement('selected-point-feedback'),
+    selectedPointMinuteInput: getRequiredElement('selected-point-minute-input'),
+    selectedPointSecondInput: getRequiredElement('selected-point-second-input'),
+    selectedPointMillisecondInput: getRequiredElement('selected-point-millisecond-input'),
+    applyPointTimeBtn: getRequiredElement('apply-point-time-btn'),
+    nudgeBackBtn: getRequiredElement('nudge-back-btn'),
+    nudgeForwardBtn: getRequiredElement('nudge-forward-btn')
 };
 
 const pageState = {
@@ -160,7 +169,14 @@ const fetchVideoInfo = async (videoId) => {
     const response = await fetch(`/api/info?videoId=${videoId}`);
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
+        let error = {};
+        try {
+            error = await response.json();
+        } catch (parseError) {
+            console.error('fetchVideoInfo failed to parse error response', parseError);
+            throw new Error(`Could not load video info (error body parse failed: ${parseError.message})`);
+        }
+
         throw new Error(error.message || 'Could not load video info');
     }
 

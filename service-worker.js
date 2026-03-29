@@ -9,6 +9,31 @@ const APP_ID_META_MARKER = '<meta name="sw-app-id" content="youtube-to-mp3">';
 const STATIC_ASSETS = Array.isArray(self.__STATIC_ASSETS)
     ? self.__STATIC_ASSETS
     : ['/', '/index.html', '/manifest.json'];
+const OFFLINE_HTML = `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Offline</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0a0a0f; color: #f4f7fb; }
+        main { width: min(32rem, calc(100vw - 2rem)); padding: 1.5rem; border-radius: 1rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+        h1 { margin: 0 0 0.75rem; font-size: 1.5rem; }
+        p { margin: 0 0 1rem; line-height: 1.6; color: rgba(244,247,251,0.82); }
+        button { border: 0; border-radius: 999px; padding: 0.8rem 1.1rem; font: inherit; font-weight: 700; cursor: pointer; background: #38bdf8; color: #041018; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>You are offline</h1>
+        <p>This page is not available from cache yet. Check your connection and try loading it again.</p>
+        <button type="button" id="retry-btn">Retry</button>
+    </main>
+    <script>
+        document.getElementById('retry-btn')?.addEventListener('click', () => window.location.reload());
+    </script>
+</body>
+</html>`;
 
 self.addEventListener('install', (event) => {
     // Precache static assets
@@ -102,7 +127,7 @@ self.addEventListener('fetch', (event) => {
                         return cachedResponse;
                     }
 
-                    return new Response('Offline', {
+                    return new Response(OFFLINE_HTML, {
                         status: 503,
                         statusText: 'Service Unavailable',
                         headers: { 'Content-Type': 'text/html' }

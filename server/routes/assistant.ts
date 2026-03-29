@@ -19,12 +19,15 @@ router.post('/', (req, res) => {
     }
 
     try {
-        const response = buildPointAssistantResponse(uiSnapshot, userText);
+        const response = buildPointAssistantResponse(uiSnapshot, userText, sessionId);
         return res.json(response);
     } catch (error: any) {
+        console.error('[assistant] Failed to build assistant response', error);
         return res.status(500).json({
             message: 'Failed to build assistant response',
-            error: error?.message || 'Unknown error'
+            error: process.env.NODE_ENV === 'production'
+                ? 'Internal server error'
+                : (error?.message || 'Unknown error')
         });
     }
 });

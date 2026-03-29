@@ -154,7 +154,7 @@ export class LyricsController {
                     });
                     fallbackIndex += 1;
                 }
-                i = cursor;
+                i = cursor - 1;
                 continue;
             }
 

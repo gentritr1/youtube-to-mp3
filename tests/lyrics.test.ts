@@ -7,6 +7,19 @@ const originalFetch = global.fetch;
 const invokeLyricsRoute = async (query: Record<string, string> = {}) => {
     return await new Promise<{ status: number; body: any; text: string }>((resolve, reject) => {
         const result = { status: 200, body: null, text: '' };
+        let settled = false;
+        const timeoutId = setTimeout(() => {
+            if (!settled) {
+                settled = true;
+                reject(new Error('route timeout'));
+            }
+        }, 2000);
+        const finish = (callback: () => void) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeoutId);
+            callback();
+        };
         const req: any = {
             method: 'GET',
             url: '/',
@@ -23,19 +36,40 @@ const invokeLyricsRoute = async (query: Record<string, string> = {}) => {
             type() {
                 return this;
             },
+            writeHead(code: number) {
+                result.status = code;
+                return this;
+            },
+            write(payload: string) {
+                result.text += payload;
+                return true;
+            },
             json(payload: any) {
                 result.body = payload;
-                resolve(result);
+                finish(() => resolve(result));
                 return this;
             },
             send(payload: string) {
                 result.text = payload;
-                resolve(result);
+                finish(() => resolve(result));
+                return this;
+            },
+            end(payload = '') {
+                if (payload) {
+                    result.text += payload;
+                }
+                finish(() => resolve(result));
                 return this;
             }
         };
 
-        lyricsRoute.handle(req, res, reject);
+        try {
+            lyricsRoute.handle(req, res, (error: unknown) => {
+                finish(() => reject(error));
+            });
+        } catch (error) {
+            finish(() => reject(error));
+        }
     });
 };
 
