@@ -1,45 +1,14 @@
-const CACHE_NAME = 'yt-converter-v8'; // AGENT: BUMP THIS VERSION on any UI/Logic change!
+try {
+    importScripts('/service-worker-assets.js');
+} catch (error) {
+    console.error('[Service Worker] Failed to load generated asset manifest.', error);
+}
 
-// Assets to cache for offline support
-const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/app.js',
-    '/js/features.js',
-    '/js/batch.js',
-    '/js/snake-game.js',
-    '/js/visualizer.js',
-    '/js/lyrics.js',
-    '/js/ui/themeRegistry.js',
-    '/js/ui/themeController.js',
-    '/js/ui/animationRegistry.js',
-    '/js/ui/animationController.js',
-    '/js/ui/karaokePanel.js',
-    '/css/base.css',
-    '/css/animations.css',
-    '/css/layout/main.css',
-    '/css/layout/hero.css',
-    '/css/components/form.css',
-    '/css/components/header.css',
-    '/css/components/theme-switcher.css',
-    '/css/components/karaoke-panel.css',
-    '/css/components/results.css',
-    '/css/components/conversion-animations.css',
-    '/css/components/features.css',
-    '/css/components/batch.css',
-    '/css/components/nerd-stats.css',
-    '/css/components/lyrics.css',
-    '/css/components/game.css',
-    '/css/components/guess-track.css',
-    '/js/guess-track.js',
-    '/css/utils/helpers.css',
-    '/css/themes/space.css',
-    '/css/themes/green.css',
-    '/css/themes/frutiger-aero.css',
-    '/manifest.json',
-    '/assets/icons/icon-192x192.png',
-    '/assets/icons/icon-512x512.png',
-];
+const CACHE_NAME = `yt-converter-${self.__STATIC_ASSET_VERSION || 'dev'}`;
+const APP_ID_META_MARKER = '<meta name="sw-app-id" content="youtube-to-mp3">';
+const STATIC_ASSETS = Array.isArray(self.__STATIC_ASSETS)
+    ? self.__STATIC_ASSETS
+    : ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
     // Precache static assets
@@ -65,9 +34,40 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+async function clearAppCaches() {
+    const cacheNames = await caches.keys();
+    await Promise.all(
+        cacheNames
+            .filter((name) => name.startsWith('yt-converter-'))
+            .map((cacheName) => caches.delete(cacheName))
+    );
+}
+
+async function unregisterIfForeignDocument(response) {
+    if (!response || !response.ok) {
+        return false;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/html')) {
+        return false;
+    }
+
+    const html = await response.clone().text();
+    if (html.includes(APP_ID_META_MARKER)) {
+        return false;
+    }
+
+    console.log('[Service Worker] Foreign HTML detected, unregistering.');
+    await clearAppCaches();
+    await self.registration.unregister();
+    return true;
+}
+
 self.addEventListener('fetch', (event) => {
     // Ignore API calls and non-GET requests
-    const pathname = new URL(event.request.url).pathname;
+    const requestUrl = new URL(event.request.url);
+    const pathname = requestUrl.pathname;
     if (event.request.method !== 'GET' || pathname === '/api' || pathname.startsWith('/api/')) {
         return;
     }
@@ -79,27 +79,36 @@ self.addEventListener('fetch', (event) => {
     const acceptHeader = event.request.headers.get('accept');
     if (event.request.mode === 'navigate' || (acceptHeader && acceptHeader.includes('text/html'))) {
         event.respondWith(
-            fetch(event.request)
-                .then((networkResponse) => {
-                    return caches.open(CACHE_NAME).then((cache) => {
-                        if (networkResponse && networkResponse.ok) {
-                            cache.put(event.request, networkResponse.clone());
+            (async () => {
+                try {
+                    const networkResponse = await fetch(event.request);
+
+                    if (requestUrl.origin === self.location.origin) {
+                        const foreignDocument = await unregisterIfForeignDocument(networkResponse);
+                        if (foreignDocument) {
+                            return networkResponse;
                         }
-                        return networkResponse;
-                    });
-                })
-                .catch(() => {
+                    }
+
+                    const cache = await caches.open(CACHE_NAME);
+                    if (networkResponse && networkResponse.ok) {
+                        await cache.put(event.request, networkResponse.clone());
+                    }
+                    return networkResponse;
+                } catch {
                     // Fallback to cache
-                    return caches.match(event.request).then((cachedResponse) => {
-                        if (cachedResponse) return cachedResponse;
-                        // If we had an offline.html, we'd return it here
-                        return new Response('Offline', {
-                            status: 503,
-                            statusText: 'Service Unavailable',
-                            headers: { 'Content-Type': 'text/html' }
-                        });
+                    const cachedResponse = await caches.match(event.request);
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+
+                    return new Response('Offline', {
+                        status: 503,
+                        statusText: 'Service Unavailable',
+                        headers: { 'Content-Type': 'text/html' }
                     });
-                })
+                }
+            })()
         );
         return;
     }
