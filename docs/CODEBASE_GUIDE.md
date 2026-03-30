@@ -357,7 +357,7 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 - the frontend uses two module systems side by side: `app.js` and `js/ui/*` use ES module `import`/`export`, while `features.js`, `batch.js`, `snake-game.js`, and `hero-runner.js` use global `<script>` tags and `window.*` exports; every new feature must pick a style, and neither integrates cleanly with the other
 - `js/ui/timeSyncStudio.js` is 1,825 lines and carries player loading, sync workflow, review state, assistant requests, and export in a single class; new studio work inflates a file that already has multiple stable seams
 - `js/features.js` is 1,130 lines and owns DOM creation, genre fetching, audio preview lifecycle, crossfade, waveform rendering, and convert handoff; it also dispatches synthetic events on elements owned by other modules
-- task persistence has both `server/services/taskManager.ts` (in-memory + JSON) and `server/services/sqliteTaskManager.ts` (SQLite); routes import from the legacy manager while the server index imports the SQLite manager for cleanup; the two are loaded simultaneously with no declared winner
+- task persistence now routes through `server/services/taskStore.ts`, but the adapter split still needs stronger documentation and test coverage around `TASK_STORE=memory` fallback behavior if that contingency remains
 - `server/routes/preview.ts` (343 lines) owns process spawning, caching, streaming, range requests, and cleanup — responsibilities that belong in a service
 - frontend test infrastructure covers server-side TypeScript but has no DOM/browser harness for testing async UI flows, request races, or stale-response guards
 
@@ -392,19 +392,20 @@ Definition of done:
 The current state is not a documentation gap; it is code duplication with divergent responsibilities.
 
 Current situation:
-- `server/services/taskManager.ts`: in-memory Map, persists to JSON file, used by routes and services for all CRUD
-- `server/services/sqliteTaskManager.ts`: SQLite with WAL mode, prepared statements, indexed — used by server index for cleanup and shutdown
-- both are loaded at startup; all write paths go through the legacy manager; SQLite cleanup runs independently
+- `server/services/taskStore.ts`: canonical entry point for routes and services
+- `server/services/sqliteTaskAdapter.ts`: default product path backed by `sqliteTaskManager.ts`
+- `server/services/memoryTaskAdapter.ts`: contingency path for environments that cannot use SQLite
+- `TASK_STORE` selects the adapter at startup, but the fallback path still needs explicit runtime verification and tighter operational documentation
 
-Decision needed:
-- pick one canonical task store (SQLite is the obvious choice given it already exists with WAL, indexes, and cleanup)
-- put one facade in front of it that matches the current `taskManager` API shape
-- schedule removal of the legacy path once routes are migrated
+Decision applied:
+- SQLite is the canonical task store
+- all route and service code imports the facade only
+- the in-memory path is a narrow contingency, not a peer architecture
 
 Definition of done:
 - one task persistence path is canonical
 - routes and services import from that path only
-- the other implementation is removed or clearly marked deprecated with a removal date
+- contingency behavior is tested and documented clearly enough that it does not become a second de facto architecture
 
 ### Phase 3. Stand up a frontend async test harness
 

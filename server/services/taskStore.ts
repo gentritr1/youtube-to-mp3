@@ -1,87 +1,51 @@
-/**
- * Task Store Facade
- *
- * Canonical task persistence API. All route and service code imports from here.
- * Backed by SQLite (via sqliteTaskManager). Replaces the legacy in-memory
- * taskManager.ts.
- *
- * Phase 2 of the Architecture Cleanup.
- *
- * Design notes:
- *  - Function signatures match what consumers already use (legacy taskManager API)
- *    so migration is a one-line import swap per file.
- *  - findExistingTask returns string|null (taskId) to match the legacy contract,
- *    even though the SQLite layer returns a full Task.
- *  - updateTask is void to match legacy, even though SQLite returns Task|null.
- */
-
-import {
-    createTask as sqliteCreate,
-    getTask as sqliteGet,
-    findExistingTask as sqliteFindExisting,
-    updateTask as sqliteUpdate,
-    cleanupOldTasks as sqliteCleanup,
-    closeDatabase as sqliteClose,
-} from './sqliteTaskManager.js';
+import { config } from '../config.js';
 import { Task } from '../types.js';
+import { MemoryTaskAdapter, type CreateTaskParams } from './memoryTaskAdapter.js';
+import { SqliteTaskAdapter } from './sqliteTaskAdapter.js';
 
-// ── Create ──────────────────────────────────────────────────────────────────
+type TaskAdapter = {
+    createTask(params: CreateTaskParams): Task;
+    getTask(taskId: string): Task | null;
+    findExistingTask(videoId: string, format: string): Task | null;
+    updateTask(taskId: string, updates: Partial<Task>): Task | null;
+    deleteTask(taskId: string): void;
+    cleanupOldTasks(maxAgeMs?: number): number;
+    close(): void;
+};
 
-/**
- * Create a new task.
- *
- * Matches legacy signature: createTask(taskId, partialTask) => void
- * Delegates to SQLite with the caller-provided taskId.
- */
-export function createTask(taskId: string, taskData: Partial<Task>): void {
-    sqliteCreate(
-        taskData.videoId ?? '',
-        taskData.format ?? 'mp3',
-        taskId
-    );
+const storeType = config.TASK_STORE === 'memory' ? 'memory' : 'sqlite';
+
+const adapter: TaskAdapter = storeType === 'memory'
+    ? new MemoryTaskAdapter()
+    : new SqliteTaskAdapter();
+
+export { storeType };
+export type { CreateTaskParams };
+
+export function createTask(params: CreateTaskParams): Task {
+    return adapter.createTask(params);
 }
 
-// ── Read ────────────────────────────────────────────────────────────────────
-
-/**
- * Get a task by ID.
- * Returns Task | undefined (legacy used undefined, SQLite uses null).
- */
-export function getTask(taskId: string): Task | undefined {
-    return sqliteGet(taskId) ?? undefined;
+export function getTask(taskId: string): Task | null {
+    return adapter.getTask(taskId);
 }
 
-/**
- * Find an existing task for the same video+format (idempotency check).
- * Returns the taskId string or null — matches legacy taskManager contract.
- */
-export function findExistingTask(videoId: string, format: string): string | null {
-    const task = sqliteFindExisting(videoId, format);
-    return task?.taskId ?? null;
+export function findExistingTask(videoId: string, format: string): Task | null {
+    return adapter.findExistingTask(videoId, format);
 }
 
-// ── Update ──────────────────────────────────────────────────────────────────
-
-/**
- * Update an existing task.
- * Matches legacy signature: (taskId, updates) => void
- */
-export function updateTask(taskId: string, updates: Partial<Task>): void {
-    sqliteUpdate(taskId, updates);
+export function updateTask(taskId: string, updates: Partial<Task>): Task | null {
+    return adapter.updateTask(taskId, updates);
 }
 
-// ── Lifecycle ───────────────────────────────────────────────────────────────
+export function deleteTask(taskId: string): void {
+    adapter.deleteTask(taskId);
+}
 
-/**
- * Clean up old tasks from the database.
- */
 export function cleanupOldTasks(maxAgeMs?: number): number {
-    return sqliteCleanup(maxAgeMs);
+    return adapter.cleanupOldTasks(maxAgeMs);
 }
 
-/**
- * Close the database connection (for graceful shutdown).
- */
-export function closeDatabase(): void {
-    sqliteClose();
+export function close(): void {
+    adapter.close();
 }

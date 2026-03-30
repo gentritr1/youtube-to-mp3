@@ -8,7 +8,7 @@ import cors from 'cors';
 import fs from 'fs';
 import { config } from './config.js';
 import routes from './routes/index.js';
-import { cleanupOldTasks, closeDatabase } from './services/taskStore.js';
+import { cleanupOldTasks, close as closeTaskStore } from './services/taskStore.js';
 import { initializeQueue, closeQueue, getQueueStats, isEnabled as isQueueEnabled } from './services/jobQueue.js';
 import { initializeGenreCatalog, stopGenreCatalogWatcher } from './services/genreCatalog.js';
 import { cleanupPreviews } from './services/previewService.js';
@@ -164,7 +164,7 @@ const shutdown = async (signal: string) => {
     try {
         stopGenreCatalogWatcher();
         await closeQueue();
-        closeDatabase();
+        closeTaskStore();
         console.log('[Server] Cleanup complete, exiting.');
         process.exit(0);
     } catch (e) {

@@ -150,8 +150,10 @@ youtube-to-mp3/
 │   │   ├── batchProgress.ts   # ✨ GET /api/batch-progress/:batchId
 │   ├── services/
 │   │   ├── ytdlp.ts           # yt-dlp wrapper (core logic)
-│   │   ├── taskManager.ts     # Legacy in-memory tasks
-│   │   ├── sqliteTaskManager.ts  # ✨ SQLite persistence
+│   │   ├── taskStore.ts       # Canonical task persistence facade
+│   │   ├── sqliteTaskManager.ts  # SQLite persistence primitives
+│   │   ├── sqliteTaskAdapter.ts  # SQLite task-store adapter
+│   │   ├── memoryTaskAdapter.ts  # In-memory contingency adapter
 │   │   ├── jobQueue.ts        # ✨ Bull + Redis queue
 │   │   └── batchService.ts    # ✨ Batch download orchestration
 │   └── utils/
@@ -164,6 +166,7 @@ youtube-to-mp3/
 │   ├── rateLimiter.test.ts    # Rate limiter tests (6 tests)
 │   ├── jobQueue.test.ts       # Job queue tests (10 tests)
 │   ├── sqliteTaskManager.test.ts  # SQLite tests
+│   ├── taskStore.test.ts      # Task-store facade tests
 │   └── batchService.test.ts   # ✨ Batch service tests (18 tests)
 │
 ├── 📁 downloads/              # Temp file storage (gitignored)

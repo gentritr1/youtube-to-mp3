@@ -69,14 +69,14 @@ export const createBatch = (items: BatchItem[]): BatchJob => {
         const safeTitle = item.title || `Video ${index + 1}`;
 
         // Create task in task manager
-        createSingleTask(taskId, {
+        createSingleTask({
             taskId,
-            state: 'processing',
-            progress: 0,
-            status: 'Queued...',
             videoId: item.videoId,
             format: item.format,
             title: safeTitle,
+            state: 'processing',
+            progress: 0,
+            status: 'Queued...',
         });
 
         // Start conversion in background (non-blocking) with error handling
@@ -228,14 +228,14 @@ export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
     const url = `https://www.youtube.com/watch?v=${item.videoId}`;
     const safeTitle = item.title || `Video ${batch.items.length + 1}`;
 
-    createSingleTask(taskId, {
+    createSingleTask({
         taskId,
-        state: 'processing',
-        progress: 0,
-        status: 'Queued...',
         videoId: item.videoId,
         format: item.format,
         title: safeTitle,
+        state: 'processing',
+        progress: 0,
+        status: 'Queued...',
     });
 
     // Start conversion in background with error handling
