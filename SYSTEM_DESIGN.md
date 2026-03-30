@@ -133,6 +133,7 @@ youtube-to-mp3/
 │   ├── snake-game.js          # Full snake game (38KB!)
 │   ├── features.js            # Popular videos UI orchestration
 │   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
+│   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
@@ -196,6 +197,7 @@ youtube-to-mp3/
 | **Snake Game** | `snake-game.js` | Entertainment during wait |
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
 | **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
+| **Sync Studio Point UI** | `timeSyncStudio.js`, `ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
 | **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components

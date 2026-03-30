@@ -54,7 +54,7 @@ Two feature modules had grown beyond maintainable size:
 | `js/ui/timeSyncStudio.js` | 1,825 | YouTube player lifecycle, 4-step wizard state machine, point-by-point sync engine, review player, assistant integration, VTT export |
 | `js/features.js` | 1,130 | DOM template generation, genre data fetching, audio preview lifecycle, crossfade engine, waveform canvas rendering, convert handoff |
 
-Both files had multiple stable seams (player adapter, assistant client, export formatter, audio engine, waveform renderer) that were good candidates for extraction.
+Both files had multiple stable seams (player adapter, assistant client, export formatter, audio engine, waveform renderer, point-workspace rendering) that were good candidates for extraction.
 
 ### Backend task persistence
 
@@ -157,9 +157,9 @@ These patterns worked well and should be carried forward:
 
 **Problem**: `timeSyncStudio.js` and `features.js` had accumulated multiple stable responsibilities that should evolve independently.
 
-**Solution so far**: Extracted YouTubePlayerAdapter, AssistantClient, and SyncExporter from studio; extracted PreviewAudioEngine and WaveformRenderer from features. Public APIs established in Phase 1 stayed unchanged.
+**Solution so far**: Extracted YouTubePlayerAdapter, AssistantClient, SyncExporter, and PointWorkspaceRenderer from studio; extracted PreviewAudioEngine and WaveformRenderer from features. Public APIs established in Phase 1 stayed unchanged.
 
-**Current state**: `features.js` is down to 762 LOC and `timeSyncStudio.js` is down to 1,685 LOC. The stable seams are in place, but the studio file still has more decomposition work ahead if it grows further.
+**Current state**: `features.js` is down to 763 LOC and `timeSyncStudio.js` is down to 1,535 LOC. The stable seams are in place, but the studio file still has more decomposition work ahead if it grows further.
 
 **Key design choice**: Phase 1 changed boundaries; Phase 4 changes guts. Callers don't see Phase 4 changes.
 

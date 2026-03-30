@@ -354,7 +354,7 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 
 **Structural (extensibility blockers):**
 
-- `js/ui/timeSyncStudio.js` is still 1,685 lines and carries player loading, sync workflow, review state, assistant requests, and export in a single class; the first stable seams are extracted, but the main file remains a future bottleneck
+- `js/ui/timeSyncStudio.js` is still 1,535 lines and carries player loading, sync workflow, review state, autosync, and undo logic in a single class; point rendering is now extracted, but the main file remains a future bottleneck
 - `js/features.js` is down to 762 lines after extracting `previewAudioEngine.js` and `waveformRenderer.js`, but it still owns DOM creation, genre fetching, card rendering, and convert handoff in one module
 - task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
 - frontend test infrastructure now has a jsdom harness for async UI flows, but coverage still leans heavily toward lyrics timing; preview audio and studio request races remain under-tested
@@ -446,13 +446,19 @@ Status:
 
 Two files carry enough distinct responsibilities that they should be split before absorbing more work.
 
-**`js/ui/timeSyncStudio.js` (1,685 lines)**
+**`js/ui/timeSyncStudio.js` (1,535 lines)**
 
-Stable seams to extract:
-- YouTube IFrame player adapter (loading, lifecycle, state polling)
-- assistant client (request/response, stale-guard, prompt formatting)
-- VTT/export formatter (serialization, download trigger)
-- leaving the wizard state machine and sync engine in the main file
+Stable seams extracted:
+- `js/ui/youtubePlayerAdapter.js` owns IFrame loading, lifecycle, and playback loop glue
+- `js/ui/assistantClient.js` owns assistant request/response flow
+- `js/ui/syncExporter.js` owns export serialization and download trigger
+- `js/ui/pointWorkspaceRenderer.js` owns point rail, point list, tooltip, editor, and stage meta rendering
+
+Remaining in the parent module:
+- wizard state transitions
+- autosync pass and review flow
+- point mutation and undo logic
+- review-player orchestration
 
 The argument is not for arbitrary splitting; it is for extracting clear seams before more work lands there.
 

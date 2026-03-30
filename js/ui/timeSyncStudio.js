@@ -1,5 +1,6 @@
 import { AssistantClient, renderAssistantFallback, renderAssistantResponse } from './assistantClient.js';
 import { exportSyncProject } from './syncExporter.js';
+import { PointWorkspaceRenderer } from './pointWorkspaceRenderer.js';
 import { YouTubePlayerAdapter } from './youtubePlayerAdapter.js';
 
 const ACTION_TYPES = new Set(['OPEN_PANEL', 'SELECT_POINT', 'NUDGE_POINT', 'START_AUTOSYNC', 'APPLY_FIX', 'EXPORT']);
@@ -236,6 +237,30 @@ export class TimeSyncStudio {
         this._boundReviewPlayToggle = null;
         this._boundReviewJump = null;
         this._boundReviewLoop = null;
+        this.pointWorkspaceRenderer = new PointWorkspaceRenderer({
+            stageBadge: this.stageBadge,
+            stageLabel: this.stageLabel,
+            progressLabel: this.progressLabel,
+            progressFill: this.progressFill,
+            countPending: this.countPending,
+            countSynced: this.countSynced,
+            countReview: this.countReview,
+            pointRail: this.pointRail,
+            pointRailWindow: this.pointRailWindow,
+            pointTooltip: this.pointTooltip,
+            pointList: this.pointList,
+            selectedPointSummary: this.selectedPointSummary,
+            selectedPointMinuteInput: this.selectedPointMinuteInput,
+            selectedPointSecondInput: this.selectedPointSecondInput,
+            selectedPointMillisecondInput: this.selectedPointMillisecondInput,
+            applyPointTimeButton: this.applyPointTimeButton,
+            nudgeBackButton: this.nudgeBackButton,
+            nudgeForwardButton: this.nudgeForwardButton,
+            formatTime,
+            escapeHtml,
+            splitTimeParts,
+            clamp
+        });
     }
 
     get reviewPlayer() {
@@ -1383,62 +1408,10 @@ export class TimeSyncStudio {
     }
 
     renderStageMeta() {
-        const counts = this.points.reduce((acc, point) => {
-            acc[point.status] += 1;
-            return acc;
-        }, { pending: 0, synced: 0, needs_review: 0 });
-        const confirmed = counts.synced;
-        const total = this.points.length;
-        const percent = total === 0 ? 0 : confirmed / total;
-
-        const stageLabels = {
-            setup: {
-                badge: 'Setup',
-                label: 'Add media and lyric lines first.'
-            },
-            lyrics: {
-                badge: 'Lyrics',
-                label: 'Points are parsed. Auto-sync is the next step.'
-            },
-            autosync: {
-                badge: 'Auto-sync',
-                label: 'Draft timings are being filled now.'
-            },
-            sync: {
-                badge: 'Sync',
-                label: 'Work one point at a time.'
-            },
-            review: {
-                badge: 'Review',
-                label: 'Only flagged points stay in view.'
-            },
-            export: {
-                badge: 'Export',
-                label: 'The current point pass is ready to hand off.'
-            }
-        };
-
-        if (this.stageBadge) {
-            this.stageBadge.textContent = stageLabels[this.stage].badge;
-        }
-        if (this.stageLabel) {
-            this.stageLabel.textContent = stageLabels[this.stage].label;
-        }
-        if (this.progressLabel) {
-            this.progressLabel.textContent = `${confirmed}/${total} points confirmed`;
-        }
-        if (this.progressFill) {
-            this.progressFill.style.transform = `scaleX(${percent})`;
-        }
-        if (this.countPending) {
-            this.countPending.textContent = String(counts.pending);
-        }
-        if (this.countSynced) {
-            this.countSynced.textContent = String(counts.synced);
-        }
-        if (this.countReview) {
-            this.countReview.textContent = String(counts.needs_review);
-        }
+        this.pointWorkspaceRenderer.renderStageMeta({
+            stage: this.stage,
+            points: this.points
+        });
     }
 
     renderAssistant(response) {
@@ -1458,105 +1431,29 @@ export class TimeSyncStudio {
     }
 
     renderPointRail() {
-        if (!this.pointRailWindow) return;
-
-        if (!this.points.length) {
-            this.hideTooltip();
-            this.pointRail?.classList.add('is-empty');
-            this.pointRailWindow.innerHTML = '<p class="point-rail-empty">No points yet.</p>';
-            return;
-        }
-
-        this.pointRail?.classList.remove('is-empty');
-
-        const currentIndex = Math.max(0, this.points.findIndex((point) => point.id === this.selectedPointId));
-        const startIndex = clamp(currentIndex - Math.floor(POINT_WINDOW_SIZE / 2), 0, Math.max(0, this.points.length - POINT_WINDOW_SIZE));
-        const windowPoints = this.points.slice(startIndex, startIndex + POINT_WINDOW_SIZE);
-
-        this.pointRailWindow.innerHTML = windowPoints.map((point) => {
-            const isSelected = point.id === this.selectedPointId;
-            const isNowPlaying = point.id === this.nowPlayingPointId;
-            const stateClass = `${point.status}${isSelected ? ' is-selected' : ''}${isNowPlaying ? ' is-now-playing' : ''}`;
-            const timeLabel = formatTime(point.timeMs ?? point.draftTimeMs) || 'Unassigned';
-            const lyricLabel = escapeHtml(point.textPreview.length > 22 ? `${point.textPreview.slice(0, 22)}…` : point.textPreview);
-            return `
-                <button
-                    type="button"
-                    class="point-hit ${stateClass}"
-                    data-point-id="${point.id}"
-                    aria-label="Point ${point.index + 1}, ${timeLabel}, ${point.status.replace('_', ' ')}"
-                    aria-current="${isSelected ? 'true' : 'false'}">
-                    <span class="point-label">${lyricLabel}</span>
-                    <span class="point-dot" aria-hidden="true"></span>
-                    <span class="point-time">${timeLabel}</span>
-                </button>
-            `;
-        }).join('');
+        this.pointWorkspaceRenderer.renderPointRail({
+            points: this.points,
+            selectedPointId: this.selectedPointId,
+            nowPlayingPointId: this.nowPlayingPointId,
+            pointWindowSize: POINT_WINDOW_SIZE
+        });
     }
 
     renderPointList() {
-        if (!this.pointList) return;
-
-        if (!this.points.length) {
-            this.renderPointListPlaceholder(['No points yet.']);
-            return;
-        }
-
-        const visiblePoints = this.stage === 'review'
-            ? this.points.filter((point) => point.status === 'needs_review')
-            : this.getPointWindowForList();
-
-        this.pointList.innerHTML = visiblePoints.map((point) => {
-            const issueLabel = point.status === 'pending'
-                ? 'waiting for timing'
-                : point.issues.length > 0
-                    ? point.issues.join(' · ').replaceAll('_', ' ')
-                    : 'confirmed';
-            const selected = point.id === this.selectedPointId ? ' is-selected' : '';
-            const playing = point.id === this.nowPlayingPointId ? ' is-now-playing' : '';
-            return `
-                <article class="point-card${selected}${playing}" data-point-card="${point.id}">
-                    <div class="point-card-meta">
-                        <span class="point-card-index">Point ${point.index + 1}</span>
-                        <span class="point-card-time">${formatTime(point.timeMs ?? point.draftTimeMs) || 'Unassigned'}</span>
-                    </div>
-                    <p class="point-card-text">${escapeHtml(point.textPreview)}</p>
-                    <div class="point-card-footer">
-                        <span class="point-card-status" data-status="${point.status}">${point.status.replace('_', ' ')}</span>
-                        <span class="point-card-issues">${escapeHtml(issueLabel)}</span>
-                    </div>
-                </article>
-            `;
-        }).join('');
+        this.pointWorkspaceRenderer.renderPointList({
+            points: this.points,
+            stage: this.stage,
+            selectedPointId: this.selectedPointId,
+            nowPlayingPointId: this.nowPlayingPointId
+        });
     }
 
     scrollSelectedPointCardIntoView() {
-        if (!this.pointList || !this.selectedPointId) {
-            return;
-        }
-
-        const card = this.pointList.querySelector(`[data-point-card="${this.selectedPointId}"]`);
-        card?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        this.pointWorkspaceRenderer.scrollSelectedPointCardIntoView(this.selectedPointId);
     }
 
     renderPointListPlaceholder(lines) {
-        if (!this.pointList) return;
-
-        const icons = ['•', '•', '•'];
-        this.pointList.innerHTML = lines.map((line, index) => `
-            <article class="point-card placeholder">
-                <div class="point-card-meta">
-                    <span class="point-card-index">${icons[index] || '•'}</span>
-                </div>
-                <p class="point-card-text">${escapeHtml(line)}</p>
-            </article>
-        `).join('');
-    }
-
-    getPointWindowForList() {
-        const currentIndex = Math.max(0, this.points.findIndex((point) => point.id === this.selectedPointId));
-        const startIndex = clamp(currentIndex - 3, 0, Math.max(0, this.points.length - 7));
-        return this.points.slice(startIndex, startIndex + 7);
+        this.pointWorkspaceRenderer.renderPointListPlaceholder(lines);
     }
 
     getSelectedPoint() {
@@ -1565,38 +1462,10 @@ export class TimeSyncStudio {
 
     renderSelectedPointEditor() {
         const selected = this.getSelectedPoint();
-
-        if (this.selectedPointSummary) {
-            this.selectedPointSummary.textContent = selected
-                ? `Point ${selected.index + 1}: ${selected.textPreview}`
-                : 'Select a point to edit its exact start time.';
-        }
-        if (!selected) {
-            this.clearEditorFeedback();
-        }
-
-        const timeParts = splitTimeParts(selected ? (selected.timeMs ?? selected.draftTimeMs) : null);
-        [this.selectedPointMinuteInput, this.selectedPointSecondInput, this.selectedPointMillisecondInput].forEach((input) => {
-            if (!input) return;
-            input.disabled = !selected;
-        });
-        const mediaDurationMs = this.getMediaDurationMs();
-        if (this.selectedPointMinuteInput) {
-            this.selectedPointMinuteInput.value = timeParts.minutes;
-            this.selectedPointMinuteInput.max = Number.isFinite(mediaDurationMs)
-                ? String(Math.floor(mediaDurationMs / 60000))
-                : '';
-        }
-        if (this.selectedPointSecondInput) {
-            this.selectedPointSecondInput.value = timeParts.seconds;
-        }
-        if (this.selectedPointMillisecondInput) {
-            this.selectedPointMillisecondInput.value = timeParts.milliseconds;
-        }
-
-        [this.applyPointTimeButton, this.nudgeBackButton, this.nudgeForwardButton].forEach((button) => {
-            if (!button) return;
-            button.disabled = !selected;
+        this.pointWorkspaceRenderer.renderSelectedPointEditor({
+            selectedPoint: selected,
+            mediaDurationMs: this.getMediaDurationMs(),
+            onDeselect: () => this.clearEditorFeedback()
         });
     }
 
@@ -1653,33 +1522,14 @@ export class TimeSyncStudio {
     }
 
     showTooltip(pointId, anchor) {
-        if (!this.pointTooltip) return;
-
-        const point = this.points.find((entry) => entry.id === pointId);
-        if (!point) return;
-
-        this.pointTooltip.hidden = false;
-        this.pointTooltip.innerHTML = `
-            <strong>Point ${point.index + 1}</strong>
-            <span>${formatTime(point.timeMs ?? point.draftTimeMs) || 'Unassigned'} · ${escapeHtml(point.status.replace('_', ' '))}</span>
-            <span>${escapeHtml(point.textPreview)}</span>
-        `;
-
-        const rect = anchor.getBoundingClientRect();
-        const tooltipRect = this.pointTooltip.getBoundingClientRect();
-        const desiredLeft = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-        const maxLeft = Math.max(16, window.innerWidth - tooltipRect.width - 16);
-        const left = clamp(desiredLeft, 16, maxLeft);
-        const top = rect.top - tooltipRect.height - 10 < 16
-            ? rect.bottom + 10
-            : rect.top - tooltipRect.height - 10;
-        this.pointTooltip.style.left = `${left}px`;
-        this.pointTooltip.style.top = `${top}px`;
+        this.pointWorkspaceRenderer.showTooltip({
+            points: this.points,
+            pointId,
+            anchor
+        });
     }
 
     hideTooltip() {
-        if (!this.pointTooltip) return;
-        this.pointTooltip.hidden = true;
-        this.pointTooltip.innerHTML = '';
+        this.pointWorkspaceRenderer.hideTooltip();
     }
 }
