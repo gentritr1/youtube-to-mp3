@@ -132,6 +132,7 @@ youtube-to-mp3/
 ├── 📁 js/                     # Frontend modules
 │   ├── snake-game.js          # Full snake game (38KB!)
 │   ├── features.js            # Popular videos UI orchestration
+│   ├── popularBrowser.js      # Popular genre loading + carousel rendering
 │   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
 │   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
 │   ├── ui/pointTimingEngine.js  # Studio autosync, point mutation, undo, snapshot math
@@ -200,6 +201,7 @@ youtube-to-mp3/
 | **Download Section** | `app.js`, `results.css` | Orchestrated success animation |
 | **Snake Game** | `snake-game.js` | Entertainment during wait |
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
+| **Popular Browser UI** | `features.js`, `popularBrowser.js`, `features.css` | Genre loading, tab rendering, carousel cards, and random track selection |
 | **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
 | **Sync Studio Point UI** | `timeSyncStudio.js`, `ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
 | **Sync Studio Timing Logic** | `timeSyncStudio.js`, `ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |

@@ -5,6 +5,15 @@
 
 import { drawWaveform as renderWaveform } from './waveformRenderer.js';
 import { PreviewAudioEngine } from './previewAudioEngine.js';
+import {
+    getRandomTracksFromGenres,
+    loadPopularGenres,
+    renderPopularGenreTabs,
+    renderPopularRetryState,
+    renderPopularVideoCarousel,
+    resolveActiveGenreId,
+    updatePopularGenreTabStyles
+} from './popularBrowser.js';
 
 let _onConvertRequest = null;
 let _audioVisualizer = null;
@@ -338,36 +347,16 @@ const FeaturesModule = (() => {
      */
     const loadGenres = async () => {
         try {
-            const response = await fetch('/api/popular');
-
-            // Check HTTP status before parsing JSON
-            if (!response.ok) {
-                throw new Error(`Server error: ${response.status} ${response.statusText}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success && data.genres) {
-                state.genres = data.genres;
-                if (!state.genres.some(genre => genre.id === state.activeGenre)) {
-                    state.activeGenre = state.genres.find(genre => genre.id === 'global')?.id || state.genres[0]?.id || '';
-                }
-                renderGenreTabs();
-                renderVideoCarousel(state.activeGenre);
-            } else {
-                throw new Error(data.message || 'Invalid response from server');
-            }
+            state.genres = await loadPopularGenres();
+            state.activeGenre = resolveActiveGenreId(state.genres, state.activeGenre);
+            renderGenreTabs();
+            renderVideoCarousel(state.activeGenre);
         } catch (error) {
             console.error('[Features] Failed to load genres:', error);
-            // Show placeholder or retry option (safe - no user input interpolated)
-            if (elements.videoCarousel) {
-                elements.videoCarousel.innerHTML = `
-                    <div style="padding: 2rem; text-align: center; color: var(--muted-foreground);">
-                        Unable to load suggestions. <button class="popular-retry-btn" type="button" style="color: var(--foreground); text-decoration: underline; background: none; border: none; cursor: pointer;">Retry</button>
-                    </div>
-                `;
-                elements.videoCarousel.querySelector('.popular-retry-btn')?.addEventListener('click', reload);
-            }
+            renderPopularRetryState({
+                videoCarousel: elements.videoCarousel,
+                onRetry: reload
+            });
         }
     };
 
@@ -375,25 +364,15 @@ const FeaturesModule = (() => {
      * Render genre tabs
      */
     const renderGenreTabs = () => {
-        if (!elements.genreTabs) return;
-
-        elements.genreTabs.innerHTML = state.genres.map(genre => `
-            <button 
-                class="genre-tab ${genre.id === state.activeGenre ? 'active' : ''}" 
-                data-genre="${escapeAttr(genre.id)}"
-                style="${genre.id === state.activeGenre ? `background: ${escapeAttr(genre.color)};` : ''}"
-            >
-                <span class="genre-tab-icon">${escapeHtml(genre.icon)}</span>
-                <span>${escapeHtml(genre.name)}</span>
-            </button>
-        `).join('');
-
-        // Bind tab click events
-        elements.genreTabs.querySelectorAll('.genre-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const genreId = tab.dataset.genre;
+        renderPopularGenreTabs({
+            genreTabs: elements.genreTabs,
+            genres: state.genres,
+            activeGenre: state.activeGenre,
+            escapeHtml,
+            escapeAttr,
+            onSelectGenre: (genreId) => {
                 setActiveGenre(genreId);
-            });
+            }
         });
     };
 
@@ -402,17 +381,10 @@ const FeaturesModule = (() => {
      */
     const setActiveGenre = (genreId) => {
         state.activeGenre = genreId;
-        const genre = state.genres.find(g => g.id === genreId);
-
-        // Update tab styles
-        elements.genreTabs.querySelectorAll('.genre-tab').forEach(tab => {
-            const isActive = tab.dataset.genre === genreId;
-            tab.classList.toggle('active', isActive);
-            if (isActive && genre) {
-                tab.style.background = genre.color;
-            } else {
-                tab.style.background = '';
-            }
+        updatePopularGenreTabStyles({
+            genreTabs: elements.genreTabs,
+            genres: state.genres,
+            genreId
         });
 
         renderVideoCarousel(genreId);
@@ -422,94 +394,19 @@ const FeaturesModule = (() => {
      * Render video carousel for a genre
      */
     const renderVideoCarousel = (genreId) => {
-        if (!elements.videoCarousel) return;
-
-        const genre = state.genres.find(g => g.id === genreId);
-        if (!genre) return;
-
-        if (elements.activeGenreSummary) {
-            elements.activeGenreSummary.innerHTML = `
-                <div class="popular-genre-card" style="--genre-accent: ${escapeAttr(genre.color)}">
-                    <span class="popular-genre-icon">${escapeHtml(genre.icon)}</span>
-                    <div class="popular-genre-copy">
-                        <span class="popular-genre-label">${escapeHtml(genre.name)}</span>
-                        <p class="popular-genre-description">${escapeHtml(genre.description || 'Curated tracks for preview and conversion.')}</p>
-                    </div>
-                    <span class="popular-genre-count">${genre.videos.length} tracks</span>
-                </div>
-            `;
-        }
-
-        // Check if video is a live stream (preview not supported)
-        const isLive = (video) => video.isLive || video.duration === 'LIVE';
-
-        elements.videoCarousel.innerHTML = genre.videos.map((video, index) => `
-            <article class="video-card" data-video-id="${escapeAttr(video.videoId)}" ${isLive(video) ? 'data-is-live="true"' : ''} style="--card-index: ${index}; --card-accent: ${escapeAttr(genre.color)}">
-                <div class="video-card-thumbnail">
-                    <img src="${escapeAttr(video.thumbnail)}" alt="${escapeAttr(video.title)}" loading="lazy">
-                    <span class="video-card-duration">${escapeHtml(video.duration)}</span>
-                    ${video.tag ? `<span class="video-card-tag">${escapeHtml(video.tag)}</span>` : ''}
-                    <div class="video-card-overlay">
-                        <div class="video-card-play">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="video-card-actions">
-                        <button class="video-action-btn${isLive(video) ? ' disabled' : ''}" data-action="preview" title="${isLive(video) ? 'Preview unavailable for live streams' : 'Preview'}" ${isLive(video) ? 'disabled' : ''}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
-                            </svg>
-                        </button>
-                        <button class="video-action-btn" data-action="convert" title="Convert">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="video-card-info">
-                    <span class="video-card-rank">${String(index + 1).padStart(2, '0')}</span>
-                    <h3 class="video-card-title">${escapeHtml(video.title)}</h3>
-                    <p class="video-card-artist">${escapeHtml(video.artist)}</p>
-                </div>
-            </article>
-        `).join('');
-
-        // Bind video card events
-        elements.videoCarousel.querySelectorAll('.video-card').forEach(card => {
-            const videoId = card.dataset.videoId;
-            const video = genre.videos.find(v => v.videoId === videoId);
-            const videoIsLive = card.dataset.isLive === 'true';
-
-            // Preview button (disabled for live streams)
-            const previewBtn = card.querySelector('[data-action="preview"]');
-            if (previewBtn && !videoIsLive) {
-                previewBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showPreview(video);
-                });
-            }
-
-            // Convert button
-            card.querySelector('[data-action="convert"]')?.addEventListener('click', (e) => {
-                e.stopPropagation();
+        renderPopularVideoCarousel({
+            videoCarousel: elements.videoCarousel,
+            activeGenreSummary: elements.activeGenreSummary,
+            genres: state.genres,
+            genreId,
+            escapeHtml,
+            escapeAttr,
+            onShowPreview: (video) => {
+                showPreview(video);
+            },
+            onConvertVideo: (video) => {
                 convertVideo(video);
-            });
-
-            // Card click - show preview (unless live stream)
-            card.addEventListener('click', () => {
-                if (!videoIsLive) {
-                    showPreview(video);
-                } else {
-                    // For live streams, go straight to convert
-                    convertVideo(video);
-                }
-            });
+            }
         });
     };
 
@@ -711,26 +608,7 @@ const FeaturesModule = (() => {
      * Get random tracks from loaded genres
      */
     const getRandomTracks = (count = 4) => {
-        if (!state.genres || state.genres.length === 0) return [];
-
-        const globalVideos = state.genres
-            .filter(g => g.id === 'global')
-            .flatMap(g => g.videos || []);
-
-        const otherVideos = state.genres
-            .filter(g => g.id !== 'global')
-            .flatMap(g => g.videos || []);
-
-        const allVideos = [...globalVideos, ...otherVideos]
-            .filter(v => !v.isLive && v.duration !== 'LIVE')
-            .filter((video, index, videos) => videos.findIndex(candidate => candidate.videoId === video.videoId) === index);
-
-        if (allVideos.length < count) {
-            return [...allVideos].sort(() => 0.5 - Math.random());
-        }
-
-        const shuffled = [...allVideos].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, count);
+        return getRandomTracksFromGenres(state.genres, count);
     };
 
     // Public API
