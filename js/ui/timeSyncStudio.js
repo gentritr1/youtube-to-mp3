@@ -2,7 +2,6 @@ import { AssistantClient, renderAssistantFallback, renderAssistantResponse } fro
 import {
     applyNeedsReviewFix,
     buildPointSnapshot,
-    buildPoints,
     createAutosyncState,
     createHistoryState,
     findPointForTime,
@@ -19,6 +18,13 @@ import {
     renderReviewPlayerPanel,
     stepReviewPlaybackLoop
 } from './reviewPlayerPanel.js';
+import {
+    getEmptyStudioState,
+    getFinishedPlaybackState,
+    getIdleStudioState,
+    getLoadingStudioState,
+    getLyricsStudioState
+} from './studioWorkflowState.js';
 import { exportSyncProject } from './syncExporter.js';
 import { PointWorkspaceRenderer } from './pointWorkspaceRenderer.js';
 import { YouTubePlayerAdapter } from './youtubePlayerAdapter.js';
@@ -628,115 +634,97 @@ export class TimeSyncStudio {
         }
     }
 
+    applyWorkflowState(nextState) {
+        if ('stage' in nextState) {
+            this.stage = nextState.stage;
+        }
+        if ('points' in nextState) {
+            this.points = nextState.points;
+        }
+        if ('selectedPointId' in nextState) {
+            this.selectedPointId = nextState.selectedPointId;
+        }
+        if ('nowPlayingPointId' in nextState) {
+            this.nowPlayingPointId = nextState.nowPlayingPointId;
+        }
+        if ('history' in nextState) {
+            this.history = nextState.history;
+        }
+        if ('errors' in nextState) {
+            this.errors = nextState.errors;
+        }
+        if ('autosync' in nextState) {
+            this.autosync = nextState.autosync;
+        }
+        if ('currentAssistantResponse' in nextState) {
+            this.currentAssistantResponse = nextState.currentAssistantResponse;
+        }
+        if (nextState.clearTooltip) {
+            this.hideTooltip();
+        }
+        if (nextState.status) {
+            this.setStatus(
+                nextState.status.badge,
+                nextState.status.title,
+                nextState.status.detail,
+                nextState.status.tone
+            );
+        }
+        if (nextState.assistantFallback) {
+            this.renderAssistantFallback(nextState.assistantFallback);
+        }
+        if (nextState.pointListPlaceholder) {
+            this.renderPointListPlaceholder(nextState.pointListPlaceholder);
+        }
+    }
+
     setIdle() {
         this.clearAutosyncTimer();
-        this.stage = 'setup';
-        this.points = [];
-        this.selectedPointId = null;
-        this.nowPlayingPointId = null;
-        this.history = createHistoryState();
-        this.errors = [];
-        this.autosync = createAutosyncState();
-        this.currentAssistantResponse = null;
+        const nextState = getIdleStudioState();
+        this.applyWorkflowState(nextState);
         this.assistantClient.clearResponse();
-        this.hideTooltip();
-
-        this.setStatus(
-            'Setup',
-            'Paste a video to build sync points.',
-            'If subtitles are available, this panel turns them into line-start points you can review one by one.',
-            'idle'
-        );
         this.renderStageMeta();
-        this.renderAssistantFallback('Add a video to create your first point rail.');
         this.renderPointRail();
-        this.renderPointListPlaceholder([
-            'The studio will create one point per lyric line start.',
-            'Auto-sync fills draft timestamps before you review flagged points.',
-            'You can also paste your own lyrics if the video does not include captions.'
-        ]);
         this.renderSelectedPointEditor();
         this.renderReviewPlayer();
     }
 
     setLoading() {
         this.clearAutosyncTimer();
-        this.stage = this.points.length > 0 ? this.stage : 'setup';
-        if (!this.points.length) {
-            this.selectedPointId = null;
-            this.nowPlayingPointId = null;
-            this.hideTooltip();
-        }
-        this.setStatus(
-            'Loading',
-            'Looking for subtitle lines.',
-            'When lyric data arrives, the point rail will appear here with one point per line start.',
-            'loading'
-        );
-        this.renderAssistantFallback('Loading lyric lines and point data…');
-
-        if (!this.points.length) {
-            this.renderPointListPlaceholder([
-                'Checking the video for subtitle cues.',
-                'If timing is missing, the studio will mark those points for review.'
-            ]);
-        }
+        const nextState = getLoadingStudioState({
+            stage: this.stage,
+            points: this.points
+        });
+        this.applyWorkflowState(nextState);
         this.renderSelectedPointEditor();
         this.renderReviewPlayer();
     }
 
     setEmpty() {
         this.clearAutosyncTimer();
-        this.stage = 'setup';
-        this.points = [];
-        this.selectedPointId = null;
-        this.nowPlayingPointId = null;
-        this.hideTooltip();
-        this.autosync = createAutosyncState({
-            status: 'failed',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        });
-
-        this.setStatus(
-            'No lyrics',
-            'No subtitle track was found for this video.',
-            'Paste your own lyric lines to create approximate points, or try another video with captions.',
-            'muted'
-        );
+        const nextState = getEmptyStudioState();
+        this.applyWorkflowState(nextState);
         this.renderStageMeta();
-        this.renderAssistantFallback('No points were created because the video does not include usable subtitle lines.');
         this.renderPointRail();
-        this.renderPointListPlaceholder([
-            'Try a video that includes captions if you want to use the sync studio.',
-            'Pasted lyrics will still work even when subtitle timing is unavailable.'
-        ]);
         this.renderSelectedPointEditor();
         this.renderReviewPlayer();
     }
 
     setLyrics(lines) {
         this.clearAutosyncTimer();
-        this.stage = 'lyrics';
-        this.points = buildPoints(lines, toPointId);
-        this.selectedPointId = this.points[0]?.id ?? null;
-        this.nowPlayingPointId = null;
-        this.history = createHistoryState();
-        this.autosync = createAutosyncState();
-        this.errors = [];
-
-        if (!this.points.length) {
-            this.setEmpty();
+        const nextState = getLyricsStudioState({
+            lines,
+            createPointId: toPointId
+        });
+        this.applyWorkflowState(nextState);
+        if (nextState.isEmpty) {
+            this.renderStageMeta();
+            this.renderPointRail();
+            this.renderSelectedPointEditor();
+            this.renderReviewPlayer();
             return;
         }
 
-        this.setStatus(
-            'Lyrics ready',
-            'Points are ready for Auto-sync.',
-            'Each point maps to a lyric line start. Run Auto-sync next, then fix only the flagged points.',
-            'ready'
-        );
         this.render();
         this.requestAssistantUpdate();
     }
@@ -752,22 +740,16 @@ export class TimeSyncStudio {
     }
 
     finishPlayback() {
-        if (!this.points.length) {
+        const nextState = getFinishedPlaybackState({
+            points: this.points,
+            stage: this.stage
+        });
+        if (nextState.shouldResetToIdle) {
             this.setIdle();
             return;
         }
 
-        const hasReviewPoints = this.points.some((point) => point.status === 'needs_review');
-        if (!hasReviewPoints && this.stage !== 'lyrics' && this.stage !== 'autosync') {
-            this.stage = 'export';
-        }
-
-        this.setStatus(
-            'Ready',
-            'The point pass is ready.',
-            'Use the assistant CTA to keep moving one point at a time, or export the timing JSON when you are done.',
-            'done'
-        );
+        this.applyWorkflowState(nextState);
         this.render();
         this.requestAssistantUpdate();
     }

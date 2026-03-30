@@ -136,6 +136,7 @@ youtube-to-mp3/
 │   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
 │   ├── ui/pointTimingEngine.js  # Studio autosync, point mutation, undo, snapshot math
 │   ├── ui/reviewPlayerPanel.js  # Studio review player panel state + rendering
+│   ├── ui/studioWorkflowState.js  # Studio workflow presets and status copy
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
@@ -202,6 +203,7 @@ youtube-to-mp3/
 | **Sync Studio Point UI** | `timeSyncStudio.js`, `ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
 | **Sync Studio Timing Logic** | `timeSyncStudio.js`, `ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |
 | **Sync Studio Review Player UI** | `timeSyncStudio.js`, `ui/reviewPlayerPanel.js`, `ui/youtubePlayerAdapter.js` | Review-player panel state, loop decisions, and YouTube IFrame control wiring |
+| **Sync Studio Workflow State** | `timeSyncStudio.js`, `ui/studioWorkflowState.js` | Setup/loading/empty/lyrics/export workflow presets and studio status copy |
 | **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components
