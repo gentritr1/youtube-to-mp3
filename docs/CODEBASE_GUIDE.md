@@ -355,10 +355,10 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 
 **Structural (extensibility blockers):**
 
-- `js/ui/timeSyncStudio.js` is still 1,358 lines and now keeps orchestration, review-player wiring, and DOM event binding, but the class remains a future bottleneck if more workflow logic accumulates there
+- `js/ui/timeSyncStudio.js` is still 1,341 lines and now keeps orchestration, DOM event binding, and top-level studio status flow, but the class remains a future bottleneck if more workflow logic accumulates there
 - `js/features.js` is down to 762 lines after extracting `previewAudioEngine.js` and `waveformRenderer.js`, but it still owns DOM creation, genre fetching, card rendering, and convert handoff in one module
 - task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
-- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js` has direct unit coverage; preview audio and studio request races remain under-tested
+- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js` and `js/ui/reviewPlayerPanel.js` seams have direct unit coverage; preview audio and studio request races remain under-tested
 
 **Maintenance (valuable but lower leverage):**
 
@@ -447,7 +447,7 @@ Status:
 
 Two files carry enough distinct responsibilities that they should be split before absorbing more work.
 
-**`js/ui/timeSyncStudio.js` (1,358 lines)**
+**`js/ui/timeSyncStudio.js` (1,341 lines)**
 
 Stable seams extracted:
 - `js/ui/youtubePlayerAdapter.js` owns IFrame loading, lifecycle, and playback loop glue
@@ -455,10 +455,11 @@ Stable seams extracted:
 - `js/ui/syncExporter.js` owns export serialization and download trigger
 - `js/ui/pointWorkspaceRenderer.js` owns point rail, point list, tooltip, editor, and stage meta rendering
 - `js/ui/pointTimingEngine.js` owns autosync pass logic, point mutation, undo state, loop math, and assistant snapshot shaping
+- `js/ui/reviewPlayerPanel.js` owns review-player panel state, loop-tick decisions, and DOM control rendering
 
 Remaining in the parent module:
 - wizard state transitions
-- review-player orchestration
+- adapter coordination around review-player loading and lifecycle
 - DOM event binding and focus management
 - editor feedback and top-level status messaging
 

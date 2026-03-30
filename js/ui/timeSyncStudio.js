@@ -11,6 +11,14 @@ import {
     runAutosyncPass,
     undoPointChange
 } from './pointTimingEngine.js';
+import {
+    buildReviewPlayerViewModel,
+    getReviewPlayerDurationMs,
+    getReviewPlayerPlayheadMs,
+    normalizeReviewMediaSource,
+    renderReviewPlayerPanel,
+    stepReviewPlaybackLoop
+} from './reviewPlayerPanel.js';
 import { exportSyncProject } from './syncExporter.js';
 import { PointWorkspaceRenderer } from './pointWorkspaceRenderer.js';
 import { YouTubePlayerAdapter } from './youtubePlayerAdapter.js';
@@ -773,14 +781,7 @@ export class TimeSyncStudio {
     }
 
     async setMediaSource(source) {
-        const nextSource = source?.kind === 'youtube' && source.videoId
-            ? {
-                kind: 'youtube',
-                videoId: source.videoId,
-                title: source.title || 'UNSPECIFIED',
-                durationMs: Number.isFinite(source.durationMs) ? source.durationMs : null
-            }
-            : null;
+        const nextSource = normalizeReviewMediaSource(source);
         const changed = JSON.stringify(this.mediaSource) !== JSON.stringify(nextSource);
 
         if (!changed) {
@@ -1095,32 +1096,31 @@ export class TimeSyncStudio {
         }
 
         this.reviewPlaybackTimerId = window.setInterval(() => {
-            const seconds = typeof this.reviewPlayer?.getCurrentTime === 'function'
-                ? this.reviewPlayer.getCurrentTime()
-                : null;
-            const playheadMs = Number.isFinite(seconds) ? Math.round(seconds * 1000) : null;
-            if (!Number.isFinite(playheadMs)) {
+            const selected = this.getSelectedPoint();
+            const loopState = stepReviewPlaybackLoop({
+                reviewPlayer: this.reviewPlayer,
+                reviewLoopEnabled: this.reviewLoopEnabled,
+                selectedPoint: selected,
+                nowPlayingPointId: this.nowPlayingPointId,
+                findPointForTime: (timeMs) => this.findPointForTime(timeMs),
+                getLoopEndTime: (pointId) => this.getLoopEndTime(pointId)
+            });
+            if (!Number.isFinite(loopState.playheadMs)) {
                 return;
             }
 
-            const pointForPlayhead = this.findPointForTime(playheadMs);
-            if (pointForPlayhead && pointForPlayhead.id !== this.nowPlayingPointId) {
-                this.nowPlayingPointId = pointForPlayhead.id;
+            if (loopState.nextNowPlayingPointId && loopState.nextNowPlayingPointId !== this.nowPlayingPointId) {
+                this.nowPlayingPointId = loopState.nextNowPlayingPointId;
                 this.renderPointRail();
                 this.renderPointList();
             }
 
-            if (this.reviewLoopEnabled) {
-                const selected = this.getSelectedPoint();
-                const loopStart = selected?.timeMs ?? selected?.draftTimeMs;
-                const loopEnd = this.getLoopEndTime(selected?.id);
-                if (selected && Number.isFinite(loopStart) && Number.isFinite(loopEnd) && playheadMs >= loopEnd) {
-                    this.reviewPlayer.seekTo(loopStart / 1000, true);
-                    this.reviewPlayer.playVideo();
-                }
+            if (Number.isFinite(loopState.shouldLoopToMs)) {
+                this.reviewPlayer.seekTo(loopState.shouldLoopToMs / 1000, true);
+                this.reviewPlayer.playVideo();
             }
 
-            this.renderReviewPlayer(playheadMs);
+            this.renderReviewPlayer(loopState.playheadMs);
         }, 150);
     }
 
@@ -1147,14 +1147,11 @@ export class TimeSyncStudio {
     }
 
     getMediaDurationMs() {
-        const playerDurationMs = this.reviewPlayerReady && typeof this.reviewPlayer?.getDuration === 'function'
-            ? Math.round((this.reviewPlayer.getDuration() ?? 0) * 1000)
-            : null;
-        if (Number.isFinite(playerDurationMs) && playerDurationMs > 0) {
-            return playerDurationMs;
-        }
-
-        return Number.isFinite(this.mediaSource?.durationMs) ? this.mediaSource.durationMs : null;
+        return getReviewPlayerDurationMs({
+            reviewPlayerReady: this.reviewPlayerReady,
+            reviewPlayer: this.reviewPlayer,
+            mediaSource: this.mediaSource
+        });
     }
 
     clampTimeMs(timeMs) {
@@ -1295,53 +1292,39 @@ export class TimeSyncStudio {
     renderReviewPlayer(playheadMs = null) {
         const selected = this.getSelectedPoint();
         const selectedTime = selected?.timeMs ?? selected?.draftTimeMs;
-        const currentPlayheadMs = Number.isFinite(playheadMs)
-            ? playheadMs
-            : (this.reviewPlayerReady && typeof this.reviewPlayer?.getCurrentTime === 'function'
-                ? Math.round(this.reviewPlayer.getCurrentTime() * 1000)
-                : selectedTime ?? 0);
+        const currentPlayheadMs = getReviewPlayerPlayheadMs({
+            explicitPlayheadMs: playheadMs,
+            reviewPlayerReady: this.reviewPlayerReady,
+            reviewPlayer: this.reviewPlayer,
+            fallbackPlayheadMs: selectedTime ?? 0
+        });
         const hasMediaSource = Boolean(this.mediaSource && this.reviewPlayerFrame);
         const isPlaying = this.reviewPlayerReady
             && this.reviewPlayer
             && this.reviewPlayer.getPlayerState?.() === window.YT?.PlayerState?.PLAYING;
+        const loopEnd = this.getLoopEndTime(selected?.id);
+        const viewModel = buildReviewPlayerViewModel({
+            mediaSource: this.mediaSource,
+            selectedPoint: selected,
+            selectedTimeMs: selectedTime,
+            currentPlayheadMs,
+            reviewPlayerReady: this.reviewPlayerReady,
+            isPlaying,
+            reviewLoopEnabled: this.reviewLoopEnabled,
+            loopEndMs: loopEnd,
+            hasFrame: hasMediaSource,
+            formatTime
+        });
 
-        if (this.reviewPlayerSummary) {
-            if (!this.mediaSource) {
-                this.reviewPlayerSummary.textContent = 'Load a captioned YouTube video to review timing against playback.';
-            } else if (!selected) {
-                this.reviewPlayerSummary.textContent = 'Select a point to jump the review player to that line start.';
-            } else if (!Number.isFinite(selectedTime)) {
-                this.reviewPlayerSummary.textContent = `Point ${selected.index + 1} is still unassigned. Set a time first, then jump straight into review playback.`;
-            } else {
-                this.reviewPlayerSummary.textContent = `Review Point ${selected.index + 1} against the player. Clicking a point chip or card seeks directly to ${formatTime(selectedTime)}.`;
-            }
-        }
-
-        if (this.reviewPlayButton) {
-            this.reviewPlayButton.disabled = !this.reviewPlayerReady || !selected;
-            this.reviewPlayButton.textContent = isPlaying ? 'Pause' : 'Play';
-        }
-        if (this.reviewJumpButton) {
-            this.reviewJumpButton.disabled = !this.reviewPlayerReady || !selected || !Number.isFinite(selectedTime);
-        }
-        if (this.reviewLoopButton) {
-            this.reviewLoopButton.disabled = !this.reviewPlayerReady || !selected || !Number.isFinite(selectedTime);
-            this.reviewLoopButton.setAttribute('aria-pressed', this.reviewLoopEnabled ? 'true' : 'false');
-            this.reviewLoopButton.classList.toggle('is-active', this.reviewLoopEnabled);
-        }
-        if (this.reviewTimeReadout) {
-            this.reviewTimeReadout.textContent = formatTime(currentPlayheadMs) || '0:00.000';
-        }
-        if (this.reviewLoopRange) {
-            const loopEnd = this.getLoopEndTime(selected?.id);
-            this.reviewLoopRange.textContent = Number.isFinite(selectedTime) && Number.isFinite(loopEnd)
-                ? `Loop range: ${formatTime(selectedTime)} -> ${formatTime(loopEnd)}`
-                : 'Loop range appears when the selected point has timing.';
-        }
-        if (this.reviewPlayerFrame) {
-            this.reviewPlayerFrame.hidden = !hasMediaSource;
-            this.reviewPlayerFrame.classList.toggle('is-ready', hasMediaSource && this.reviewPlayerReady);
-        }
+        renderReviewPlayerPanel({
+            reviewPlayerSummary: this.reviewPlayerSummary,
+            reviewPlayButton: this.reviewPlayButton,
+            reviewJumpButton: this.reviewJumpButton,
+            reviewLoopButton: this.reviewLoopButton,
+            reviewTimeReadout: this.reviewTimeReadout,
+            reviewLoopRange: this.reviewLoopRange,
+            reviewPlayerFrame: this.reviewPlayerFrame
+        }, viewModel);
     }
 
     showTooltip(pointId, anchor) {

@@ -135,6 +135,7 @@ youtube-to-mp3/
 │   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
 │   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
 │   ├── ui/pointTimingEngine.js  # Studio autosync, point mutation, undo, snapshot math
+│   ├── ui/reviewPlayerPanel.js  # Studio review player panel state + rendering
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
@@ -200,6 +201,7 @@ youtube-to-mp3/
 | **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
 | **Sync Studio Point UI** | `timeSyncStudio.js`, `ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
 | **Sync Studio Timing Logic** | `timeSyncStudio.js`, `ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |
+| **Sync Studio Review Player UI** | `timeSyncStudio.js`, `ui/reviewPlayerPanel.js`, `ui/youtubePlayerAdapter.js` | Review-player panel state, loop decisions, and YouTube IFrame control wiring |
 | **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components
