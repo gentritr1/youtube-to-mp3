@@ -4,29 +4,51 @@
  */
 
 import { drawWaveform as renderWaveform } from './waveformRenderer.js';
+import { PreviewAudioEngine } from './previewAudioEngine.js';
 
 let _onConvertRequest = null;
 let _audioVisualizer = null;
+let _previewAudioEngine = null;
 
 const FeaturesModule = (() => {
     // State
     const state = {
         genres: [],
         activeGenre: 'global',
-        previewAudio: null,
-        fadingPreviewAudio: null,
         previewVideoId: null,
-        previewSource: 'popular',
-        isPreviewPlaying: false,
-        isPreviewLoading: false,
-        previewRequestId: 0,
-        previewRequestController: null,
-        crossfadeFrameId: null,
-        playbackProgressFrameId: null
+        previewSource: 'popular'
     };
 
     // DOM Elements (populated on init)
     let elements = {};
+    const previewAudioEngine = new PreviewAudioEngine({
+        onStateChange: ({ isPlaying, isLoading }) => {
+            elements.previewPlayBtn?.classList.toggle('playing', Boolean(isPlaying));
+            setPreviewLoadingState(isLoading);
+            emitPreviewStateChange();
+        },
+        onProgress: ({ currentTime, duration, percent }) => {
+            renderPreviewProgress({ currentTime, duration, percent });
+        },
+        onStatus: (message) => {
+            updatePreviewStatus(message);
+        },
+        onMetadata: ({ duration, seedSource }) => {
+            if (elements.previewTimeTotal) {
+                elements.previewTimeTotal.textContent = formatTime(duration);
+            }
+            renderWaveform(elements.waveformCanvas, { seedSource });
+        },
+        onError: (message) => {
+            setPreviewLoadingState(true);
+            if (elements.previewLoadingText) {
+                elements.previewLoadingText.textContent = `⚠️ ${message}`;
+                elements.previewLoadingText.style.color = 'var(--destructive)';
+            }
+        },
+        audioVisualizer: _audioVisualizer
+    });
+    _previewAudioEngine = previewAudioEngine;
 
     /**
      * HTML escape helper to prevent XSS
@@ -280,13 +302,15 @@ const FeaturesModule = (() => {
     };
 
     const emitPreviewStateChange = () => {
-        elements.previewPlayer?.classList.toggle('is-playing', Boolean(state.isPreviewPlaying));
+        const isPlaying = previewAudioEngine.isPlaying();
+        const isLoading = previewAudioEngine.isLoading();
+        elements.previewPlayer?.classList.toggle('is-playing', Boolean(isPlaying));
         document.dispatchEvent(new CustomEvent('preview-state-change', {
             detail: {
                 videoId: state.previewVideoId,
                 source: state.previewSource,
-                isPlaying: state.isPreviewPlaying,
-                isLoading: state.isPreviewLoading
+                isPlaying,
+                isLoading
             }
         }));
     };
@@ -307,213 +331,6 @@ const FeaturesModule = (() => {
         if (!elements.previewLoadingText) return;
         elements.previewLoadingText.textContent = 'Generating preview...';
         elements.previewLoadingText.style.color = '';
-    };
-
-    const abortPreviewRequest = () => {
-        if (state.previewRequestController) {
-            state.previewRequestController.abort();
-            state.previewRequestController = null;
-        }
-    };
-
-    const stopCrossfade = () => {
-        if (state.crossfadeFrameId) {
-            cancelAnimationFrame(state.crossfadeFrameId);
-            state.crossfadeFrameId = null;
-        }
-
-        if (state.fadingPreviewAudio) {
-            if (typeof state.fadingPreviewAudio.currentTime === 'number') {
-                state.fadingPreviewAudio.currentTime = 0;
-            }
-            disposeAudio(state.fadingPreviewAudio);
-            state.fadingPreviewAudio = null;
-        }
-    };
-
-    const stopPreviewProgressLoop = () => {
-        if (state.playbackProgressFrameId) {
-            cancelAnimationFrame(state.playbackProgressFrameId);
-            state.playbackProgressFrameId = null;
-        }
-    };
-
-    const startPreviewProgressLoop = () => {
-        stopPreviewProgressLoop();
-
-        const tick = () => {
-            if (!state.previewAudio) {
-                state.playbackProgressFrameId = null;
-                return;
-            }
-
-            updatePreviewProgress();
-
-            if (state.isPreviewPlaying && !state.previewAudio.paused && !state.previewAudio.ended) {
-                state.playbackProgressFrameId = requestAnimationFrame(tick);
-            } else {
-                state.playbackProgressFrameId = null;
-            }
-        };
-
-        state.playbackProgressFrameId = requestAnimationFrame(tick);
-    };
-
-    const getAdaptiveCrossfadeDurationMs = (outgoingAudio, incomingAudio) => {
-        const outgoingDuration = Number.isFinite(outgoingAudio?.duration) ? outgoingAudio.duration : 30;
-        const incomingDuration = Number.isFinite(incomingAudio?.duration) ? incomingAudio.duration : 30;
-        const outgoingCurrentTime = outgoingAudio?.currentTime ?? 0;
-        const outgoingRemaining = Number.isFinite(outgoingAudio?.duration)
-            ? Math.max(outgoingAudio.duration - outgoingCurrentTime, 0)
-            : 30;
-        const outgoingProgress = outgoingDuration > 0 ? outgoingCurrentTime / outgoingDuration : 0.5;
-
-        let duration = Math.min(outgoingRemaining, incomingDuration, 8) * 180;
-
-        if (outgoingProgress < 0.12) duration *= 0.72;
-        if (outgoingRemaining < 2.5) duration *= 0.68;
-        if (incomingDuration < 12) duration *= 0.9;
-
-        return Math.max(320, Math.min(1600, duration));
-    };
-
-    const disposeAudio = (audio) => {
-        if (!audio) return;
-
-        if (Array.isArray(audio._previewListeners)) {
-            audio._previewListeners.forEach(({ type, handler }) => {
-                audio.removeEventListener(type, handler);
-            });
-            delete audio._previewListeners;
-        }
-
-        audio.pause();
-        audio.removeAttribute('src');
-        audio.load();
-    };
-
-    const attachPreviewAudioEvents = (audio) => {
-        const listeners = [];
-        const addListener = (type, handler) => {
-            audio.addEventListener(type, handler);
-            listeners.push({ type, handler });
-        };
-
-        const onError = (e) => {
-            console.error('[Preview] Audio load/play error:', e);
-            if (state.previewAudio !== audio) return;
-
-            disposeAudio(audio);
-            state.previewAudio = null;
-            state.isPreviewPlaying = false;
-            elements.previewPlayBtn.classList.remove('playing');
-            if (_audioVisualizer) _audioVisualizer.pause();
-            stopPreviewProgressLoop();
-            updatePreviewStatus('Preview unavailable');
-            emitPreviewStateChange();
-            setPreviewLoadingState(true);
-
-            if (elements.previewLoadingText) {
-                elements.previewLoadingText.textContent = '⚠️ Failed to load audio preview';
-                elements.previewLoadingText.style.color = 'var(--destructive)';
-            }
-        };
-
-        const onLoadedMetadata = () => {
-            if (state.previewAudio !== audio) return;
-            elements.previewTimeTotal.textContent = formatTime(audio.duration);
-            renderWaveform(elements.waveformCanvas, {
-                seedSource: `${state.previewVideoId || 'preview'}:${elements.previewTitle?.textContent || ''}`
-            });
-            updatePreviewProgress();
-        };
-
-        const onTimeUpdate = () => {
-            if (state.previewAudio !== audio) return;
-            updatePreviewProgress();
-        };
-
-        const onEnded = () => {
-            if (state.previewAudio !== audio) return;
-            state.isPreviewPlaying = false;
-            elements.previewPlayBtn.classList.remove('playing');
-            if (_audioVisualizer) _audioVisualizer.pause();
-            stopPreviewProgressLoop();
-            updatePreviewStatus('Preview ended');
-            emitPreviewStateChange();
-        };
-
-        addListener('error', onError);
-        addListener('loadedmetadata', onLoadedMetadata);
-        addListener('timeupdate', onTimeUpdate);
-        addListener('ended', onEnded);
-
-        audio._previewListeners = listeners;
-    };
-
-    const createPreviewAudio = (previewUrl) => new Promise((resolve, reject) => {
-        const audio = new Audio(previewUrl);
-        audio.preload = 'auto';
-
-        const onCanPlay = () => {
-            cleanup();
-            resolve(audio);
-        };
-
-        const onError = () => {
-            cleanup();
-            reject(new Error('Failed to load audio preview'));
-        };
-
-        const cleanup = () => {
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.removeEventListener('error', onError);
-        };
-
-        audio.addEventListener('canplay', onCanPlay, { once: true });
-        audio.addEventListener('error', onError, { once: true });
-    });
-
-    const startCrossfade = (outgoingAudio, incomingAudio) => {
-        stopCrossfade();
-
-        state.fadingPreviewAudio = outgoingAudio;
-        const startTime = performance.now();
-        const durationMs = getAdaptiveCrossfadeDurationMs(outgoingAudio, incomingAudio);
-        updatePreviewStatus(`Adaptive crossfade ${Math.round(durationMs / 10) / 100}s`);
-
-        const fade = (now) => {
-            const progress = Math.min((now - startTime) / durationMs, 1);
-            const clampedProgress = Math.max(0, Math.min(1, progress));
-            const incomingVolume = Math.max(0, Math.min(1, Math.sin(clampedProgress * Math.PI * 0.5)));
-            const outgoingVolume = Math.max(0, Math.min(1, Math.cos(clampedProgress * Math.PI * 0.5)));
-
-            incomingAudio.volume = incomingVolume;
-            outgoingAudio.volume = outgoingVolume;
-
-            if (clampedProgress < 1) {
-                state.crossfadeFrameId = requestAnimationFrame(fade);
-                return;
-            }
-
-            stopCrossfade();
-            incomingAudio.volume = 1;
-            updatePreviewStatus('Crossfade complete');
-        };
-
-        state.crossfadeFrameId = requestAnimationFrame(fade);
-    };
-
-    const stopAllPreviewAudio = () => {
-        abortPreviewRequest();
-        state.previewRequestId += 1;
-        stopCrossfade();
-        stopPreviewProgressLoop();
-        disposeAudio(state.previewAudio);
-        state.previewAudio = null;
-        state.isPreviewPlaying = false;
-        state.isPreviewLoading = false;
-        emitPreviewStateChange();
     };
 
     /**
@@ -546,9 +363,10 @@ const FeaturesModule = (() => {
             if (elements.videoCarousel) {
                 elements.videoCarousel.innerHTML = `
                     <div style="padding: 2rem; text-align: center; color: var(--muted-foreground);">
-                        Unable to load suggestions. <button onclick="FeaturesModule.reload()" style="color: var(--foreground); text-decoration: underline; background: none; border: none; cursor: pointer;">Retry</button>
+                        Unable to load suggestions. <button class="popular-retry-btn" type="button" style="color: var(--foreground); text-decoration: underline; background: none; border: none; cursor: pointer;">Retry</button>
                     </div>
                 `;
+                elements.videoCarousel.querySelector('.popular-retry-btn')?.addEventListener('click', reload);
             }
         }
     };
@@ -707,30 +525,20 @@ const FeaturesModule = (() => {
 
         const isSamePreview = elements.previewPlayer.classList.contains('active')
             && state.previewVideoId === video.videoId
-            && state.previewAudio !== null;
+            && previewAudioEngine.hasAudio();
 
         if (isSamePreview) {
             updatePreviewMetadata(video);
-            updatePreviewStatus(state.isPreviewPlaying ? 'Now playing' : 'Ready to preview');
+            updatePreviewStatus(previewAudioEngine.isPlaying() ? 'Now playing' : 'Ready to preview');
             return;
         }
 
-        const requestId = state.previewRequestId + 1;
-        abortPreviewRequest();
-        const controller = new AbortController();
-        const outgoingAudio = state.previewAudio;
-
-        state.previewRequestId = requestId;
-        state.previewRequestController = controller;
         elements.previewPlayer.classList.add('active');
         updatePreviewMetadata(video);
         resetPreviewProgress();
-
-        state.isPreviewLoading = true;
         resetLoadingText();
-        updatePreviewStatus(outgoingAudio && state.isPreviewPlaying ? 'Preparing next preview...' : 'Generating preview...');
-        emitPreviewStateChange();
-        setPreviewLoadingState(true);
+        const { requestId, controller, outgoingAudio } = previewAudioEngine.beginRequest();
+        updatePreviewStatus(outgoingAudio && previewAudioEngine.isPlaying() ? 'Preparing next preview...' : 'Generating preview...');
 
         try {
             const response = await fetch('/api/preview', {
@@ -760,73 +568,31 @@ const FeaturesModule = (() => {
                 throw new Error(data.message || 'Failed to generate preview');
             }
 
-            const incomingAudio = await createPreviewAudio(data.previewUrl);
-            if (requestId !== state.previewRequestId) {
-                disposeAudio(incomingAudio);
-                return;
-            }
-
             const shouldAutoplay = Boolean(
                 outgoingAudio
-                && requestId === state.previewRequestId
-                && state.isPreviewPlaying
-                && state.previewAudio === outgoingAudio
+                && previewAudioEngine.isCurrentRequest(requestId)
+                && previewAudioEngine.isPlaying()
+                && previewAudioEngine.getCurrentAudio() === outgoingAudio
             );
 
-            attachPreviewAudioEvents(incomingAudio);
-            state.previewAudio = incomingAudio;
-
-            if (shouldAutoplay && outgoingAudio) {
-                incomingAudio.volume = 0;
-
-                try {
-                    await incomingAudio.play();
-                    state.isPreviewPlaying = true;
-                    elements.previewPlayBtn.classList.add('playing');
-                    if (_audioVisualizer) _audioVisualizer.play(incomingAudio);
-                    startPreviewProgressLoop();
-                    startCrossfade(outgoingAudio, incomingAudio);
-                    emitPreviewStateChange();
-                } catch (error) {
-                    console.error('[Features] Crossfade playback failed:', error);
-                    state.isPreviewPlaying = false;
-                    elements.previewPlayBtn.classList.remove('playing');
-                    disposeAudio(outgoingAudio);
-                    incomingAudio.volume = 1;
-                    updatePreviewStatus('Tap play to start preview');
-                    emitPreviewStateChange();
-                }
-            } else {
-                if (outgoingAudio) {
-                    disposeAudio(outgoingAudio);
-                }
-                if (_audioVisualizer) _audioVisualizer.pause();
-                state.isPreviewPlaying = false;
-                elements.previewPlayBtn.classList.remove('playing');
-                incomingAudio.volume = 1;
-                stopPreviewProgressLoop();
-                updatePreviewStatus('Tap play to start preview');
-                emitPreviewStateChange();
-            }
+            await previewAudioEngine.loadPreview(data.previewUrl, {
+                requestId,
+                outgoingAudio,
+                shouldAutoplay,
+                seedSource: `${state.previewVideoId || 'preview'}:${elements.previewTitle?.textContent || ''}`
+            });
         } catch (error) {
             if (error.name === 'AbortError') {
                 return;
             }
-            if (requestId !== state.previewRequestId) return;
+            if (!previewAudioEngine.isCurrentRequest(requestId)) return;
             console.error('[Preview] Error:', error);
             if (elements.previewLoadingText) {
                 elements.previewLoadingText.textContent = '⚠️ ' + (error.message || 'Failed to generate preview');
                 elements.previewLoadingText.style.color = 'var(--destructive)';
             }
         } finally {
-            if (requestId === state.previewRequestId) {
-                state.isPreviewLoading = false;
-                setPreviewLoadingState(false);
-                if (state.previewRequestController === controller) {
-                    state.previewRequestController = null;
-                }
-                emitPreviewStateChange();
-            }
+            previewAudioEngine.endRequest(requestId, controller);
         }
     };
 
@@ -834,13 +600,10 @@ const FeaturesModule = (() => {
      * Close preview player
      */
     const closePreview = () => {
-        stopAllPreviewAudio();
-        if (_audioVisualizer) _audioVisualizer.pause();
+        previewAudioEngine.stopAll();
         state.previewVideoId = null;
         state.previewSource = 'popular';
         elements.previewPlayer.classList.remove('active');
-        elements.previewPlayBtn.classList.remove('playing');
-        setPreviewLoadingState(false);
         resetPreviewProgress();
 
         resetLoadingText();
@@ -852,46 +615,13 @@ const FeaturesModule = (() => {
      * Toggle preview playback
      */
     const togglePreviewPlayback = () => {
-        if (!state.previewAudio) return;
-
-        if (state.isPreviewPlaying) {
-            state.previewAudio.pause();
-            state.isPreviewPlaying = false;
-            elements.previewPlayBtn.classList.remove('playing');
-            if (_audioVisualizer) _audioVisualizer.pause();
-            stopPreviewProgressLoop();
-            updatePreviewStatus('Paused');
-            emitPreviewStateChange();
-        } else {
-            state.previewAudio.play()
-                .then(() => {
-                    state.isPreviewPlaying = true;
-                    elements.previewPlayBtn.classList.add('playing');
-                    if (_audioVisualizer) _audioVisualizer.play(state.previewAudio);
-                    startPreviewProgressLoop();
-                    updatePreviewStatus('Now playing');
-                    emitPreviewStateChange();
-                })
-                .catch((error) => {
-                    console.error('[Features] Playback failed:', error);
-                    state.isPreviewPlaying = false;
-                    elements.previewPlayBtn.classList.remove('playing');
-                    stopPreviewProgressLoop();
-                    updatePreviewStatus('Playback blocked');
-                    emitPreviewStateChange();
-                });
-        }
+        previewAudioEngine.togglePlayback();
     };
 
     /**
      * Seek in preview
      */
     const seekPreview = (e) => {
-        if (!state.previewAudio) return;
-
-        const duration = state.previewAudio.duration;
-        if (!Number.isFinite(duration) || duration <= 0) return;
-
         const target = e.currentTarget instanceof HTMLElement ? e.currentTarget : elements.previewProgressBar;
         const rect = target.getBoundingClientRect();
         let percent = (e.clientX - rect.left) / rect.width;
@@ -899,38 +629,27 @@ const FeaturesModule = (() => {
         // Clamp to [0, 1]
         percent = Math.max(0, Math.min(1, percent));
 
-        state.previewAudio.currentTime = percent * duration;
-        updatePreviewProgress();
+        previewAudioEngine.seekToPercent(percent);
     };
 
     const seekPreviewByWheel = (e) => {
-        if (!state.previewAudio) return;
-
-        const duration = state.previewAudio.duration;
-        if (!Number.isFinite(duration) || duration <= 0) return;
-
         e.preventDefault();
 
         const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        const currentAudio = previewAudioEngine.getCurrentAudio();
+        const duration = currentAudio?.duration;
+        if (!Number.isFinite(duration) || duration <= 0) return;
+
         const stepSeconds = Math.max(0.6, Math.min(duration * 0.045, 2.4));
         const direction = delta > 0 ? 1 : -1;
-        const nextTime = Math.max(0, Math.min(duration, state.previewAudio.currentTime + (direction * stepSeconds)));
-
-        state.previewAudio.currentTime = nextTime;
+        previewAudioEngine.seekByDelta(direction * stepSeconds);
         updatePreviewStatus('Scroll to scrub');
-        updatePreviewProgress();
     };
 
     /**
      * Update preview progress UI
      */
-    const updatePreviewProgress = () => {
-        if (!state.previewAudio) return;
-
-        const currentTime = state.previewAudio.currentTime;
-        const duration = state.previewAudio.duration;
-
-        // Guard against NaN/infinite duration
+    const renderPreviewProgress = ({ currentTime, duration, percent }) => {
         if (!Number.isFinite(duration) || duration <= 0) {
             elements.previewProgressFill.style.transform = 'scaleX(0)';
             elements.waveformProgress.style.transform = 'scaleX(0)';
@@ -938,9 +657,6 @@ const FeaturesModule = (() => {
             elements.previewTimeCurrent.textContent = '0:00';
             return;
         }
-
-        let percent = currentTime / duration;
-        percent = Math.max(0, Math.min(1, percent));
 
         elements.previewProgressFill.style.transform = `scaleX(${percent})`;
         elements.waveformProgress.style.transform = `scaleX(${percent})`;
@@ -1041,6 +757,7 @@ export function setOnConvertRequest(callback) {
  */
 export function setAudioVisualizer(visualizer) {
     _audioVisualizer = visualizer;
+    _previewAudioEngine?.setAudioVisualizer(visualizer);
 }
 
 export { FeaturesModule };

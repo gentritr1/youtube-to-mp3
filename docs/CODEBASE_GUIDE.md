@@ -287,7 +287,7 @@ If ownership is unclear, split the feature first.
 
 All new JavaScript must use `import`/`export`. Do not add new `window.*` globals.
 
-Existing globals (`window.FeaturesModule`, `window.batchDownloads`, `window.SnakeGame`, `window.__heroRunner`) are legacy integration points. They work today but compound drift — every new feature that follows them inherits the same coupling. Migrate them to ES modules opportunistically when touching those files.
+Remaining legacy-style integration points are concentrated in older feature files such as `js/batch.js`, `js/snake-game.js`, and `js/hero-runner.js`. They work today but compound drift — every new feature that follows them inherits the same coupling. Migrate them to ES modules opportunistically when touching those files.
 
 ### 3. Add tokens before exceptions
 
@@ -354,12 +354,10 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 
 **Structural (extensibility blockers):**
 
-- the frontend uses two module systems side by side: `app.js` and `js/ui/*` use ES module `import`/`export`, while `features.js`, `batch.js`, `snake-game.js`, and `hero-runner.js` use global `<script>` tags and `window.*` exports; every new feature must pick a style, and neither integrates cleanly with the other
-- `js/ui/timeSyncStudio.js` is 1,825 lines and carries player loading, sync workflow, review state, assistant requests, and export in a single class; new studio work inflates a file that already has multiple stable seams
-- `js/features.js` is 1,130 lines and owns DOM creation, genre fetching, audio preview lifecycle, crossfade, waveform rendering, and convert handoff; it also dispatches synthetic events on elements owned by other modules
-- task persistence now routes through `server/services/taskStore.ts`, but the adapter split still needs stronger documentation and test coverage around `TASK_STORE=memory` fallback behavior if that contingency remains
-- `server/routes/preview.ts` (343 lines) owns process spawning, caching, streaming, range requests, and cleanup — responsibilities that belong in a service
-- frontend test infrastructure covers server-side TypeScript but has no DOM/browser harness for testing async UI flows, request races, or stale-response guards
+- `js/ui/timeSyncStudio.js` is still 1,685 lines and carries player loading, sync workflow, review state, assistant requests, and export in a single class; the first stable seams are extracted, but the main file remains a future bottleneck
+- `js/features.js` is down to 762 lines after extracting `previewAudioEngine.js` and `waveformRenderer.js`, but it still owns DOM creation, genre fetching, card rendering, and convert handoff in one module
+- task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
+- frontend test infrastructure now has a jsdom harness for async UI flows, but coverage still leans heavily toward lyrics timing; preview audio and studio request races remain under-tested
 
 **Maintenance (valuable but lower leverage):**
 
@@ -368,15 +366,20 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 
 ### Phase 1. Freeze new globals and unify the module system direction
 
+Status:
+- completed
+
 This is the single biggest barrier to additive features. Without it, every new feature inherits a module-system decision debt.
 
-Immediate rule:
+Rule in force:
 - all new JavaScript uses `import`/`export` — no new `window.*` assignments
-- existing globals are legacy and should be migrated when their files are touched for other work
+- remaining globals are legacy and should be migrated when their files are touched for other work
 
-Migration targets (opportunistic, not blocking):
-- `js/features.js` → ES module, replace `window.FeaturesModule` with named exports
-- `js/batch.js` → ES module, replace `window.batchDownloads` with named exports
+Completed migration targets:
+- `js/features.js` now ships as an ES module with named exports
+
+Remaining migration targets:
+- `js/batch.js` → ES module, replace legacy-style integration points with named exports only
 - `js/snake-game.js` → ES module, replace `window.SnakeGame` with default export
 - `js/hero-runner.js` → ES module, replace `window.__heroRunner` with module-scoped reference
 
@@ -388,6 +391,9 @@ Definition of done:
 - migration of existing globals progresses when files are touched
 
 ### Phase 2. Resolve backend task persistence
+
+Status:
+- completed
 
 The current state is not a documentation gap; it is code duplication with divergent responsibilities.
 
@@ -409,7 +415,10 @@ Definition of done:
 
 ### Phase 3. Stand up a frontend async test harness
 
-The plan calls for race-condition tests around lyric timing, assistant requests, and stale-response guards. Those tests need fake timers, DOM state, fetch mocking, and browser API control. The current test suite is server-side TypeScript only.
+Status:
+- completed
+
+The harness now exists. The next gap is depth rather than setup: more race-condition coverage around assistant requests, preview playback transitions, and studio state replacement.
 
 Before writing race tests, decide and wire up:
 - test runner: vitest (already in package.json) with jsdom or happy-dom environment
@@ -432,9 +441,12 @@ Definition of done:
 
 ### Phase 4. Decompose oversized feature modules
 
+Status:
+- in progress
+
 Two files carry enough distinct responsibilities that they should be split before absorbing more work.
 
-**`js/ui/timeSyncStudio.js` (1,825 lines)**
+**`js/ui/timeSyncStudio.js` (1,685 lines)**
 
 Stable seams to extract:
 - YouTube IFrame player adapter (loading, lifecycle, state polling)
@@ -444,23 +456,31 @@ Stable seams to extract:
 
 The argument is not for arbitrary splitting; it is for extracting clear seams before more work lands there.
 
-**`js/features.js` (1,130 lines)**
+**`js/features.js` (762 lines)**
 
-Stable seams to extract:
-- preview audio engine (crossfade, playback loop, audio lifecycle)
-- waveform renderer (canvas drawing, progress display)
-- leaving genre data, DOM creation, and card rendering in the main file
+Stable seams extracted:
+- `js/previewAudioEngine.js` now owns crossfade, playback loop, request cancellation, and audio lifecycle
+- `js/waveformRenderer.js` now owns waveform drawing
+
+Remaining in the parent module:
+- genre data loading
+- DOM creation
+- card rendering and preview metadata wiring
+- convert handoff
 
 Also: remove synthetic event dispatches (`form.dispatchEvent(new Event('submit'))`) and replace with an explicit callback or imported function. Cross-module DOM mutations are the exact coupling the architecture warns against.
 
 Definition of done:
-- no single frontend JS file exceeds roughly 500 lines
 - extracted sub-modules have clear single-purpose APIs
 - the parent module imports from them rather than containing them inline
+- follow-up splits are driven by stable seams, not arbitrary line counts
 
 ### Phase 5. Extract preview service from route
 
-`server/routes/preview.ts` currently owns HTTP handling, `yt-dlp`/`ffmpeg` process orchestration, cache management, file streaming, and cleanup. These should be split:
+Status:
+- completed
+
+This split is now in place:
 
 - `server/services/previewService.ts`: process spawning, caching, cleanup, file lifecycle
 - `server/routes/preview.ts`: request validation, response mapping, streaming

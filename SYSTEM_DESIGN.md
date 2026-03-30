@@ -131,7 +131,8 @@ youtube-to-mp3/
 │
 ├── 📁 js/                     # Frontend modules
 │   ├── snake-game.js          # Full snake game (38KB!)
-│   ├── features.js            # Popular videos & audio preview module
+│   ├── features.js            # Popular videos UI orchestration
+│   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
@@ -154,6 +155,7 @@ youtube-to-mp3/
 │   │   ├── sqliteTaskManager.ts  # SQLite persistence primitives
 │   │   ├── sqliteTaskAdapter.ts  # SQLite task-store adapter
 │   │   ├── memoryTaskAdapter.ts  # In-memory contingency adapter
+│   │   ├── previewService.ts  # Audio preview orchestration
 │   │   ├── jobQueue.ts        # ✨ Bull + Redis queue
 │   │   └── batchService.ts    # ✨ Batch download orchestration
 │   └── utils/
@@ -193,7 +195,7 @@ youtube-to-mp3/
 | **Download Section** | `app.js`, `results.css` | Orchestrated success animation |
 | **Snake Game** | `snake-game.js` | Entertainment during wait |
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
-| **Audio Preview** | `features.js`, `features.css` | 30-second audio preview with waveform |
+| **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
 | **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components
@@ -207,10 +209,14 @@ youtube-to-mp3/
 | **Convert Route** | `server/routes/convert.ts` | Start async conversion task |
 | **Progress Route** | `server/routes/progress.ts` | Poll task status |
 | **Download Route** | `server/routes/download.ts` | Serve converted file |
+| **Preview Route** | `server/routes/preview.ts` | Validate preview requests and stream generated previews |
 | **Batch Convert Route** | `server/routes/batchConvert.ts` | Create batch with multiple videos |
 | **Batch Progress Route** | `server/routes/batchProgress.ts` | Poll batch status |
 | **yt-dlp Service** | `server/services/ytdlp.ts` | Wrapper with retry logic |
-| **SQLite Task Manager** | `server/services/sqliteTaskManager.ts` | Persistent task storage |
+| **Task Store** | `server/services/taskStore.ts` | Canonical task facade with adapter selection |
+| **SQLite Task Adapter** | `server/services/sqliteTaskAdapter.ts` | Default persistent task backend |
+| **Memory Task Adapter** | `server/services/memoryTaskAdapter.ts` | Contingency in-memory task backend |
+| **Preview Service** | `server/services/previewService.ts` | Generate, cache, and clean audio previews |
 | **Job Queue** | `server/services/jobQueue.ts` | Optional Redis-backed queue |
 | **Batch Service** | `server/services/batchService.ts` | Batch download orchestration |
 
@@ -256,11 +262,13 @@ Returns:
 
 ## 💾 Persistence & Scalability
 
-### SQLite Task Persistence
+### Task Persistence
 
-Tasks are now stored in an SQLite database (`tasks.db`) that survives server restarts.
+Tasks route through `server/services/taskStore.ts`, which selects the backing adapter at startup.
 
 **Features:**
+- `TASK_STORE=sqlite` is the default product path
+- `TASK_STORE=memory` is available as a contingency path
 - WAL mode for better concurrency
 - Prepared statements for performance
 - Indexed on `video_id`, `format`, `state`
@@ -275,6 +283,8 @@ CREATE TABLE tasks (
     format TEXT NOT NULL,
     state TEXT DEFAULT 'processing',
     progress INTEGER DEFAULT 0,
+    title TEXT,
+    status TEXT,
     filename TEXT,
     download_url TEXT,
     error TEXT,
@@ -302,7 +312,7 @@ When Redis is available and `USE_QUEUE=true`:
 Run tests with:
 
 ```bash
-npm run test:node
+npm test
 ```
 
 | Test File | Tests | Coverage |

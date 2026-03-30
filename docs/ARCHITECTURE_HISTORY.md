@@ -129,7 +129,7 @@ These patterns worked well and should be carried forward:
 
 ## Change Log
 
-### Architecture Cleanup — Phase 1: ES Module Unification (planned)
+### Architecture Cleanup — Phase 1: ES Module Unification (completed)
 
 **Problem**: Two module systems (ES modules + window globals) running side by side, forcing every new feature to pick an integration style.
 
@@ -137,7 +137,7 @@ These patterns worked well and should be carried forward:
 
 **Key design choice**: `batch.js → features.js` dependency uses an injected callback from `app.js` (`setPreviewCallback`) instead of a direct import, because `features.js` will be split in Phase 4. Interface-first design prevents re-breaking the same file.
 
-### Architecture Cleanup — Phase 2: Task Persistence Consolidation (planned)
+### Architecture Cleanup — Phase 2: Task Persistence Consolidation (completed)
 
 **Problem**: Two task persistence implementations loaded simultaneously with no canonical path. Routes import legacy in-memory manager; server index imports SQLite for cleanup.
 
@@ -145,7 +145,7 @@ These patterns worked well and should be carried forward:
 
 **Key design choice**: Object-based `createTask({ taskId, videoId, format, ... })` instead of positional args. `findExistingTask` returns `Task | null` instead of `string | null`. Callers adapt minimally; the facade absorbs the difference.
 
-### Architecture Cleanup — Phase 3: Frontend Test Harness (planned)
+### Architecture Cleanup — Phase 3: Frontend Test Harness (completed)
 
 **Problem**: No DOM/browser test environment for async UI flows. Can't write race-condition or stale-state tests.
 
@@ -153,15 +153,17 @@ These patterns worked well and should be carried forward:
 
 **Key design choice**: Per-file environment opt-in instead of global jsdom. Server tests stay in Node without DOM overhead.
 
-### Architecture Cleanup — Phase 4: Module Decomposition (planned)
+### Architecture Cleanup — Phase 4: Module Decomposition (in progress)
 
-**Problem**: `timeSyncStudio.js` (1,825 LOC) and `features.js` (1,130 LOC) carry multiple stable responsibilities that should evolve independently.
+**Problem**: `timeSyncStudio.js` and `features.js` had accumulated multiple stable responsibilities that should evolve independently.
 
-**Solution**: Extract along stable seams — YouTubePlayerAdapter, AssistantClient, SyncExporter from studio; PreviewAudioEngine, WaveformRenderer from features. Public APIs established in Phase 1 stay unchanged.
+**Solution so far**: Extracted YouTubePlayerAdapter, AssistantClient, and SyncExporter from studio; extracted PreviewAudioEngine and WaveformRenderer from features. Public APIs established in Phase 1 stayed unchanged.
+
+**Current state**: `features.js` is down to 762 LOC and `timeSyncStudio.js` is down to 1,685 LOC. The stable seams are in place, but the studio file still has more decomposition work ahead if it grows further.
 
 **Key design choice**: Phase 1 changed boundaries; Phase 4 changes guts. Callers don't see Phase 4 changes.
 
-### Architecture Cleanup — Phase 5: Preview Service Extraction (planned)
+### Architecture Cleanup — Phase 5: Preview Service Extraction (completed)
 
 **Problem**: `server/routes/preview.ts` owns process spawning, caching, streaming, and cleanup — responsibilities that belong in a service.
 

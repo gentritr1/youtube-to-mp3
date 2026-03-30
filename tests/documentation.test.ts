@@ -369,7 +369,7 @@ describe('Documentation Files', () => {
 
     it('SYSTEM_DESIGN should document all major services', () => {
       expect(systemDesign).toContain('ytdlp');
-      expect(systemDesign).toContain('taskManager');
+      expect(systemDesign).toContain('taskStore');
       expect(systemDesign).toContain('jobQueue');
     });
 
