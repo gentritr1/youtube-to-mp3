@@ -1,3 +1,7 @@
+import { AssistantClient, renderAssistantFallback, renderAssistantResponse } from './assistantClient.js';
+import { exportSyncProject } from './syncExporter.js';
+import { YouTubePlayerAdapter } from './youtubePlayerAdapter.js';
+
 const ACTION_TYPES = new Set(['OPEN_PANEL', 'SELECT_POINT', 'NUDGE_POINT', 'START_AUTOSYNC', 'APPLY_FIX', 'EXPORT']);
 const POINT_WINDOW_SIZE = 9;
 
@@ -76,51 +80,6 @@ const getTimePartsError = (minutesValue, secondsValue, millisecondsValue) => {
     }
 
     return '';
-};
-
-let youTubeApiPromise = null;
-const resetYouTubeApiPromise = (error, reject) => {
-    youTubeApiPromise = null;
-    reject(error);
-};
-
-const loadYouTubeApi = () => {
-    if (typeof window === 'undefined') {
-        return Promise.reject(new Error('YouTube API is not available in this environment.'));
-    }
-
-    if (window.YT?.Player) {
-        return Promise.resolve(window.YT);
-    }
-
-    if (youTubeApiPromise) {
-        return youTubeApiPromise;
-    }
-
-    youTubeApiPromise = new Promise((resolve, reject) => {
-        const existing = document.querySelector('script[data-youtube-iframe-api]');
-        const previousReady = window.onYouTubeIframeAPIReady;
-
-        window.onYouTubeIframeAPIReady = () => {
-            previousReady?.();
-            if (window.YT?.Player) {
-                resolve(window.YT);
-            } else {
-                resetYouTubeApiPromise(new Error('YouTube API loaded without player support.'), reject);
-            }
-        };
-
-        if (!existing) {
-            const script = document.createElement('script');
-            script.src = 'https://www.youtube.com/iframe_api';
-            script.async = true;
-            script.dataset.youtubeIframeApi = 'true';
-            script.onerror = () => resetYouTubeApiPromise(new Error('Could not load YouTube player API.'), reject);
-            document.head.appendChild(script);
-        }
-    });
-
-    return youTubeApiPromise;
 };
 
 export class TimeSyncStudio {
@@ -223,16 +182,41 @@ export class TimeSyncStudio {
         this.motionMediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? null;
         this.sessionId = window.crypto?.randomUUID?.() ?? `sync_${Date.now()}`;
         this.currentAssistantResponse = null;
-        this.pendingAssistantRequestId = 0;
+        this.assistantClient = new AssistantClient({
+            sessionId: this.sessionId,
+            onRender: (response) => this.renderAssistant(response),
+            onFallback: (text) => this.renderAssistantFallback(text),
+            onResponseChange: (response) => {
+                this.currentAssistantResponse = response;
+            }
+        });
         this.autosyncTimerId = null;
         this.estimateGapMs = 2200;
         this.mediaSource = null;
         this.reviewLoopEnabled = false;
-        this.reviewPlayer = null;
-        this.reviewPlayerReady = false;
         this.reviewPlaybackTimerId = null;
         this.reviewPlayerRequestId = 0;
         this.reviewPlayerMountId = `yt-sync-player-${window.crypto?.randomUUID?.() ?? Date.now()}`;
+        this.reviewPlayerAdapter = new YouTubePlayerAdapter({
+            frameElement: this.reviewPlayerFrame,
+            mountId: this.reviewPlayerMountId,
+            onReady: () => {
+                this.renderReviewPlayer();
+            },
+            onStateChange: (event, YT) => {
+                const state = YT?.PlayerState ?? {};
+                if (event.data === state.PLAYING) {
+                    this.startReviewPlaybackLoop();
+                } else if (event.data === state.PAUSED || event.data === state.ENDED) {
+                    this.stopReviewPlaybackLoop();
+                }
+                this.renderReviewPlayer();
+            },
+            onError: (error) => {
+                console.error('ensureReviewPlayer failed', error);
+                this.renderReviewPlayer();
+            }
+        });
         this.editorFeedback = '';
         this.editorFeedbackTone = 'muted';
         this._tabHandlers = [];
@@ -252,6 +236,14 @@ export class TimeSyncStudio {
         this._boundReviewPlayToggle = null;
         this._boundReviewJump = null;
         this._boundReviewLoop = null;
+    }
+
+    get reviewPlayer() {
+        return this.reviewPlayerAdapter.getPlayer();
+    }
+
+    get reviewPlayerReady() {
+        return this.reviewPlayerAdapter.isReady();
     }
 
     init() {
@@ -615,6 +607,7 @@ export class TimeSyncStudio {
             issuesByPointId: {}
         };
         this.currentAssistantResponse = null;
+        this.assistantClient.clearResponse();
         this.hideTooltip();
 
         this.setStatus(
@@ -817,61 +810,18 @@ export class TimeSyncStudio {
             return;
         }
 
-        if (this.reviewPlayer && this.reviewPlayer.__videoId === this.mediaSource.videoId) {
+        if (this.reviewPlayerAdapter.hasVideo(this.mediaSource.videoId)) {
             return;
         }
 
-        this.destroyReviewPlayer();
-        this.reviewPlayerFrame.innerHTML = `<div id="${this.reviewPlayerMountId}" class="review-player-embed"></div>`;
-
-        try {
-            const YT = await loadYouTubeApi();
-            if (requestId !== this.reviewPlayerRequestId || !this.mediaSource) {
-                return;
-            }
-            this.reviewPlayer = new YT.Player(this.reviewPlayerMountId, {
-                videoId: this.mediaSource.videoId,
-                playerVars: {
-                    playsinline: 1,
-                    rel: 0,
-                    modestbranding: 1
-                },
-                events: {
-                    onReady: () => {
-                        this.reviewPlayerReady = true;
-                        if (this.reviewPlayer) {
-                            this.reviewPlayer.__videoId = this.mediaSource?.videoId ?? '';
-                        }
-                        this.renderReviewPlayer();
-                    },
-                    onStateChange: (event) => {
-                        const state = YT?.PlayerState ?? {};
-                        if (event.data === state.PLAYING) {
-                            this.startReviewPlaybackLoop();
-                        } else if (event.data === state.PAUSED || event.data === state.ENDED) {
-                            this.stopReviewPlaybackLoop();
-                        }
-                        this.renderReviewPlayer();
-                    }
-                }
-            });
-            this.reviewPlayerReady = false;
-        } catch (error) {
-            console.error('ensureReviewPlayer failed', error);
-            this.destroyReviewPlayer();
-        }
+        await this.reviewPlayerAdapter.loadForVideo(this.mediaSource.videoId, {
+            isCurrentRequest: () => requestId === this.reviewPlayerRequestId && Boolean(this.mediaSource)
+        });
     }
 
     destroyReviewPlayer() {
         this.stopReviewPlaybackLoop();
-        if (this.reviewPlayer?.destroy) {
-            this.reviewPlayer.destroy();
-        }
-        this.reviewPlayer = null;
-        this.reviewPlayerReady = false;
-        if (this.reviewPlayerFrame) {
-            this.reviewPlayerFrame.innerHTML = '';
-        }
+        this.reviewPlayerAdapter.destroy();
     }
 
     setEstimateGapMs(value) {
@@ -959,76 +909,23 @@ export class TimeSyncStudio {
             return;
         }
 
-        const requestId = Date.now() + Math.random();
-        this.pendingAssistantRequestId = requestId;
-
-        try {
-            const response = await fetch('/api/assistant', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: this.sessionId,
-                    userText,
-                    uiSnapshot: this.buildSnapshot()
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Assistant request failed');
-            }
-
-            const payload = await response.json();
-            if (this.pendingAssistantRequestId !== requestId) {
-                return;
-            }
-
-            this.currentAssistantResponse = payload;
-            this.renderAssistant(payload);
-        } catch (error) {
-            if (this.pendingAssistantRequestId !== requestId) {
-                return;
-            }
-
-            this.currentAssistantResponse = null;
-            this.renderAssistantFallback('The assistant is unavailable right now. You can still select a point and nudge it manually.');
-        }
+        await this.assistantClient.requestUpdate(() => this.buildSnapshot(), userText);
     }
 
     async executeAction(action) {
-        if (!action || !ACTION_TYPES.has(action.type)) {
-            return;
-        }
-
-        switch (action.type) {
-        case 'OPEN_PANEL':
-            this.setMode('studio');
-            if (action.payload?.panel) {
-                this.openPanel(action.payload.panel);
-            } else {
-                this.pointRail?.focus();
-            }
-            break;
-        case 'SELECT_POINT':
-            this.selectPoint(action.payload?.pointId || action.targetPointId, { focus: true });
-            break;
-        case 'NUDGE_POINT':
-            this.nudgePoint(action.payload?.pointId || action.targetPointId, Number(action.payload?.deltaMs) || 0);
-            break;
-        case 'START_AUTOSYNC':
-            this.startAutosync();
-            return;
-        case 'APPLY_FIX':
-            this.applyFix(action.payload || {});
-            break;
-        case 'EXPORT':
-            this.exportProject();
-            break;
-        default:
-            break;
-        }
-
-        this.render();
-        await this.requestAssistantUpdate();
+        await this.assistantClient.executeAction(action, {
+            isActionType: (type) => ACTION_TYPES.has(type),
+            setMode: (mode) => this.setMode(mode),
+            openPanel: (panel) => this.openPanel(panel),
+            focusPointRail: () => this.pointRail?.focus(),
+            selectPoint: (pointId) => this.selectPoint(pointId, { focus: true }),
+            nudgePoint: (pointId, deltaMs) => this.nudgePoint(pointId, deltaMs),
+            startAutosync: () => this.startAutosync(),
+            applyFix: (payload) => this.applyFix(payload),
+            exportProject: () => this.exportProject(),
+            render: () => this.render(),
+            requestUpdate: () => this.requestAssistantUpdate()
+        });
     }
 
     startAutosync() {
@@ -1463,31 +1360,11 @@ export class TimeSyncStudio {
     }
 
     exportProject() {
-        const exportPayload = {
-            schemaVersion: '1.0',
-            exportedAt: new Date().toISOString(),
-            project: {
-                id: this.sessionId,
-                title: this.getProjectTitle()
-            },
-            points: this.points.map((point) => ({
-                id: point.id,
-                index: point.index,
-                textPreview: point.textPreview,
-                timeMs: point.timeMs,
-                status: point.status
-            }))
-        };
-
-        const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'lyrics-sync-points.json';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
+        exportSyncProject({
+            sessionId: this.sessionId,
+            title: this.getProjectTitle(),
+            points: this.points
+        });
 
         this.setStatus(
             'Exported',
@@ -1565,36 +1442,19 @@ export class TimeSyncStudio {
     }
 
     renderAssistant(response) {
-        if (this.assistantText) {
-            this.assistantText.textContent = response.assistantText;
-        }
-
-        if (this.assistantAction) {
-            const actionType = response.nextAction?.type;
-            this.assistantAction.hidden = !actionType;
-            this.assistantAction.disabled = !actionType;
-            this.assistantAction.textContent = response.nextAction?.label || 'Continue';
-        }
-
-        if (this.assistantHint) {
-            const hint = response.hints?.[0];
-            this.assistantHint.textContent = hint?.text || '';
-            this.assistantHint.hidden = !hint?.text;
-        }
+        renderAssistantResponse({
+            assistantText: this.assistantText,
+            assistantAction: this.assistantAction,
+            assistantHint: this.assistantHint
+        }, response);
     }
 
     renderAssistantFallback(text) {
-        if (this.assistantText) {
-            this.assistantText.textContent = text;
-        }
-        if (this.assistantAction) {
-            this.assistantAction.hidden = true;
-            this.assistantAction.disabled = true;
-        }
-        if (this.assistantHint) {
-            this.assistantHint.hidden = true;
-            this.assistantHint.textContent = '';
-        }
+        renderAssistantFallback({
+            assistantText: this.assistantText,
+            assistantAction: this.assistantAction,
+            assistantHint: this.assistantHint
+        }, text);
     }
 
     renderPointRail() {

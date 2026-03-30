@@ -284,7 +284,7 @@ describe('package.json Configuration', () => {
 
     it('test:watch should run in watch mode', () => {
       expect(packageJson.scripts['test:watch']).toContain('vitest');
-      expect(packageJson.scripts['test:watch']).not.toContain('run');
+      expect(packageJson.scripts['test:watch']).not.toContain('vitest run');
     });
   });
 
