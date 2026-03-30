@@ -6,8 +6,17 @@
  */
 
 // Configuration
-// Use global API_URL if defined, otherwise default to relative path
-const getApiUrl = () => window.API_URL || '';
+const getApiUrl = () => '';
+
+let _previewCallback = null;
+
+/**
+ * Inject preview callback. Called by app.js during init.
+ * Avoids a direct import of features.js which will be split in Phase 4.
+ */
+export function setPreviewCallback(fn) {
+    _previewCallback = fn;
+}
 
 // Batch state
 const batchState = {
@@ -364,10 +373,9 @@ function createBatchItemElement(item) {
 
 function previewBatchItem(itemId) {
     const item = batchState.items.find((candidate) => candidate.id === itemId);
-    const featuresModule = window.FeaturesModule;
-    if (!item || item.isLive || !featuresModule) return;
+    if (!item || item.isLive || !_previewCallback) return;
 
-    featuresModule.showPreview({
+    _previewCallback({
         videoId: item.videoId,
         title: item.title,
         thumbnail: item.thumbnail,
@@ -782,15 +790,9 @@ function isBatchModeEnabled() {
     return batchState.enabled;
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBatchDownloads);
-} else {
-    initBatchDownloads();
-}
-
 // Export functions for use by main app
-window.batchDownloads = {
+export const batchDownloads = {
+    init: initBatchDownloads,
     isEnabled: isBatchModeEnabled,
     add: addToBatch,
     getState: () => batchState

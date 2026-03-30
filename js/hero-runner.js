@@ -9,7 +9,7 @@
  * Inspired by Three.js render-loop patterns, but zero dependencies.
  */
 
-(() => {
+{
   'use strict';
 
   /* ── helpers ──────────────────────────────────────────── */
@@ -440,6 +440,5 @@
     animator.init();
   }
 
-  // Expose for debugging in dev console
-  window.__heroRunner = animator;
-})();
+  // Expose for debugging in dev console only — no window global
+}

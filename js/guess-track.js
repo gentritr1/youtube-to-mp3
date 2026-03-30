@@ -1,7 +1,18 @@
 /**
  * Guess the Track - Mini Game Logic
  */
-class GuessTrackGame {
+
+let _getRandomTracks = null;
+
+/**
+ * Inject the track provider callback. Called by app.js during init
+ * so this module never imports features.js directly (it will be split in Phase 4).
+ */
+export function setTrackProvider(fn) {
+    _getRandomTracks = fn;
+}
+
+export class GuessTrackGame {
     constructor(elements) {
         this.elements = elements;
         
@@ -111,12 +122,12 @@ class GuessTrackGame {
         this.elements.timerBarContainer.classList.add('hidden');
         this.elements.timerBar.style.width = '100%';
 
-        if (typeof FeaturesModule === 'undefined' || !FeaturesModule.getRandomTracks) {
+        if (typeof _getRandomTracks !== 'function') {
             this.setStatus('danger', 'Feature unavailable', 'Track data is not ready yet.');
             this.isLoading = false;
             return;
         }
-        const tracks = FeaturesModule.getRandomTracks(4);
+        const tracks = _getRandomTracks(4);
         if (tracks.length === 0) {
              this.setStatus('loading', 'Waiting for music feed', 'No tracks yet. Retrying in a moment.');
              this.scheduleRetry(1000);

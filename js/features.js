@@ -3,6 +3,9 @@
  * Handles curated music suggestions and 30-second audio previews
  */
 
+let _onConvertRequest = null;
+let _audioVisualizer = null;
+
 const FeaturesModule = (() => {
     // State
     const state = {
@@ -402,7 +405,7 @@ const FeaturesModule = (() => {
             state.previewAudio = null;
             state.isPreviewPlaying = false;
             elements.previewPlayBtn.classList.remove('playing');
-            if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
+            if (_audioVisualizer) _audioVisualizer.pause();
             stopPreviewProgressLoop();
             updatePreviewStatus('Preview unavailable');
             emitPreviewStateChange();
@@ -430,7 +433,7 @@ const FeaturesModule = (() => {
             if (state.previewAudio !== audio) return;
             state.isPreviewPlaying = false;
             elements.previewPlayBtn.classList.remove('playing');
-            if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
+            if (_audioVisualizer) _audioVisualizer.pause();
             stopPreviewProgressLoop();
             updatePreviewStatus('Preview ended');
             emitPreviewStateChange();
@@ -776,7 +779,7 @@ const FeaturesModule = (() => {
                     await incomingAudio.play();
                     state.isPreviewPlaying = true;
                     elements.previewPlayBtn.classList.add('playing');
-                    if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.play(incomingAudio);
+                    if (_audioVisualizer) _audioVisualizer.play(incomingAudio);
                     startPreviewProgressLoop();
                     startCrossfade(outgoingAudio, incomingAudio);
                     emitPreviewStateChange();
@@ -793,7 +796,7 @@ const FeaturesModule = (() => {
                 if (outgoingAudio) {
                     disposeAudio(outgoingAudio);
                 }
-                if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
+                if (_audioVisualizer) _audioVisualizer.pause();
                 state.isPreviewPlaying = false;
                 elements.previewPlayBtn.classList.remove('playing');
                 incomingAudio.volume = 1;
@@ -828,7 +831,7 @@ const FeaturesModule = (() => {
      */
     const closePreview = () => {
         stopAllPreviewAudio();
-        if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
+        if (_audioVisualizer) _audioVisualizer.pause();
         state.previewVideoId = null;
         state.previewSource = 'popular';
         elements.previewPlayer.classList.remove('active');
@@ -851,7 +854,7 @@ const FeaturesModule = (() => {
             state.previewAudio.pause();
             state.isPreviewPlaying = false;
             elements.previewPlayBtn.classList.remove('playing');
-            if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.pause();
+            if (_audioVisualizer) _audioVisualizer.pause();
             stopPreviewProgressLoop();
             updatePreviewStatus('Paused');
             emitPreviewStateChange();
@@ -860,7 +863,7 @@ const FeaturesModule = (() => {
                 .then(() => {
                     state.isPreviewPlaying = true;
                     elements.previewPlayBtn.classList.add('playing');
-                    if (typeof AudioVisualizer !== 'undefined') AudioVisualizer.play(state.previewAudio);
+                    if (_audioVisualizer) _audioVisualizer.play(state.previewAudio);
                     startPreviewProgressLoop();
                     updatePreviewStatus('Now playing');
                     emitPreviewStateChange();
@@ -1045,11 +1048,8 @@ const FeaturesModule = (() => {
         if (!state.previewVideoId) return;
 
         const url = `https://www.youtube.com/watch?v=${state.previewVideoId}`;
-        const urlInput = document.getElementById('url-input');
-        if (urlInput) {
-            urlInput.value = url;
-            // Trigger form submission
-            document.getElementById('converter-form')?.dispatchEvent(new Event('submit'));
+        if (_onConvertRequest) {
+            _onConvertRequest(url);
         }
 
         closePreview();
@@ -1060,10 +1060,8 @@ const FeaturesModule = (() => {
      */
     const convertVideo = (video) => {
         const url = `https://www.youtube.com/watch?v=${video.videoId}`;
-        const urlInput = document.getElementById('url-input');
-        if (urlInput) {
-            urlInput.value = url;
-            document.getElementById('converter-form')?.dispatchEvent(new Event('submit'));
+        if (_onConvertRequest) {
+            _onConvertRequest(url);
         }
     };
 
@@ -1119,11 +1117,20 @@ const FeaturesModule = (() => {
     };
 })();
 
-window.FeaturesModule = FeaturesModule;
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => FeaturesModule.init());
-} else {
-    FeaturesModule.init();
+/**
+ * Inject convert request callback. Called by app.js during init.
+ * Replaces the old synthetic event dispatch on converter-form.
+ */
+export function setOnConvertRequest(callback) {
+    _onConvertRequest = callback;
 }
+
+/**
+ * Inject AudioVisualizer reference. Called by app.js during init.
+ * Avoids a direct import that would change when features.js is split in Phase 4.
+ */
+export function setAudioVisualizer(visualizer) {
+    _audioVisualizer = visualizer;
+}
+
+export { FeaturesModule };
