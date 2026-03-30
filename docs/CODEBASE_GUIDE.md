@@ -356,7 +356,7 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 **Structural (extensibility blockers):**
 
 - `js/ui/timeSyncStudio.js` is still 1,127 lines and now keeps orchestration, editor feedback, and top-level studio status flow, but the class remains a future bottleneck if more workflow logic accumulates there
-- `js/features.js` is down to 641 lines after extracting `previewAudioEngine.js`, `waveformRenderer.js`, and `popularBrowser.js`, but it still owns DOM creation, preview orchestration, and convert handoff in one module
+- `js/features.js` is down to 590 lines after extracting `previewAudioEngine.js`, `waveformRenderer.js`, `popularBrowser.js`, and `previewPanel.js`, but it still owns DOM creation, preview request orchestration, and convert handoff in one module
 - task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
 - frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; preview audio and studio request races remain under-tested
 
@@ -466,16 +466,17 @@ Remaining in the parent module:
 
 The argument is not for arbitrary splitting; it is for extracting clear seams before more work lands there.
 
-**`js/features.js` (641 lines)**
+**`js/features.js` (590 lines)**
 
 Stable seams extracted:
 - `js/previewAudioEngine.js` now owns crossfade, playback loop, request cancellation, and audio lifecycle
 - `js/waveformRenderer.js` now owns waveform drawing
 - `js/popularBrowser.js` now owns genre loading, genre-tab rendering, carousel rendering, and random-track selection
+- `js/previewPanel.js` now owns preview panel metadata, progress, loading state, and state-change emission
 
 Remaining in the parent module:
 - DOM creation
-- preview metadata wiring and preview request orchestration
+- preview request orchestration
 - convert handoff
 
 Also: remove synthetic event dispatches (`form.dispatchEvent(new Event('submit'))`) and replace with an explicit callback or imported function. Cross-module DOM mutations are the exact coupling the architecture warns against.

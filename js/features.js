@@ -6,6 +6,18 @@
 import { drawWaveform as renderWaveform } from './waveformRenderer.js';
 import { PreviewAudioEngine } from './previewAudioEngine.js';
 import {
+    activatePreviewPanel,
+    deactivatePreviewPanel,
+    emitPreviewStateChange,
+    renderPreviewProgress,
+    resetPreviewLoadingText,
+    resetPreviewProgress,
+    setPreviewLoadingState,
+    showPreviewError,
+    updatePreviewMetadata,
+    updatePreviewStatus
+} from './previewPanel.js';
+import {
     getRandomTracksFromGenres,
     loadPopularGenres,
     renderPopularGenreTabs,
@@ -33,14 +45,18 @@ const FeaturesModule = (() => {
     const previewAudioEngine = new PreviewAudioEngine({
         onStateChange: ({ isPlaying, isLoading }) => {
             elements.previewPlayBtn?.classList.toggle('playing', Boolean(isPlaying));
-            setPreviewLoadingState(isLoading);
-            emitPreviewStateChange();
+            setPreviewLoadingState(elements, isLoading);
+            emitPreviewStateChange({
+                elements,
+                state,
+                previewAudioEngine
+            });
         },
         onProgress: ({ currentTime, duration, percent }) => {
-            renderPreviewProgress({ currentTime, duration, percent });
+            renderPreviewProgress(elements, { currentTime, duration, percent }, formatTime);
         },
         onStatus: (message) => {
-            updatePreviewStatus(message);
+            updatePreviewStatus(elements, message);
         },
         onMetadata: ({ duration, seedSource }) => {
             if (elements.previewTimeTotal) {
@@ -49,11 +65,8 @@ const FeaturesModule = (() => {
             renderWaveform(elements.waveformCanvas, { seedSource });
         },
         onError: (message) => {
-            setPreviewLoadingState(true);
-            if (elements.previewLoadingText) {
-                elements.previewLoadingText.textContent = `⚠️ ${message}`;
-                elements.previewLoadingText.style.color = 'var(--destructive)';
-            }
+            setPreviewLoadingState(elements, true);
+            showPreviewError(elements, message);
         },
         audioVisualizer: _audioVisualizer
     });
@@ -287,61 +300,6 @@ const FeaturesModule = (() => {
         }, 1800);
     };
 
-    const resetPreviewProgress = () => {
-        elements.previewProgressFill?.style.setProperty('transform', 'scaleX(0)');
-        elements.waveformProgress?.style.setProperty('transform', 'scaleX(0)');
-        elements.waveformPlayhead?.style.setProperty('left', '0%');
-        if (elements.previewTimeCurrent) {
-            elements.previewTimeCurrent.textContent = '0:00';
-        }
-        if (elements.previewTimeTotal) {
-            elements.previewTimeTotal.textContent = '0:30';
-        }
-    };
-
-    const setPreviewLoadingState = (isLoading) => {
-        elements.previewPlayer?.classList.toggle('is-loading', Boolean(isLoading));
-        elements.previewPlayer?.setAttribute('aria-busy', isLoading ? 'true' : 'false');
-    };
-
-    const updatePreviewStatus = (message) => {
-        if (elements.previewTransitionNote) {
-            elements.previewTransitionNote.textContent = message;
-        }
-    };
-
-    const emitPreviewStateChange = () => {
-        const isPlaying = previewAudioEngine.isPlaying();
-        const isLoading = previewAudioEngine.isLoading();
-        elements.previewPlayer?.classList.toggle('is-playing', Boolean(isPlaying));
-        document.dispatchEvent(new CustomEvent('preview-state-change', {
-            detail: {
-                videoId: state.previewVideoId,
-                source: state.previewSource,
-                isPlaying,
-                isLoading
-            }
-        }));
-    };
-
-    const updatePreviewMetadata = (video) => {
-        elements.previewThumb.src = video.thumbnail || `https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg`;
-        elements.previewTitle.textContent = video.title || 'Unknown Track';
-        elements.previewArtist.textContent = video.artist || video.author || 'Queued track';
-        state.previewSource = video.previewSource === 'batch' ? 'batch' : 'popular';
-        if (elements.previewSourceBadge) {
-            elements.previewSourceBadge.textContent = state.previewSource === 'batch' ? 'Batch Queue' : 'Popular Preview';
-        }
-        state.previewVideoId = video.videoId;
-        emitPreviewStateChange();
-    };
-
-    const resetLoadingText = () => {
-        if (!elements.previewLoadingText) return;
-        elements.previewLoadingText.textContent = 'Generating preview...';
-        elements.previewLoadingText.style.color = '';
-    };
-
     /**
      * Load genres from API
      */
@@ -425,17 +383,25 @@ const FeaturesModule = (() => {
             && previewAudioEngine.hasAudio();
 
         if (isSamePreview) {
-            updatePreviewMetadata(video);
-            updatePreviewStatus(previewAudioEngine.isPlaying() ? 'Now playing' : 'Ready to preview');
+            updatePreviewMetadata({ elements, state, video, emitPreviewStateChange: () => emitPreviewStateChange({
+                elements,
+                state,
+                previewAudioEngine
+            }) });
+            updatePreviewStatus(elements, previewAudioEngine.isPlaying() ? 'Now playing' : 'Ready to preview');
             return;
         }
 
-        elements.previewPlayer.classList.add('active');
-        updatePreviewMetadata(video);
-        resetPreviewProgress();
-        resetLoadingText();
+        activatePreviewPanel(elements);
+        updatePreviewMetadata({ elements, state, video, emitPreviewStateChange: () => emitPreviewStateChange({
+            elements,
+            state,
+            previewAudioEngine
+        }) });
+        resetPreviewProgress(elements);
+        resetPreviewLoadingText(elements);
         const { requestId, controller, outgoingAudio } = previewAudioEngine.beginRequest();
-        updatePreviewStatus(outgoingAudio && previewAudioEngine.isPlaying() ? 'Preparing next preview...' : 'Generating preview...');
+        updatePreviewStatus(elements, outgoingAudio && previewAudioEngine.isPlaying() ? 'Preparing next preview...' : 'Generating preview...');
 
         try {
             const response = await fetch('/api/preview', {
@@ -484,10 +450,7 @@ const FeaturesModule = (() => {
             }
             if (!previewAudioEngine.isCurrentRequest(requestId)) return;
             console.error('[Preview] Error:', error);
-            if (elements.previewLoadingText) {
-                elements.previewLoadingText.textContent = '⚠️ ' + (error.message || 'Failed to generate preview');
-                elements.previewLoadingText.style.color = 'var(--destructive)';
-            }
+            showPreviewError(elements, error.message || 'Failed to generate preview');
         } finally {
             previewAudioEngine.endRequest(requestId, controller);
         }
@@ -500,12 +463,16 @@ const FeaturesModule = (() => {
         previewAudioEngine.stopAll();
         state.previewVideoId = null;
         state.previewSource = 'popular';
-        elements.previewPlayer.classList.remove('active');
-        resetPreviewProgress();
+        deactivatePreviewPanel(elements);
+        resetPreviewProgress(elements);
 
-        resetLoadingText();
-        updatePreviewStatus('Ready to preview');
-        emitPreviewStateChange();
+        resetPreviewLoadingText(elements);
+        updatePreviewStatus(elements, 'Ready to preview');
+        emitPreviewStateChange({
+            elements,
+            state,
+            previewAudioEngine
+        });
     };
 
     /**
@@ -540,25 +507,7 @@ const FeaturesModule = (() => {
         const stepSeconds = Math.max(0.6, Math.min(duration * 0.045, 2.4));
         const direction = delta > 0 ? 1 : -1;
         previewAudioEngine.seekByDelta(direction * stepSeconds);
-        updatePreviewStatus('Scroll to scrub');
-    };
-
-    /**
-     * Update preview progress UI
-     */
-    const renderPreviewProgress = ({ currentTime, duration, percent }) => {
-        if (!Number.isFinite(duration) || duration <= 0) {
-            elements.previewProgressFill.style.transform = 'scaleX(0)';
-            elements.waveformProgress.style.transform = 'scaleX(0)';
-            elements.waveformPlayhead.style.left = '0%';
-            elements.previewTimeCurrent.textContent = '0:00';
-            return;
-        }
-
-        elements.previewProgressFill.style.transform = `scaleX(${percent})`;
-        elements.waveformProgress.style.transform = `scaleX(${percent})`;
-        elements.waveformPlayhead.style.left = `${percent * 100}%`;
-        elements.previewTimeCurrent.textContent = formatTime(currentTime);
+        updatePreviewStatus(elements, 'Scroll to scrub');
     };
 
     /**

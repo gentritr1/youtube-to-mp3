@@ -134,6 +134,7 @@ youtube-to-mp3/
 │   ├── features.js            # Popular videos UI orchestration
 │   ├── popularBrowser.js      # Popular genre loading + carousel rendering
 │   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
+│   ├── previewPanel.js        # Preview panel UI state + progress rendering
 │   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
 │   ├── ui/pointTimingEngine.js  # Studio autosync, point mutation, undo, snapshot math
 │   ├── ui/reviewPlayerPanel.js  # Studio review player panel state + rendering
@@ -203,6 +204,7 @@ youtube-to-mp3/
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
 | **Popular Browser UI** | `features.js`, `popularBrowser.js`, `features.css` | Genre loading, tab rendering, carousel cards, and random track selection |
 | **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
+| **Preview Panel UI** | `features.js`, `previewPanel.js`, `features.css` | Preview metadata, progress, loading state, and preview-state event emission |
 | **Sync Studio Point UI** | `timeSyncStudio.js`, `ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
 | **Sync Studio Timing Logic** | `timeSyncStudio.js`, `ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |
 | **Sync Studio Review Player UI** | `timeSyncStudio.js`, `ui/reviewPlayerPanel.js`, `ui/youtubePlayerAdapter.js` | Review-player panel state, loop decisions, and YouTube IFrame control wiring |
