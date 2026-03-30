@@ -11,6 +11,7 @@ import routes from './routes/index.js';
 import { cleanupOldTasks, closeDatabase } from './services/taskStore.js';
 import { initializeQueue, closeQueue, getQueueStats, isEnabled as isQueueEnabled } from './services/jobQueue.js';
 import { initializeGenreCatalog, stopGenreCatalogWatcher } from './services/genreCatalog.js';
+import { cleanupPreviews } from './services/previewService.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 
@@ -113,6 +114,15 @@ const runCleanup = () => {
         }
     } catch (e: any) {
         console.error('[Cleanup] Error cleaning tasks:', e.message);
+    }
+
+    try {
+        const deletedPreviews = cleanupPreviews();
+        if (deletedPreviews > 0) {
+            console.log(`[Cleanup] Removed ${deletedPreviews} expired previews`);
+        }
+    } catch (e: any) {
+        console.error('[Cleanup] Error cleaning previews:', e.message);
     }
 };
 
