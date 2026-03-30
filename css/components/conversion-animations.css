@@ -16,7 +16,7 @@
     border: 1px solid color-mix(in srgb, var(--hero-border) 62%, transparent);
     background:
         radial-gradient(circle at top, color-mix(in srgb, var(--hero-orb-soft) 80%, transparent), transparent 52%),
-        linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 30%),
+        linear-gradient(180deg, color-mix(in srgb, var(--glass-highlight) 48%, transparent), transparent 30%),
         color-mix(in srgb, var(--card) 58%, transparent);
     box-shadow:
         0 1px 0 var(--glass-highlight) inset,
@@ -32,7 +32,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(140deg, color-mix(in srgb, white 18%, transparent), transparent 28% 55%, color-mix(in srgb, var(--liquid-tint) 72%, transparent) 100%);
+        linear-gradient(140deg, color-mix(in srgb, var(--glass-highlight) 82%, transparent), transparent 28% 55%, color-mix(in srgb, var(--liquid-tint) 72%, transparent) 100%);
     pointer-events: none;
 }
 
@@ -57,17 +57,17 @@
     border-radius: 50%;
     background:
         radial-gradient(circle at center, var(--foreground) 8px, transparent 8px),
-        radial-gradient(circle at center, transparent 10px, rgba(255, 255, 255, 0.03) 11px, transparent 12px),
-        radial-gradient(circle at center, transparent 18px, rgba(255, 255, 255, 0.02) 19px, transparent 20px),
-        radial-gradient(circle at center, transparent 26px, rgba(255, 255, 255, 0.03) 27px, transparent 28px),
-        radial-gradient(circle at center, transparent 34px, rgba(255, 255, 255, 0.02) 35px, transparent 36px),
-        radial-gradient(circle at center, color-mix(in srgb, var(--background) 92%, black) 0%, color-mix(in srgb, var(--background) 98%, black) 100%);
-    border: 2px solid color-mix(in srgb, white 12%, transparent);
+        radial-gradient(circle at center, transparent 10px, color-mix(in srgb, var(--glass-highlight) 36%, transparent) 11px, transparent 12px),
+        radial-gradient(circle at center, transparent 18px, color-mix(in srgb, var(--glass-highlight) 28%, transparent) 19px, transparent 20px),
+        radial-gradient(circle at center, transparent 26px, color-mix(in srgb, var(--glass-highlight) 36%, transparent) 27px, transparent 28px),
+        radial-gradient(circle at center, transparent 34px, color-mix(in srgb, var(--glass-highlight) 28%, transparent) 35px, transparent 36px),
+        radial-gradient(circle at center, color-mix(in srgb, var(--background) 92%, var(--game-shadow)) 0%, color-mix(in srgb, var(--background) 98%, var(--game-shadow)) 100%);
+    border: 2px solid color-mix(in srgb, var(--glass-highlight) 58%, transparent);
     animation: vinyl-spin 2s linear infinite;
     box-shadow:
-        0 0 0 3px rgba(255, 255, 255, 0.03),
-        0 4px 15px rgba(0, 0, 0, 0.3),
-        inset 0 0 20px rgba(0, 0, 0, 0.4);
+        0 0 0 3px color-mix(in srgb, var(--glass-highlight) 36%, transparent),
+        0 4px 15px color-mix(in srgb, var(--game-shadow) 68%, transparent),
+        inset 0 0 20px color-mix(in srgb, var(--game-shadow) 92%, transparent);
     position: relative;
     overflow: hidden;
 }
@@ -82,10 +82,10 @@
     height: 200%;
     background: conic-gradient(from 0deg,
             transparent 0deg,
-            rgba(255, 255, 255, 0.06) 30deg,
+            color-mix(in srgb, var(--glass-highlight) 92%, transparent) 30deg,
             transparent 60deg,
             transparent 180deg,
-            rgba(255, 255, 255, 0.04) 210deg,
+            color-mix(in srgb, var(--glass-highlight) 68%, transparent) 210deg,
             transparent 240deg);
     animation: vinyl-spin 2s linear infinite;
     pointer-events: none;
@@ -106,8 +106,8 @@
     justify-content: center;
     transform-origin: center;
     box-shadow:
-        0 0 8px rgba(16, 185, 129, 0.4),
-        0 0 20px rgba(16, 185, 129, 0.15);
+        0 0 8px color-mix(in srgb, var(--hero-orb) 44%, transparent),
+        0 0 20px color-mix(in srgb, var(--hero-orb) 18%, transparent);
 }
 
 .vinyl-label::after {
@@ -125,7 +125,7 @@
     right: -8px;
     width: 3px;
     height: 40px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.15));
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--glass-highlight) 88%, transparent), color-mix(in srgb, var(--glass-highlight) 34%, transparent));
     border-radius: 2px;
     transform-origin: top right;
     animation: tonearm-bob 4s ease-in-out infinite;
@@ -138,7 +138,7 @@
     left: -1px;
     width: 5px;
     height: 5px;
-    background: rgba(255, 255, 255, 0.3);
+    background: color-mix(in srgb, var(--glass-highlight) 74%, transparent);
     border-radius: 50%;
 }
 
@@ -198,15 +198,15 @@
     width: 130px;
     height: 78px;
     background:
-        linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 32%),
-        linear-gradient(180deg, color-mix(in srgb, var(--card) 88%, var(--background)) 0%, color-mix(in srgb, var(--background) 94%, black) 100%);
+        linear-gradient(180deg, color-mix(in srgb, var(--glass-highlight) 58%, transparent), transparent 32%),
+        linear-gradient(180deg, color-mix(in srgb, var(--card) 88%, var(--background)) 0%, color-mix(in srgb, var(--background) 94%, var(--game-shadow)) 100%);
     border-radius: 6px;
-    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border: 1.5px solid color-mix(in srgb, var(--glass-highlight) 44%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 24px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--game-shadow) 68%, transparent);
 }
 
 /* Top label strip */
@@ -239,7 +239,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.12);
+    border: 2px solid color-mix(in srgb, var(--glass-highlight) 56%, transparent);
     position: relative;
     display: flex;
     align-items: center;
@@ -251,9 +251,9 @@
     content: '';
     width: 8px;
     height: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--glass-highlight) 52%, transparent);
     border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border: 1.5px solid color-mix(in srgb, var(--glass-highlight) 70%, transparent);
 }
 
 /* Spokes inside reels */
@@ -263,7 +263,7 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border: 1px dashed color-mix(in srgb, var(--glass-highlight) 44%, transparent);
 }
 
 .reel-left {
@@ -281,9 +281,9 @@
     left: 20px;
     right: 20px;
     height: 12px;
-    background: rgba(0, 0, 0, 0.4);
+    background: color-mix(in srgb, var(--game-shadow) 92%, transparent);
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid color-mix(in srgb, var(--glass-highlight) 28%, transparent);
     overflow: hidden;
 }
 
@@ -296,7 +296,7 @@
     background: linear-gradient(90deg,
             transparent 0%,
             color-mix(in srgb, var(--sky) 55%, transparent) 20%,
-            color-mix(in srgb, var(--hero-orb) 92%, white) 50%,
+            color-mix(in srgb, var(--hero-orb) 92%, var(--foreground)) 50%,
             color-mix(in srgb, var(--sky) 55%, transparent) 80%,
             transparent 100%);
     animation: tape-move 2s linear infinite;
@@ -327,12 +327,12 @@
 .eq-bar {
     width: 8px;
     border-radius: 4px 4px 2px 2px;
-    background: linear-gradient(to top, color-mix(in srgb, var(--hero-orb) 78%, var(--emerald)), color-mix(in srgb, var(--hero-orb) 56%, white));
+    background: linear-gradient(to top, color-mix(in srgb, var(--hero-orb) 78%, var(--emerald)), color-mix(in srgb, var(--hero-orb) 56%, var(--foreground)));
     transform-origin: bottom center;
     animation: eq-bounce var(--eq-speed, 0.8s) ease-in-out infinite alternate;
     animation-delay: var(--eq-delay, 0s);
     height: var(--eq-max, 55px);
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--hero-orb) 24%, transparent);
 }
 
 /* Give each bar different heights/speeds via CSS custom props */
@@ -374,12 +374,12 @@
 /* Color variation for some bars */
 .eq-bar:nth-child(2),
 .eq-bar:nth-child(5) {
-    background: linear-gradient(to top, color-mix(in srgb, var(--emerald) 88%, var(--hero-orb)), color-mix(in srgb, var(--sky) 48%, white));
+    background: linear-gradient(to top, color-mix(in srgb, var(--emerald) 88%, var(--hero-orb)), color-mix(in srgb, var(--sky) 48%, var(--foreground)));
 }
 
 .eq-bar:nth-child(4),
 .eq-bar:nth-child(7) {
-    background: linear-gradient(to top, color-mix(in srgb, var(--hero-orb) 66%, var(--background)), color-mix(in srgb, var(--hero-orb) 82%, white));
+    background: linear-gradient(to top, color-mix(in srgb, var(--hero-orb) 66%, var(--background)), color-mix(in srgb, var(--hero-orb) 82%, var(--foreground)));
 }
 
 @keyframes eq-bounce {
@@ -451,7 +451,7 @@
 
 .waveform-line-bg {
     fill: none;
-    stroke: rgba(255, 255, 255, 0.05);
+    stroke: color-mix(in srgb, var(--glass-highlight) 28%, transparent);
     stroke-width: 2.5;
     stroke-linecap: round;
 }
