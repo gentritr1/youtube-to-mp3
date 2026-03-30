@@ -25,6 +25,7 @@ import {
     getLoadingStudioState,
     getLyricsStudioState
 } from './studioWorkflowState.js';
+import { bindStudioEvents } from './studioEventBindings.js';
 import { exportSyncProject } from './syncExporter.js';
 import { PointWorkspaceRenderer } from './pointWorkspaceRenderer.js';
 import { YouTubePlayerAdapter } from './youtubePlayerAdapter.js';
@@ -238,23 +239,7 @@ export class TimeSyncStudio {
         });
         this.editorFeedback = '';
         this.editorFeedbackTone = 'muted';
-        this._tabHandlers = [];
-        this._launchHandlers = [];
-        this._boundPointClick = null;
-        this._boundPointHover = null;
-        this._boundPointLeave = null;
-        this._boundPointListClick = null;
-        this._boundKeydown = null;
-        this._boundAssistantClick = null;
-        this._boundReducedMotion = null;
-        this._boundDocumentPointer = null;
-        this._boundApplyPointTime = null;
-        this._boundNudgeBack = null;
-        this._boundNudgeForward = null;
-        this._boundTimeInputKeydown = null;
-        this._boundReviewPlayToggle = null;
-        this._boundReviewJump = null;
-        this._boundReviewLoop = null;
+        this.disposeEventBindings = null;
         this.pointWorkspaceRenderer = new PointWorkspaceRenderer({
             stageBadge: this.stageBadge,
             stageLabel: this.stageLabel,
@@ -299,113 +284,39 @@ export class TimeSyncStudio {
 
     bindEvents() {
         this.destroy();
-
-        this.tabs.forEach((tab) => {
-            const handler = () => {
-                this.setMode(tab.dataset.panelMode || 'studio');
-            };
-
-            tab.addEventListener('click', handler);
-            this._tabHandlers.push({ element: tab, handler });
-        });
-
-        this.launchButtons.forEach((button) => {
-            const handler = () => {
-                const gameId = button.dataset.gameLaunch;
-                if (!gameId) return;
-
-                this.setMode('arcade');
-                this.onLaunchGame(gameId);
-            };
-
-            button.addEventListener('click', handler);
-            this._launchHandlers.push({ element: button, handler });
-        });
-
-        if (this.pointRailWindow) {
-            this._boundPointClick = (event) => {
-                const button = event.target.closest('button.point-hit');
-                if (!button) return;
-
-                this.lastInputMode = 'mouse';
-                this.selectPoint(button.dataset.pointId, { focus: true });
-                this.jumpToSelectedPoint();
-                this.requestAssistantUpdate();
-            };
-            this.pointRailWindow.addEventListener('click', this._boundPointClick);
-
-            this._boundPointHover = (event) => {
-                const button = event.target.closest('button.point-hit');
-                if (!button) return;
-
-                this.showTooltip(button.dataset.pointId, button);
-            };
-            this.pointRailWindow.addEventListener('pointerover', this._boundPointHover);
-
-            this._boundPointLeave = (event) => {
-                const relatedTarget = event.relatedTarget;
-                if (relatedTarget && this.pointRailWindow.contains(relatedTarget)) {
-                    return;
-                }
-
-                this.hideTooltip();
-            };
-            this.pointRailWindow.addEventListener('pointerout', this._boundPointLeave);
-        }
-
-        if (this.pointList) {
-            this._boundPointListClick = (event) => {
-                const card = event.target.closest('[data-point-card]');
-                if (!card) return;
-
-                this.selectPoint(card.dataset.pointCard, { focus: false });
-                this.jumpToSelectedPoint();
-                this.requestAssistantUpdate();
-            };
-            this.pointList.addEventListener('click', this._boundPointListClick);
-        }
-
-        if (this.pointRail) {
-            this._boundKeydown = (event) => {
-                this.lastInputMode = 'keyboard';
-
-                if (event.key === 'ArrowLeft') {
-                    event.preventDefault();
-                    this.moveSelection(-1);
-                    this.requestAssistantUpdate();
-                    return;
-                }
-
-                if (event.key === 'ArrowRight') {
-                    event.preventDefault();
-                    this.moveSelection(1);
-                    this.requestAssistantUpdate();
-                    return;
-                }
-
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    this.jumpToSelectedPoint();
-                    return;
-                }
-
-                if (event.key === '[') {
-                    event.preventDefault();
-                    this.nudgeSelectedPoint(event.shiftKey ? -200 : -50);
-                    return;
-                }
-
-                if (event.key === ']') {
-                    event.preventDefault();
-                    this.nudgeSelectedPoint(event.shiftKey ? 200 : 50);
-                    return;
-                }
-            };
-            this.pointRail.addEventListener('keydown', this._boundKeydown);
-        }
-
-        if (this.assistantAction) {
-            this._boundAssistantClick = async () => {
+        this.disposeEventBindings = bindStudioEvents({
+            documentRef: document,
+            tabs: this.tabs,
+            launchButtons: this.launchButtons,
+            pointRailWindow: this.pointRailWindow,
+            pointList: this.pointList,
+            pointRail: this.pointRail,
+            assistantAction: this.assistantAction,
+            applyPointTimeButton: this.applyPointTimeButton,
+            nudgeBackButton: this.nudgeBackButton,
+            nudgeForwardButton: this.nudgeForwardButton,
+            timeInputs: [
+                this.selectedPointMinuteInput,
+                this.selectedPointSecondInput,
+                this.selectedPointMillisecondInput
+            ],
+            reviewPlayButton: this.reviewPlayButton,
+            reviewJumpButton: this.reviewJumpButton,
+            reviewLoopButton: this.reviewLoopButton,
+            motionMediaQuery: this.motionMediaQuery,
+            onSetMode: (mode) => this.setMode(mode),
+            onLaunchGame: (gameId) => this.onLaunchGame(gameId),
+            onSelectPoint: (pointId, options) => this.selectPoint(pointId, options),
+            onJumpToSelectedPoint: () => this.jumpToSelectedPoint(),
+            onRequestAssistantUpdate: () => this.requestAssistantUpdate(),
+            onShowTooltip: (pointId, anchor) => this.showTooltip(pointId, anchor),
+            onHideTooltip: () => this.hideTooltip(),
+            onSetLastInputMode: (mode) => {
+                this.lastInputMode = mode;
+            },
+            onMoveSelection: (direction) => this.moveSelection(direction),
+            onNudgeSelectedPoint: (deltaMs) => this.nudgeSelectedPoint(deltaMs),
+            onAssistantActionClick: async () => {
                 if (!this.currentAssistantResponse?.uiAction) {
                     return;
                 }
@@ -422,12 +333,8 @@ export class TimeSyncStudio {
                 }
 
                 await this.executeAction(this.currentAssistantResponse.uiAction);
-            };
-            this.assistantAction.addEventListener('click', this._boundAssistantClick);
-        }
-
-        if (this.applyPointTimeButton) {
-            this._boundApplyPointTime = () => {
+            },
+            onApplyPointTime: () => {
                 const validationError = getTimePartsError(
                     this.selectedPointMinuteInput?.value,
                     this.selectedPointSecondInput?.value,
@@ -449,134 +356,31 @@ export class TimeSyncStudio {
                 }
 
                 this.setSelectedPointTime(timeMs);
-            };
-            this.applyPointTimeButton.addEventListener('click', this._boundApplyPointTime);
-        }
-
-        if (this.nudgeBackButton) {
-            this._boundNudgeBack = () => this.nudgeSelectedPoint(-100);
-            this.nudgeBackButton.addEventListener('click', this._boundNudgeBack);
-        }
-
-        if (this.nudgeForwardButton) {
-            this._boundNudgeForward = () => this.nudgeSelectedPoint(100);
-            this.nudgeForwardButton.addEventListener('click', this._boundNudgeForward);
-        }
-
-        if (this.selectedPointMinuteInput || this.selectedPointSecondInput || this.selectedPointMillisecondInput) {
-            this._boundTimeInputKeydown = (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    this._boundApplyPointTime?.();
-                    return;
-                }
-
-                this.clearEditorFeedback();
-            };
-            [this.selectedPointMinuteInput, this.selectedPointSecondInput, this.selectedPointMillisecondInput]
-                .filter(Boolean)
-                .forEach((input) => input.addEventListener('keydown', this._boundTimeInputKeydown));
-        }
-
-        if (this.reviewPlayButton) {
-            this._boundReviewPlayToggle = () => this.toggleReviewPlayback();
-            this.reviewPlayButton.addEventListener('click', this._boundReviewPlayToggle);
-        }
-
-        if (this.reviewJumpButton) {
-            this._boundReviewJump = () => this.jumpToSelectedPoint();
-            this.reviewJumpButton.addEventListener('click', this._boundReviewJump);
-        }
-
-        if (this.reviewLoopButton) {
-            this._boundReviewLoop = () => {
+            },
+            onClearEditorFeedback: () => this.clearEditorFeedback(),
+            onToggleReviewPlayback: () => this.toggleReviewPlayback(),
+            onReviewJump: () => this.jumpToSelectedPoint(),
+            onToggleReviewLoop: () => {
                 this.reviewLoopEnabled = !this.reviewLoopEnabled;
                 this.renderReviewPlayer();
-            };
-            this.reviewLoopButton.addEventListener('click', this._boundReviewLoop);
-        }
-
-        this._boundDocumentPointer = (event) => {
-            const pointerType = event?.pointerType;
-            this.lastInputMode = pointerType === 'touch'
-                ? 'touch'
-                : pointerType === 'pen'
-                    ? 'mouse'
-                    : 'mouse';
-        };
-        document.addEventListener('pointerdown', this._boundDocumentPointer, { passive: true });
-
-        if (this.motionMediaQuery) {
-            this._boundReducedMotion = (event) => {
-                this.reducedMotion = event.matches;
-                document.documentElement.dataset.motion = event.matches ? 'reduced' : 'full';
-            };
-
-            if (typeof this.motionMediaQuery.addEventListener === 'function') {
-                this.motionMediaQuery.addEventListener('change', this._boundReducedMotion);
-            } else if (typeof this.motionMediaQuery.addListener === 'function') {
-                this.motionMediaQuery.addListener(this._boundReducedMotion);
+            },
+            onPointerInputMode: (pointerType) => {
+                this.lastInputMode = pointerType === 'touch'
+                    ? 'touch'
+                    : pointerType === 'pen'
+                        ? 'mouse'
+                        : 'mouse';
+            },
+            onReducedMotionChange: (matches) => {
+                this.reducedMotion = matches;
+                document.documentElement.dataset.motion = matches ? 'reduced' : 'full';
             }
-        }
+        });
     }
 
     destroy() {
-        this._tabHandlers.forEach(({ element, handler }) => element.removeEventListener('click', handler));
-        this._launchHandlers.forEach(({ element, handler }) => element.removeEventListener('click', handler));
-        this._tabHandlers = [];
-        this._launchHandlers = [];
-
-        if (this.pointRailWindow && this._boundPointClick) {
-            this.pointRailWindow.removeEventListener('click', this._boundPointClick);
-        }
-        if (this.pointRailWindow && this._boundPointHover) {
-            this.pointRailWindow.removeEventListener('pointerover', this._boundPointHover);
-        }
-        if (this.pointRailWindow && this._boundPointLeave) {
-            this.pointRailWindow.removeEventListener('pointerout', this._boundPointLeave);
-        }
-        if (this.pointList && this._boundPointListClick) {
-            this.pointList.removeEventListener('click', this._boundPointListClick);
-        }
-        if (this.pointRail && this._boundKeydown) {
-            this.pointRail.removeEventListener('keydown', this._boundKeydown);
-        }
-        if (this.assistantAction && this._boundAssistantClick) {
-            this.assistantAction.removeEventListener('click', this._boundAssistantClick);
-        }
-        if (this.applyPointTimeButton && this._boundApplyPointTime) {
-            this.applyPointTimeButton.removeEventListener('click', this._boundApplyPointTime);
-        }
-        if (this.nudgeBackButton && this._boundNudgeBack) {
-            this.nudgeBackButton.removeEventListener('click', this._boundNudgeBack);
-        }
-        if (this.nudgeForwardButton && this._boundNudgeForward) {
-            this.nudgeForwardButton.removeEventListener('click', this._boundNudgeForward);
-        }
-        if (this._boundTimeInputKeydown) {
-            [this.selectedPointMinuteInput, this.selectedPointSecondInput, this.selectedPointMillisecondInput]
-                .filter(Boolean)
-                .forEach((input) => input.removeEventListener('keydown', this._boundTimeInputKeydown));
-        }
-        if (this.reviewPlayButton && this._boundReviewPlayToggle) {
-            this.reviewPlayButton.removeEventListener('click', this._boundReviewPlayToggle);
-        }
-        if (this.reviewJumpButton && this._boundReviewJump) {
-            this.reviewJumpButton.removeEventListener('click', this._boundReviewJump);
-        }
-        if (this.reviewLoopButton && this._boundReviewLoop) {
-            this.reviewLoopButton.removeEventListener('click', this._boundReviewLoop);
-        }
-        if (this._boundDocumentPointer) {
-            document.removeEventListener('pointerdown', this._boundDocumentPointer);
-        }
-        if (this.motionMediaQuery && this._boundReducedMotion) {
-            if (typeof this.motionMediaQuery.removeEventListener === 'function') {
-                this.motionMediaQuery.removeEventListener('change', this._boundReducedMotion);
-            } else if (typeof this.motionMediaQuery.removeListener === 'function') {
-                this.motionMediaQuery.removeListener(this._boundReducedMotion);
-            }
-        }
+        this.disposeEventBindings?.();
+        this.disposeEventBindings = null;
 
         this.stopReviewPlaybackLoop();
         this.destroyReviewPlayer();
