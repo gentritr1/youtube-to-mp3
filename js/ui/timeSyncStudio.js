@@ -1,4 +1,16 @@
 import { AssistantClient, renderAssistantFallback, renderAssistantResponse } from './assistantClient.js';
+import {
+    applyNeedsReviewFix,
+    buildPointSnapshot,
+    buildPoints,
+    createAutosyncState,
+    createHistoryState,
+    findPointForTime,
+    getLoopEndTime,
+    nudgePointTiming,
+    runAutosyncPass,
+    undoPointChange
+} from './pointTimingEngine.js';
 import { exportSyncProject } from './syncExporter.js';
 import { PointWorkspaceRenderer } from './pointWorkspaceRenderer.js';
 import { YouTubePlayerAdapter } from './youtubePlayerAdapter.js';
@@ -167,16 +179,8 @@ export class TimeSyncStudio {
         this.points = [];
         this.selectedPointId = null;
         this.nowPlayingPointId = null;
-        this.autosync = {
-            status: 'not_run',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        };
-        this.history = {
-            undoStack: [],
-            redoStack: []
-        };
+        this.autosync = createAutosyncState();
+        this.history = createHistoryState();
         this.errors = [];
         this.lastInputMode = 'mouse';
         this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
@@ -622,15 +626,9 @@ export class TimeSyncStudio {
         this.points = [];
         this.selectedPointId = null;
         this.nowPlayingPointId = null;
-        this.history.undoStack = [];
-        this.history.redoStack = [];
+        this.history = createHistoryState();
         this.errors = [];
-        this.autosync = {
-            status: 'not_run',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        };
+        this.autosync = createAutosyncState();
         this.currentAssistantResponse = null;
         this.assistantClient.clearResponse();
         this.hideTooltip();
@@ -686,12 +684,12 @@ export class TimeSyncStudio {
         this.selectedPointId = null;
         this.nowPlayingPointId = null;
         this.hideTooltip();
-        this.autosync = {
+        this.autosync = createAutosyncState({
             status: 'failed',
             coverage: 0,
             confidence: 'low',
             issuesByPointId: {}
-        };
+        });
 
         this.setStatus(
             'No lyrics',
@@ -713,17 +711,11 @@ export class TimeSyncStudio {
     setLyrics(lines) {
         this.clearAutosyncTimer();
         this.stage = 'lyrics';
-        this.points = this.buildPoints(lines);
+        this.points = buildPoints(lines, toPointId);
         this.selectedPointId = this.points[0]?.id ?? null;
         this.nowPlayingPointId = null;
-        this.history.undoStack = [];
-        this.history.redoStack = [];
-        this.autosync = {
-            status: 'not_run',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        };
+        this.history = createHistoryState();
+        this.autosync = createAutosyncState();
         this.errors = [];
 
         if (!this.points.length) {
@@ -805,20 +797,6 @@ export class TimeSyncStudio {
         this.renderReviewPlayer();
     }
 
-    buildPoints(lines) {
-        return (Array.isArray(lines) ? lines : []).map((line, index) => ({
-            id: toPointId(index),
-            index,
-            textPreview: line.text || `Line ${index + 1}`,
-            draftTimeMs: Number.isFinite(line.time) ? line.time : null,
-            timeMs: null,
-            status: 'pending',
-            issues: [],
-            sourceTimed: line.hasTiming !== false && Number.isFinite(line.time),
-            isApproximate: Boolean(line.isApproximate)
-        }));
-    }
-
     async ensureReviewPlayer(requestId = this.reviewPlayerRequestId) {
         this.stopReviewPlaybackLoop();
 
@@ -856,61 +834,29 @@ export class TimeSyncStudio {
     }
 
     buildSnapshot() {
-        const selectedIndex = Math.max(0, this.points.findIndex((point) => point.id === this.selectedPointId));
-        const totalPoints = this.points.length;
-        const startIndex = clamp(selectedIndex - Math.floor(POINT_WINDOW_SIZE / 2), 0, Math.max(0, totalPoints - POINT_WINDOW_SIZE));
-        const pointsWindow = this.points.slice(startIndex, startIndex + POINT_WINDOW_SIZE);
-        const counts = this.points.reduce((acc, point) => {
-            acc[point.status] += 1;
-            return acc;
-        }, { pending: 0, synced: 0, needs_review: 0 });
-
         const playerSeconds = this.reviewPlayerReady && typeof this.reviewPlayer?.getCurrentTime === 'function'
             ? this.reviewPlayer.getCurrentTime()
             : null;
         const playerState = this.reviewPlayerReady && typeof this.reviewPlayer?.getPlayerState === 'function'
             ? this.reviewPlayer.getPlayerState()
             : null;
-        const selectedPoint = this.getSelectedPoint();
-        const loopStart = selectedPoint?.timeMs ?? selectedPoint?.draftTimeMs ?? 0;
-        const loopEnd = this.getLoopEndTime(selectedPoint?.id);
+        const snapshot = buildPointSnapshot({
+            stage: this.stage,
+            sessionId: this.sessionId,
+            getProjectTitle: this.getProjectTitle,
+            selectedPointId: this.selectedPointId,
+            points: this.points,
+            pointWindowSize: POINT_WINDOW_SIZE,
+            currentPlayheadMs: Number.isFinite(playerSeconds) ? Math.round(playerSeconds * 1000) : 0,
+            isPlaying: playerState === window.YT?.PlayerState?.PLAYING,
+            reviewLoopEnabled: this.reviewLoopEnabled,
+            reducedMotion: this.reducedMotion,
+            lastInputMode: this.lastInputMode,
+            getLoopEndTime: (pointId) => this.getLoopEndTime(pointId)
+        });
 
         return {
-            schemaVersion: '1.0',
-            stage: this.stage,
-            project: {
-                projectId: this.sessionId,
-                title: this.getProjectTitle()
-            },
-            pointFlow: {
-                totalPoints,
-                currentPointId: this.selectedPointId,
-                nextIncompletePointId: this.points.find((point) => point.status !== 'synced')?.id ?? null,
-                windowPointIds: pointsWindow.map((point) => point.id),
-                counts: {
-                    pending: counts.pending,
-                    synced: counts.synced,
-                    needsReview: counts.needs_review
-                },
-                confirmMode: 'implicit_undo'
-            },
-            pointsWindow: pointsWindow.map((point) => ({
-                id: point.id,
-                index: point.index,
-                textPreview: point.textPreview,
-                timeMs: Number.isFinite(point.timeMs) ? point.timeMs : point.draftTimeMs ?? 0,
-                status: point.status,
-                issues: [...point.issues]
-            })),
-            playback: {
-                playheadMs: Number.isFinite(playerSeconds) ? Math.round(playerSeconds * 1000) : 0,
-                isPlaying: playerState === window.YT?.PlayerState?.PLAYING,
-                loop: {
-                    on: this.reviewLoopEnabled,
-                    startMs: Number.isFinite(loopStart) ? loopStart : 0,
-                    endMs: Number.isFinite(loopEnd) ? loopEnd : (Number.isFinite(loopStart) ? loopStart : 0)
-                }
-            },
+            ...snapshot,
             autosync: {
                 status: this.autosync.status,
                 coverage: this.autosync.coverage,
@@ -971,60 +917,20 @@ export class TimeSyncStudio {
         this.renderAssistantFallback('Auto-sync is running…');
 
         this.autosyncTimerId = window.setTimeout(() => {
-            let timedPoints = 0;
-            let previousTime = 0;
-            const issuesByPointId = {};
-
-            this.points = this.points.map((point, index) => {
-                const fallbackTime = index === 0 ? 0 : previousTime + this.estimateGapMs;
-                const nextTime = Number.isFinite(point.draftTimeMs) ? point.draftTimeMs : fallbackTime;
-                const issues = [];
-
-                if (point.sourceTimed) {
-                    timedPoints += 1;
-                } else {
-                    issues.push('timing_estimated');
-                }
-
-                const gap = index === 0 ? 0 : nextTime - previousTime;
-                if (index > 0 && gap < 500) {
-                    issues.push('early_start');
-                }
-                if (index > 0 && gap > 7000) {
-                    issues.push('late_start');
-                }
-
-                previousTime = nextTime;
-
-                if (issues.length > 0) {
-                    issuesByPointId[point.id] = issues;
-                }
-
-                return {
-                    ...point,
-                    timeMs: nextTime,
-                    issues,
-                    status: issues.length > 0 ? 'needs_review' : 'synced'
-                };
+            const nextState = runAutosyncPass({
+                points: this.points,
+                estimateGapMs: this.estimateGapMs,
+                selectedPointId: this.selectedPointId
             });
-
-            const reviewPoint = this.points.find((point) => point.status === 'needs_review') ?? this.points[0] ?? null;
-            this.selectedPointId = reviewPoint?.id ?? this.selectedPointId;
-            this.autosync = {
-                status: 'done',
-                coverage: this.points.length ? timedPoints / this.points.length : 0,
-                confidence: timedPoints / Math.max(this.points.length, 1) > 0.85 ? 'high' : timedPoints / Math.max(this.points.length, 1) > 0.5 ? 'medium' : 'low',
-                issuesByPointId
-            };
-            this.stage = reviewPoint?.status === 'needs_review' ? 'review' : 'export';
-
+            this.points = nextState.points;
+            this.selectedPointId = nextState.selectedPointId;
+            this.autosync = nextState.autosync;
+            this.stage = nextState.stage;
             this.setStatus(
-                reviewPoint?.status === 'needs_review' ? 'Review' : 'Ready',
-                reviewPoint?.status === 'needs_review' ? 'Review the flagged points.' : 'Auto-sync is complete.',
-                reviewPoint?.status === 'needs_review'
-                    ? 'Only the points that need attention stay in the critical path now.'
-                    : 'No obvious timing issues were flagged. You can export the timing JSON now.',
-                reviewPoint?.status === 'needs_review' ? 'ready' : 'done'
+                nextState.status.badge,
+                nextState.status.title,
+                nextState.status.detail,
+                nextState.status.tone
             );
             this.render();
             this.requestAssistantUpdate();
@@ -1038,43 +944,25 @@ export class TimeSyncStudio {
     }
 
     applyFix(payload) {
-        if (payload.scope !== 'needs_review') {
-            return;
-        }
-
-        const changedPoints = [];
-        this.points = this.points.map((point) => {
-            if (point.status !== 'needs_review') {
-                return point;
-            }
-
-            changedPoints.push({
-                id: point.id,
-                prevTimeMs: point.timeMs,
-                prevStatus: point.status,
-                prevIssues: [...point.issues]
-            });
-
-            return {
-                ...point,
-                status: 'synced',
-                issues: []
-            };
+        const nextState = applyNeedsReviewFix({
+            points: this.points,
+            history: this.history,
+            autosync: this.autosync,
+            payload
         });
-
-        if (changedPoints.length === 0) {
+        if (!nextState) {
             return;
         }
 
-        this.history.undoStack.push({ type: 'APPLY_FIX', changes: changedPoints });
-        this.history.redoStack = [];
-        this.autosync.issuesByPointId = {};
-        this.stage = 'export';
+        this.points = nextState.points;
+        this.history = nextState.history;
+        this.autosync = nextState.autosync;
+        this.stage = nextState.stage;
         this.setStatus(
-            'Ready',
-            'Flagged points were cleaned up.',
-            'You can still undo this batch fix if you want to inspect points one by one.',
-            'done'
+            nextState.status.badge,
+            nextState.status.title,
+            nextState.status.detail,
+            nextState.status.tone
         );
     }
 
@@ -1167,50 +1055,35 @@ export class TimeSyncStudio {
     }
 
     nudgePoint(pointId, deltaMs) {
-        const pointIndex = this.points.findIndex((entry) => entry.id === pointId);
-        if (pointIndex === -1) {
+        const nextState = nudgePointTiming({
+            points: this.points,
+            pointId,
+            deltaMs,
+            history: this.history,
+            autosync: this.autosync,
+            stage: this.stage,
+            clampTimeMs: (timeMs) => this.clampTimeMs(timeMs),
+            getMediaDurationMs: () => this.getMediaDurationMs(),
+            formatTime
+        });
+        if (!nextState) {
             return;
         }
 
-        const point = this.points[pointIndex];
-        const previous = {
-            id: point.id,
-            prevTimeMs: point.timeMs,
-            prevStatus: point.status,
-            prevIssues: [...point.issues]
-        };
-
-        const requestedTime = (point.timeMs ?? point.draftTimeMs ?? 0) + deltaMs;
-        const nextTime = this.clampTimeMs(requestedTime);
-        this.history.undoStack.push({ type: 'NUDGE_POINT', ...previous });
-        this.history.redoStack = [];
-
-        this.points[pointIndex] = {
-            ...point,
-            timeMs: nextTime,
-            status: 'synced',
-            issues: []
-        };
-
-        delete this.autosync.issuesByPointId[pointId];
-        if (nextTime !== requestedTime) {
-            const mediaDurationMs = this.getMediaDurationMs();
-            if (requestedTime < 0) {
-                this.setEditorFeedback('Reached the start of the track at 0:00.000.', 'warning');
-            } else if (Number.isFinite(mediaDurationMs)) {
-                this.setEditorFeedback(`Reached the end of the video at ${formatTime(mediaDurationMs)}.`, 'warning');
-            }
+        this.points = nextState.points;
+        this.history = nextState.history;
+        this.autosync = nextState.autosync;
+        this.stage = nextState.stage;
+        if (nextState.editorFeedback) {
+            this.setEditorFeedback(nextState.editorFeedback.message, nextState.editorFeedback.tone);
         }
-        if (!this.points.some((entry) => entry.status === 'needs_review') && this.stage !== 'lyrics' && this.stage !== 'autosync') {
-            this.stage = 'export';
+        if (nextState.status) {
             this.setStatus(
-                'Ready',
-                'All flagged points are now confirmed.',
-                'Export the timing JSON when you want a clean handoff.',
-                'done'
+                nextState.status.badge,
+                nextState.status.title,
+                nextState.status.detail,
+                nextState.status.tone
             );
-        } else {
-            this.stage = 'review';
         }
 
         this.render();
@@ -1261,31 +1134,16 @@ export class TimeSyncStudio {
     }
 
     findPointForTime(timeMs) {
-        if (!Number.isFinite(timeMs) || !this.points.length) {
-            return null;
-        }
-
-        for (let index = this.points.length - 1; index >= 0; index -= 1) {
-            const pointTime = this.points[index].timeMs ?? this.points[index].draftTimeMs;
-            if (Number.isFinite(pointTime) && timeMs >= pointTime) {
-                return this.points[index];
-            }
-        }
-
-        return this.points[0];
+        return findPointForTime(this.points, timeMs);
     }
 
     getLoopEndTime(pointId) {
-        const pointIndex = this.points.findIndex((point) => point.id === pointId);
-        if (pointIndex === -1) {
-            return null;
-        }
-
-        const nextTimedPoint = this.points.slice(pointIndex + 1)
-            .find((point) => Number.isFinite(point.timeMs ?? point.draftTimeMs));
-        return nextTimedPoint
-            ? this.clampTimeMs(nextTimedPoint.timeMs ?? nextTimedPoint.draftTimeMs)
-            : this.getMediaDurationMs();
+        return getLoopEndTime({
+            points: this.points,
+            pointId,
+            clampTimeMs: (timeMs) => this.clampTimeMs(timeMs),
+            getMediaDurationMs: () => this.getMediaDurationMs()
+        });
     }
 
     getMediaDurationMs() {
@@ -1329,56 +1187,21 @@ export class TimeSyncStudio {
     }
 
     undo() {
-        const operation = this.history.undoStack.pop();
-        if (!operation) return false;
-
-        if (operation.type === 'NUDGE_POINT') {
-            const pointIndex = this.points.findIndex((entry) => entry.id === operation.id);
-            if (pointIndex === -1) {
-                return false;
-            }
-
-            const current = this.points[pointIndex];
-            this.history.redoStack.push({
-                type: 'NUDGE_POINT',
-                id: current.id,
-                prevTimeMs: current.timeMs,
-                prevStatus: current.status,
-                prevIssues: [...current.issues]
-            });
-            this.points[pointIndex] = {
-                ...current,
-                timeMs: operation.prevTimeMs,
-                status: operation.prevStatus,
-                issues: [...operation.prevIssues]
-            };
-            if (operation.prevIssues.length > 0) {
-                this.autosync.issuesByPointId[operation.id] = [...operation.prevIssues];
-                this.stage = 'review';
-            }
+        const nextState = undoPointChange({
+            points: this.points,
+            history: this.history,
+            autosync: this.autosync
+        });
+        if (!nextState.applied) {
+            return false;
         }
 
-        if (operation.type === 'APPLY_FIX') {
-            operation.changes.forEach((change) => {
-                const pointIndex = this.points.findIndex((entry) => entry.id === change.id);
-                if (pointIndex === -1) return;
-
-                this.points[pointIndex] = {
-                    ...this.points[pointIndex],
-                    timeMs: change.prevTimeMs,
-                    status: change.prevStatus,
-                    issues: [...change.prevIssues]
-                };
-
-                if (change.prevIssues.length > 0) {
-                    this.autosync.issuesByPointId[change.id] = [...change.prevIssues];
-                }
-            });
-
-            this.history.redoStack.push(operation);
-            this.stage = 'review';
+        this.points = nextState.points;
+        this.history = nextState.history;
+        this.autosync = nextState.autosync;
+        if (nextState.stage) {
+            this.stage = nextState.stage;
         }
-
         this.render();
         this.requestAssistantUpdate();
         return true;

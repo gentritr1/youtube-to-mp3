@@ -134,6 +134,7 @@ youtube-to-mp3/
 │   ├── features.js            # Popular videos UI orchestration
 │   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
 │   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
+│   ├── ui/pointTimingEngine.js  # Studio autosync, point mutation, undo, snapshot math
 │   └── game/                  # Snake game components
 │
 ├── 📁 server/                 # Backend (Express)
@@ -198,6 +199,7 @@ youtube-to-mp3/
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
 | **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
 | **Sync Studio Point UI** | `timeSyncStudio.js`, `ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
+| **Sync Studio Timing Logic** | `timeSyncStudio.js`, `ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |
 | **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components

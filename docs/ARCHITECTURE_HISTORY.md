@@ -157,9 +157,9 @@ These patterns worked well and should be carried forward:
 
 **Problem**: `timeSyncStudio.js` and `features.js` had accumulated multiple stable responsibilities that should evolve independently.
 
-**Solution so far**: Extracted YouTubePlayerAdapter, AssistantClient, SyncExporter, and PointWorkspaceRenderer from studio; extracted PreviewAudioEngine and WaveformRenderer from features. Public APIs established in Phase 1 stayed unchanged.
+**Solution so far**: Extracted YouTubePlayerAdapter, AssistantClient, SyncExporter, PointWorkspaceRenderer, and PointTimingEngine from studio; extracted PreviewAudioEngine and WaveformRenderer from features. Public APIs established in Phase 1 stayed unchanged.
 
-**Current state**: `features.js` is down to 763 LOC and `timeSyncStudio.js` is down to 1,535 LOC. The stable seams are in place, but the studio file still has more decomposition work ahead if it grows further.
+**Current state**: `features.js` is down to 763 LOC and `timeSyncStudio.js` is down to 1,358 LOC. The studio now keeps orchestration and DOM wiring while `pointTimingEngine.js` owns autosync, point mutation, undo state, and assistant snapshot math. The seams are materially better, but the studio file still has more decomposition work ahead if it grows further.
 
 **Key design choice**: Phase 1 changed boundaries; Phase 4 changes guts. Callers don't see Phase 4 changes.
 
