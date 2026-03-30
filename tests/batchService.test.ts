@@ -7,8 +7,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock the taskManager before importing batchService
-vi.mock('../server/services/taskManager.js', () => ({
+// Mock the taskStore before importing batchService
+vi.mock('../server/services/taskStore.js', () => ({
     createTask: vi.fn(),
     getTask: vi.fn(),
     updateTask: vi.fn(),
@@ -37,7 +37,7 @@ import {
     MAX_BATCH_SIZE
 } from '../server/services/batchService.js';
 import type { BatchItem } from '../server/types.js';
-import { createTask, getTask } from '../server/services/taskManager.js';
+import { createTask, getTask } from '../server/services/taskStore.js';
 
 describe('Batch Service', () => {
     beforeEach(() => {

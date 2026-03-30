@@ -8,8 +8,7 @@ import cors from 'cors';
 import fs from 'fs';
 import { config } from './config.js';
 import routes from './routes/index.js';
-import { loadTasks } from './services/taskManager.js';
-import { cleanupOldTasks, closeDatabase } from './services/sqliteTaskManager.js';
+import { cleanupOldTasks, closeDatabase } from './services/taskStore.js';
 import { initializeQueue, closeQueue, getQueueStats, isEnabled as isQueueEnabled } from './services/jobQueue.js';
 import { initializeGenreCatalog, stopGenreCatalogWatcher } from './services/genreCatalog.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -38,8 +37,7 @@ if (!fs.existsSync(config.DOWNLOADS_DIR)) {
     fs.mkdirSync(config.DOWNLOADS_DIR, { recursive: true });
 }
 
-// Load persisted tasks (legacy support)
-loadTasks();
+
 
 // Dependency Checks
 import { execSync } from 'child_process';

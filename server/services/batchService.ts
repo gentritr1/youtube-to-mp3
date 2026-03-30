@@ -12,7 +12,7 @@
 
 import { randomUUID } from 'crypto';
 import { BatchItem, BatchJob, BatchProgress, Task } from '../types.js';
-import { createTask as createSingleTask, getTask, updateTask } from './taskManager.js';
+import { createTask as createSingleTask, getTask, updateTask } from './taskStore.js';
 import { convertVideo } from './ytdlp.js';
 
 // Constants

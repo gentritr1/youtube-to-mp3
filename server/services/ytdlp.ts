@@ -10,7 +10,7 @@ import { config } from '../config.js';
 import { formatDuration } from '../utils/formatDuration.js';
 import { parseProgress } from '../utils/parseProgress.js';
 import { sanitizeFilename } from '../utils/sanitize.js';
-import { getTask, updateTask } from './taskManager.js';
+import { getTask, updateTask } from './taskStore.js';
 import { VideoInfo } from '../types.js';
 import { analyzeAudio } from './audioAnalysis.js';
 

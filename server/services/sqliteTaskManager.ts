@@ -100,9 +100,12 @@ const generateTaskId = (): string => {
 
 /**
  * Create a new task
+ * @param videoId - YouTube video ID
+ * @param format - Output format (mp3/mp4)
+ * @param externalId - Optional caller-provided task ID. If omitted, one is generated.
  */
-export const createTask = (videoId: string, format: string): Partial<Task> => {
-    const taskId = generateTaskId();
+export const createTask = (videoId: string, format: string, externalId?: string): Partial<Task> => {
+    const taskId = externalId ?? generateTaskId();
 
     statements.insert.run(taskId, videoId, format);
 
