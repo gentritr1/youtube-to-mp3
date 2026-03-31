@@ -356,7 +356,7 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 **Structural (extensibility blockers):**
 
 - task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
-- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; the remaining async gap is mostly assistant-side studio request behavior and manual UI verification
+- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; the remaining gap is mostly manual UI verification plus a few non-critical time-sync-page edges
 
 **Maintenance (valuable but lower leverage):**
 
@@ -419,12 +419,13 @@ Definition of done:
 Status:
 - completed
 
-The harness now exists. The next gap is depth rather than setup: more race-condition coverage around assistant requests and the remaining studio state-replacement edges.
+The harness now exists. The next gap is depth rather than setup: targeted follow-through on any remaining time-sync-page edges and manual browser verification.
 
 Recent coverage added:
 - `tests/lyricsRace.test.ts` covers stale subtitle loads and finish-after-load behavior
 - `tests/previewAudioEngine.test.ts` covers preview request replacement, stale outgoing audio events, and stop-before-resolve behavior
 - `tests/timeSyncStudioRequestRace.test.ts` covers review-player request replacement and clear-while-loading behavior
+- `tests/assistantClient.test.ts` covers stale assistant success/failure handling when newer studio requests replace older ones
 
 Before writing race tests, decide and wire up:
 - test runner: vitest (already in package.json) with jsdom or happy-dom environment
@@ -435,7 +436,6 @@ Before writing race tests, decide and wire up:
 Priority test targets:
 - stale subtitle responses in `js/lyrics.js` (request-scoped `requestId` guard)
 - late subtitle completion in `js/time-sync-page.js`
-- assistant request races in `js/ui/timeSyncStudio.js`
 - `finishPlayback()` when conversion completes before subtitles settle
 - fallback timing behavior and malformed subtitle input
 
@@ -559,7 +559,7 @@ During review:
 ### Recommended sequence
 
 1. verify SQLite and memory fallback behavior outside the unit suite
-2. deepen async race coverage for the remaining assistant-side studio update paths
+2. decide whether `js/time-sync-page.js` still needs explicit late-completion coverage beyond the current lyric and studio request tests
 3. manually verify visual states across themes and mobile/desktop layouts
 4. finish the remaining JS/canvas fallback cleanup after the new runtime token-sync pass
 5. keep migrating remaining legacy globals opportunistically when touched
@@ -585,7 +585,7 @@ During review:
 Priority order now that the major structural phases are in place:
 
 1. **Verify persistence behavior in runtime-like environments** — confirm `TASK_STORE=sqlite` and `TASK_STORE=memory` behavior outside isolated unit tests
-2. **Expand race-condition coverage** — keep the new preview-engine and review-player request tests in place and add explicit coverage for the remaining assistant-side studio races
+2. **Expand race-condition coverage only if needed** — keep the new preview, review-player, and assistant request tests in place, then add more only where `js/time-sync-page.js` or future UI flows show a real stale-state risk
 3. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
 4. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
 5. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
