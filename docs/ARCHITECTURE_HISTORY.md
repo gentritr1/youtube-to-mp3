@@ -173,6 +173,6 @@ These patterns worked well and should be carried forward:
 
 **Problem**: Semantic theming existed, but repeated overlay, outline, scrim, and shadow values were still embedded directly inside component CSS, especially in discovery and studio surfaces.
 
-**Solution so far**: Added shared overlay, outline, scrim, and surface-shadow tokens to `css/base.css`. `conversion-animations.css` moved off its remaining direct color literals earlier in the cleanup, and `features.css` plus `time-sync-page.css` now consume the shared tokens for their repeated glass-surface treatments.
+**Solution so far**: Added shared overlay, outline, scrim, and surface-shadow tokens to `css/base.css`. `conversion-animations.css` moved off its remaining direct color literals earlier in the cleanup, `features.css` plus `time-sync-page.css` now consume the shared tokens for their repeated glass-surface treatments, and `karaoke-panel.css` now uses the same token set instead of component-level overlay and warning literals.
 
 **Key design choice**: Centralize repeated visual assumptions as semantic tokens, but keep component-specific gradients and one-off art direction local until a second real reuse appears. This keeps the token layer useful instead of bloated.
