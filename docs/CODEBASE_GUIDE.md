@@ -528,6 +528,7 @@ Progress so far:
 - `css/components/conversion-animations.css` moved off its remaining direct color literals
 - `css/components/features.css` and `css/components/time-sync-page.css` now consume shared overlay, outline, scrim, and shadow tokens from `css/base.css` for repeated discovery/studio surface treatments
 - `css/components/karaoke-panel.css` now consumes the same shared overlay, outline, warning, and surface-shadow tokens, eliminating its remaining direct color/shadow literals
+- `css/components/guess-track.css` now drives its success/error/hot-state surfaces, Frutiger glass overrides, and option-state chrome through token-backed custom properties instead of raw component literals
 
 Definition of done:
 - themes own palette choices
