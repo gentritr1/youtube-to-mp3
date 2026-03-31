@@ -84,8 +84,14 @@ const toRgba = (value, alpha) => {
 
     const rgbaMatch = normalized.match(/^rgba?\(([^)]+)\)$/i);
     if (rgbaMatch) {
-        const [red, green, blue] = rgbaMatch[1].split(',').map((part) => part.trim());
-        return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+        const parts = rgbaMatch[1].split(',').map((part) => part.trim());
+        const [red, green, blue, existingAlphaValue] = parts;
+        const existingAlpha = parts.length > 3 ? Number.parseFloat(existingAlphaValue) : 1;
+        if (parts.length < 3 || !Number.isFinite(existingAlpha)) {
+            return value;
+        }
+
+        return `rgba(${red}, ${green}, ${blue}, ${existingAlpha * alpha})`;
     }
 
     return value;

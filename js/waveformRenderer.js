@@ -59,8 +59,9 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_RO
     canvas.height = Math.floor(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const styles = getComputedStyle(root);
-    const documentRef = root?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+    const documentRef = root?.ownerDocument || view.document || (typeof document !== 'undefined' ? document : null);
+    const styleRoot = root || documentRef?.documentElement || documentRef?.body;
+    const styles = styleRoot ? getComputedStyle(styleRoot) : null;
     const sky = readThemeValue(styles, '--sky', RUNTIME_THEME_TOKEN_DEFAULTS.sky);
     const emerald = readThemeValue(styles, '--emerald', RUNTIME_THEME_TOKEN_DEFAULTS.emerald);
     const heroOrb = readThemeValue(styles, '--hero-orb', RUNTIME_THEME_TOKEN_DEFAULTS.heroOrb);

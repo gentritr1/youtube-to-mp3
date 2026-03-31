@@ -93,7 +93,12 @@ export const bindStudioEvents = ({
 
     addBinding(bindings, pointRailWindow, 'pointerout', (event) => {
         const relatedTarget = event.relatedTarget;
-        if (relatedTarget && pointRailWindow?.contains?.(relatedTarget)) {
+        if (
+            relatedTarget
+            && pointRailWindow
+            && relatedTarget !== pointRailWindow
+            && pointRailWindow.contains?.(relatedTarget)
+        ) {
             return;
         }
 

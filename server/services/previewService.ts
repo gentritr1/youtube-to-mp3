@@ -9,6 +9,7 @@ export const PREVIEW_DURATION = 30;
 const PREVIEW_START_OFFSET = 30;
 const PREVIEW_MAX_AGE_MS = 30 * 60 * 1000;
 const PREVIEW_TIMEOUT_MS = 60 * 1000;
+const STDERR_BUFFER_LIMIT = 2048;
 const SAFE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 
 export interface PreviewResult {
@@ -30,6 +31,18 @@ const ensurePreviewsDir = (): void => {
 const getPreviewFilePath = (videoId: string): string => {
     ensurePreviewsDir();
     return path.join(getPreviewsDir(), `${videoId}_preview.mp3`);
+};
+
+const appendStderrChunk = (currentValue: string, chunk: Buffer | string): string => {
+    if (currentValue.length >= STDERR_BUFFER_LIMIT) {
+        return currentValue;
+    }
+
+    const text = chunk.toString();
+    const remainingChars = STDERR_BUFFER_LIMIT - currentValue.length;
+    const nextChunk = text.slice(0, remainingChars);
+    const wasTruncated = text.length > remainingChars;
+    return wasTruncated ? `${currentValue}${nextChunk}…(truncated)` : `${currentValue}${nextChunk}`;
 };
 
 export const validatePreviewVideoId = (videoId: unknown): string | null => {
@@ -149,11 +162,11 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
         let ffmpegError = '';
 
         ytdlpStderr.on('data', (data) => {
-            ytdlpError += data.toString();
+            ytdlpError = appendStderrChunk(ytdlpError, data);
         });
 
         ffmpegStderr.on('data', (data) => {
-            ffmpegError += data.toString();
+            ffmpegError = appendStderrChunk(ffmpegError, data);
         });
 
         ytdlp.on('error', (err) => {

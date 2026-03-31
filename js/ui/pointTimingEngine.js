@@ -1,6 +1,8 @@
 const cloneIssuesByPointId = (issuesByPointId = {}) => Object.fromEntries(
     Object.entries(issuesByPointId).map(([pointId, issues]) => [pointId, Array.isArray(issues) ? [...issues] : []])
 );
+const EARLY_START_THRESHOLD_MS = 500;
+const LATE_START_THRESHOLD_MS = 7000;
 
 export const createAutosyncState = (overrides = {}) => ({
     status: overrides.status ?? 'not_run',
@@ -120,10 +122,10 @@ export const runAutosyncPass = ({
         }
 
         const gap = index === 0 ? 0 : nextTime - previousTime;
-        if (index > 0 && gap < 500) {
+        if (index > 0 && gap < EARLY_START_THRESHOLD_MS) {
             issues.push('early_start');
         }
-        if (index > 0 && gap > 7000) {
+        if (index > 0 && gap > LATE_START_THRESHOLD_MS) {
             issues.push('late_start');
         }
 
@@ -337,6 +339,8 @@ export const undoPointChange = ({
         operation.changes.forEach((change) => {
             const pointIndex = nextPoints.findIndex((entry) => entry.id === change.id);
             if (pointIndex === -1) {
+                // Skipping missing point ids is intentional here so undo stays safe
+                // even when nextPoints no longer contains one of operation.changes.
                 return;
             }
 
