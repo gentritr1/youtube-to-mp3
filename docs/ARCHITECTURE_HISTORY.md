@@ -153,18 +153,26 @@ These patterns worked well and should be carried forward:
 
 **Key design choice**: Per-file environment opt-in instead of global jsdom. Server tests stay in Node without DOM overhead.
 
-### Architecture Cleanup — Phase 4: Module Decomposition (in progress)
+### Architecture Cleanup — Phase 4: Module Decomposition (completed)
 
 **Problem**: `timeSyncStudio.js` and `features.js` had accumulated multiple stable responsibilities that should evolve independently.
 
 **Solution so far**: Extracted YouTubePlayerAdapter, AssistantClient, SyncExporter, PointWorkspaceRenderer, PointTimingEngine, ReviewPlayerPanel, StudioWorkflowState, and StudioEventBindings from studio; extracted PreviewAudioEngine, WaveformRenderer, PopularBrowser, and PreviewPanel from features. Public APIs established in Phase 1 stayed unchanged.
 
-**Current state**: `features.js` is down to 590 LOC and `timeSyncStudio.js` is down to 1,127 LOC. The studio now keeps orchestration while `pointTimingEngine.js` owns autosync and mutation state, `reviewPlayerPanel.js` owns review-player panel state and loop-tick rendering decisions, `studioWorkflowState.js` owns the setup/loading/empty/lyrics/export workflow presets, and `studioEventBindings.js` owns DOM listener binding and cleanup. On the discovery side, `popularBrowser.js` now owns genre loading and carousel rendering, `previewPanel.js` owns preview panel UI state, and `features.js` stays focused on preview requests and convert handoff. The seams are materially better, but both parent files still have more decomposition work ahead if they grow further.
+**Current state**: `features.js` is down to 590 LOC and `timeSyncStudio.js` is down to 1,127 LOC. The studio now keeps orchestration while `pointTimingEngine.js` owns autosync and mutation state, `reviewPlayerPanel.js` owns review-player panel state and loop-tick rendering decisions, `studioWorkflowState.js` owns the setup/loading/empty/lyrics/export workflow presets, and `studioEventBindings.js` owns DOM listener binding and cleanup. On the discovery side, `popularBrowser.js` now owns genre loading and carousel rendering, `previewPanel.js` owns preview panel UI state, and `features.js` stays focused on preview requests and convert handoff. The remaining parent modules are accepted orchestration shells rather than unfinished decompositions.
 
-**Key design choice**: Phase 1 changed boundaries; Phase 4 changes guts. Callers don't see Phase 4 changes.
+**Key design choice**: Phase 1 changed boundaries; Phase 4 changed guts. Callers don't see Phase 4 changes, and future splits should only happen when a new stable responsibility appears.
 
 ### Architecture Cleanup — Phase 5: Preview Service Extraction (completed)
 
 **Problem**: `server/routes/preview.ts` owns process spawning, caching, streaming, and cleanup — responsibilities that belong in a service.
 
 **Solution**: New `previewService.ts` with `generatePreview()`, `getPreviewPath()`, `cleanupPreviews()`. Route file reduced to HTTP concerns only.
+
+### Architecture Cleanup — Parallel Track: CSS Token Migration (in progress)
+
+**Problem**: Semantic theming existed, but repeated overlay, outline, scrim, and shadow values were still embedded directly inside component CSS, especially in discovery and studio surfaces.
+
+**Solution so far**: Added shared overlay, outline, scrim, and surface-shadow tokens to `css/base.css`. `conversion-animations.css` moved off its remaining direct color literals earlier in the cleanup, and `features.css` plus `time-sync-page.css` now consume the shared tokens for their repeated glass-surface treatments.
+
+**Key design choice**: Centralize repeated visual assumptions as semantic tokens, but keep component-specific gradients and one-off art direction local until a second real reuse appears. This keeps the token layer useful instead of bloated.

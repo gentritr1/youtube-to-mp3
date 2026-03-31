@@ -355,15 +355,15 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 
 **Structural (extensibility blockers):**
 
-- `js/ui/timeSyncStudio.js` is still 1,127 lines and now keeps orchestration, editor feedback, and top-level studio status flow, but the class remains a future bottleneck if more workflow logic accumulates there
-- `js/features.js` is down to 590 lines after extracting `previewAudioEngine.js`, `waveformRenderer.js`, `popularBrowser.js`, and `previewPanel.js`, but it still owns DOM creation, preview request orchestration, and convert handoff in one module
 - task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
 - frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; preview audio and studio request races remain under-tested
 
 **Maintenance (valuable but lower leverage):**
 
+- `js/ui/timeSyncStudio.js` is now an orchestration shell at 1,127 lines; treat it as acceptable until new responsibilities accumulate, then split again by stable seam instead of adding back inline logic
+- `js/features.js` is now a 590-line controller shell for DOM creation, preview requests, and convert handoff; split it further only when one of those responsibilities grows materially
 - `app.js` still owns some sidecar panel state and mini-game wiring in addition to the main conversion flow
-- older component CSS files still contain direct visual assumptions instead of consuming the semantic token layer
+- older component CSS files still contain direct visual assumptions instead of consuming the semantic token layer, even after tokenizing discovery/studio surface overlays and shadows
 
 ### Phase 1. Freeze new globals and unify the module system direction
 
@@ -443,9 +443,9 @@ Definition of done:
 ### Phase 4. Decompose oversized feature modules
 
 Status:
-- in progress
+- completed
 
-Two files carry enough distinct responsibilities that they should be split before absorbing more work.
+This phase has reached its intended stopping point. Both parent files are now orchestration shells with stable helper modules behind them.
 
 **`js/ui/timeSyncStudio.js` (1,127 lines)**
 
@@ -464,7 +464,7 @@ Remaining in the parent module:
 - editor feedback and top-level status messaging
 - final orchestration across extracted studio helpers
 
-The argument is not for arbitrary splitting; it is for extracting clear seams before more work lands there.
+This is the accepted resting state for now. If the studio grows again, split the next stable seam before adding more inline state or rendering logic.
 
 **`js/features.js` (590 lines)**
 
@@ -485,6 +485,11 @@ Definition of done:
 - extracted sub-modules have clear single-purpose APIs
 - the parent module imports from them rather than containing them inline
 - follow-up splits are driven by stable seams, not arbitrary line counts
+
+Current result:
+- `js/ui/timeSyncStudio.js` is 1,127 lines after extracting `youtubePlayerAdapter.js`, `assistantClient.js`, `syncExporter.js`, `pointWorkspaceRenderer.js`, `pointTimingEngine.js`, `reviewPlayerPanel.js`, `studioWorkflowState.js`, and `studioEventBindings.js`
+- `js/features.js` is 590 lines after extracting `previewAudioEngine.js`, `waveformRenderer.js`, `popularBrowser.js`, and `previewPanel.js`
+- further decomposition is optional until those parent shells start growing again
 
 ### Phase 5. Extract preview service from route
 
@@ -508,16 +513,20 @@ Definition of done:
 This is real maintenance work that should continue in parallel with the structural phases above. It improves visual consistency across themes but does not itself solve ownership, integration style, or extensibility.
 
 Focus:
-- `css/components/karaoke-panel.css` (40 hardcoded color values)
-- `css/components/conversion-animations.css` (23 hardcoded)
-- `css/components/guess-track.css` (22 hardcoded)
-- `css/components/game.css` (17 hardcoded)
+- `css/components/karaoke-panel.css` for older lyric and player surfaces
+- `css/components/guess-track.css` for game overlays and state treatments
+- `css/components/game.css` for canvas-adjacent state chrome
+- `css/components/header.css` and `css/components/theme-switcher.css` for remaining theme-preview literals
 - canvas-driven color fallbacks in `js/features.js`, `js/game/*`, and `js/guess-track.js`
 
 Actions:
 - convert repeated surfaces, borders, glow states, and status treatments into semantic tokens in `css/base.css`
 - keep palette decisions in `css/themes/*.css`
 - treat new hardcoded presentation values in JavaScript as exceptions that need a documented data-driven reason
+
+Progress so far:
+- `css/components/conversion-animations.css` moved off its remaining direct color literals
+- `css/components/features.css` and `css/components/time-sync-page.css` now consume shared overlay, outline, scrim, and shadow tokens from `css/base.css` for repeated discovery/studio surface treatments
 
 Definition of done:
 - themes own palette choices
@@ -544,12 +553,11 @@ During review:
 
 ### Recommended sequence
 
-1. freeze new `window.*` globals immediately (zero-cost rule)
-2. choose one task persistence path and schedule legacy removal
-3. stand up the frontend async test harness
-4. decompose `timeSyncStudio.js` and `features.js` by stable seams
-5. extract preview service from preview route
-6. continue token migration in parallel throughout
+1. verify SQLite and memory fallback behavior outside the unit suite
+2. deepen async race coverage for preview playback and studio request replacement
+3. continue token migration in parallel throughout
+4. manually verify visual states across themes and mobile/desktop layouts
+5. keep migrating remaining legacy globals opportunistically when touched
 
 ## Practical Checklist
 
@@ -569,14 +577,13 @@ During review:
 
 ## Near-Term Next Steps
 
-Priority order, with structural extensibility first and visual cleanup in parallel:
+Priority order now that the major structural phases are in place:
 
-1. **Freeze new globals** — enforce ES module `import`/`export` for all new work; migrate existing `window.*` globals opportunistically
-2. **Choose one task persistence path** — declare SQLite canonical, put one facade in front of it, schedule removal of the legacy in-memory path
-3. **Stand up a frontend async test harness** — wire vitest with a DOM environment and fake timers so race-condition tests are writable
-4. **Decompose oversized modules** — split `timeSyncStudio.js` and `features.js` along stable seams before adding more features to them
-5. **Extract preview service** — move process orchestration out of `server/routes/preview.ts` into a dedicated service
-6. **Continue token migration** — reduce hardcoded visual assumptions in karaoke-panel, guess-track, conversion-animations, and game CSS (parallel track)
+1. **Verify persistence behavior in runtime-like environments** — confirm `TASK_STORE=sqlite` and `TASK_STORE=memory` behavior outside isolated unit tests
+2. **Expand race-condition coverage** — add explicit tests for preview request replacement, preview playback transitions, and remaining studio request races
+3. **Continue token migration** — reduce hardcoded visual assumptions in karaoke-panel, guess-track, game, header, and theme-switcher CSS
+4. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
+5. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
 
 Use the Architecture Adjustment Plan above as the default path for these changes.
 

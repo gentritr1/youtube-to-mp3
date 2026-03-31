@@ -34,7 +34,7 @@
         radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb-soft) 90%, transparent), transparent 50%),
         linear-gradient(135deg, color-mix(in srgb, var(--hero-surface-strong) 92%, transparent), color-mix(in srgb, var(--card) 98%, transparent));
     box-shadow: 
-        0 24px 64px rgba(0, 0, 0, 0.15),
+        var(--shadow-panel-soft),
         inset 0 1px 0 color-mix(in srgb, var(--foreground) 6%, transparent);
     position: relative;
     overflow: hidden;
@@ -58,8 +58,8 @@
     width: fit-content;
     padding: 0.3rem 0.58rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-overlay);
+    border: 1px solid var(--surface-outline);
     color: var(--muted-foreground);
     font-size: 0.68rem;
     font-weight: 800;
@@ -91,8 +91,8 @@
     align-items: center;
     padding: 0.45rem 0.7rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--surface-overlay-soft);
+    border: 1px solid var(--surface-outline-soft);
     font-size: 0.8rem;
     color: var(--foreground);
 }
@@ -112,7 +112,7 @@
     border: 1px solid color-mix(in srgb, var(--hero-border) 60%, transparent);
     background: linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, transparent), color-mix(in srgb, var(--secondary) 80%, transparent));
     box-shadow: 
-        0 24px 60px rgba(0, 0, 0, 0.15),
+        var(--shadow-panel-soft),
         inset 0 1px 0 color-mix(in srgb, var(--foreground) 6%, transparent);
 }
 
@@ -167,7 +167,7 @@
     background: color-mix(in srgb, var(--secondary) 60%, transparent);
     color: var(--foreground);
     font: inherit;
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-inset-soft);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
@@ -176,7 +176,7 @@
     border-color: color-mix(in srgb, var(--hero-orb) 60%, transparent);
     background: color-mix(in srgb, var(--secondary) 90%, transparent);
     box-shadow: 
-        inset 0 2px 8px rgba(0, 0, 0, 0.1),
+        var(--shadow-inset),
         0 0 0 3px color-mix(in srgb, var(--hero-orb) 15%, transparent);
     outline: none;
 }
@@ -223,7 +223,7 @@
 
 .studio-secondary-btn,
 .studio-teaser-link {
-    background: color-mix(in srgb, var(--hero-orb) 14%, rgba(255, 255, 255, 0.06));
+    background: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay-strong));
     border-color: color-mix(in srgb, var(--hero-orb) 44%, transparent);
 }
 
@@ -265,7 +265,7 @@
         radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb) 12%, transparent), transparent 60%),
         linear-gradient(135deg, color-mix(in srgb, var(--card) 80%, transparent), color-mix(in srgb, var(--secondary) 60%, transparent));
     box-shadow: 
-        0 8px 24px rgba(0, 0, 0, 0.15),
+        var(--shadow-lg),
         inset 0 1px 0 color-mix(in srgb, var(--foreground) 5%, transparent);
 }
 
@@ -295,7 +295,7 @@
     background:
         radial-gradient(circle at center, color-mix(in srgb, var(--hero-orb) 12%, transparent), transparent 80%),
         color-mix(in srgb, var(--secondary) 86%, transparent);
-    box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-inset-strong);
 }
 
 .review-player-frame iframe,
@@ -327,7 +327,7 @@
 }
 
 .studio-secondary-btn.is-active {
-    background: color-mix(in srgb, var(--hero-orb) 26%, rgba(255, 255, 255, 0.1));
+    background: color-mix(in srgb, var(--hero-orb) 26%, var(--surface-overlay-emphasis));
     border-color: color-mix(in srgb, var(--hero-orb) 62%, transparent);
 }
 
@@ -404,7 +404,7 @@
 }
 
 .sync-editor-feedback[data-tone="warning"] {
-    color: var(--warning, #b7791f);
+    color: var(--warning);
 }
 
 .sync-editor-feedback[data-tone="error"] {
@@ -424,10 +424,10 @@
     gap: 0.85rem;
     padding: 1rem;
     border-radius: 1.1rem;
-    border: 1px solid color-mix(in srgb, var(--hero-orb) 28%, rgba(255, 255, 255, 0.08));
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 28%, var(--surface-outline));
     background:
-        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 14%, transparent), rgba(255, 255, 255, 0.03)),
-        rgba(255, 255, 255, 0.04);
+        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 14%, transparent), color-mix(in srgb, var(--foreground) 3%, transparent)),
+        var(--surface-overlay-soft);
 }
 
 .studio-teaser-copy {

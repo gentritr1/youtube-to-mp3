@@ -63,6 +63,13 @@
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
     --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.12);
+    --shadow-panel-soft: 0 24px 64px rgba(0, 0, 0, 0.15);
+    --shadow-panel: 0 24px 50px rgba(0, 0, 0, 0.28);
+    --shadow-card-hover: 0 18px 40px -14px rgba(0, 0, 0, 0.6);
+    --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.25);
+    --shadow-inset-soft: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-inset: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-inset-strong: inset 0 2px 12px rgba(0, 0, 0, 0.15);
 
     /* ---- Theming / hero ---- */
     --hero-surface: rgba(10, 15, 28, 0.76);
@@ -77,6 +84,14 @@
     --glass-highlight: rgba(255, 255, 255, 0.08);
     --glass-shadow: rgba(0, 0, 0, 0.22);
     --liquid-tint: rgba(255, 255, 255, 0.04);
+    --surface-overlay-soft: color-mix(in srgb, var(--foreground) 4%, transparent);
+    --surface-overlay: color-mix(in srgb, var(--foreground) 5%, transparent);
+    --surface-overlay-strong: color-mix(in srgb, var(--foreground) 6%, transparent);
+    --surface-overlay-emphasis: color-mix(in srgb, var(--foreground) 10%, transparent);
+    --surface-outline-soft: color-mix(in srgb, var(--foreground) 7%, transparent);
+    --surface-outline: color-mix(in srgb, var(--foreground) 8%, transparent);
+    --surface-scrim: color-mix(in srgb, black 62%, transparent);
+    --surface-scrim-strong: color-mix(in srgb, black 75%, transparent);
     --surface-glass: color-mix(in srgb, var(--card) 84%, transparent);
     --surface-glass-strong: color-mix(in srgb, var(--hero-surface-strong) 88%, transparent);
     --surface-glass-soft: color-mix(in srgb, var(--secondary) 82%, transparent);
