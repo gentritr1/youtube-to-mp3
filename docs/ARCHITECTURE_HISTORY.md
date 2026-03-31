@@ -153,6 +153,8 @@ These patterns worked well and should be carried forward:
 
 **Key design choice**: Per-file environment opt-in instead of global jsdom. Server tests stay in Node without DOM overhead.
 
+**Follow-through**: Later slices added direct `previewAudioEngine` request-race tests on top of the earlier lyric timing coverage, so the remaining async-test gap is now concentrated in the studio request-replacement paths rather than the preview loader itself.
+
 ### Architecture Cleanup — Phase 4: Module Decomposition (completed)
 
 **Problem**: `timeSyncStudio.js` and `features.js` had accumulated multiple stable responsibilities that should evolve independently.
