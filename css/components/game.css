@@ -252,7 +252,7 @@
     background: var(--amber-soft);
     padding: 0.2rem 0.5rem;
     border-radius: 5px;
-    border: 1px solid hsl(38 60% 30%);
+    border: 1px solid color-mix(in srgb, var(--amber) 38%, transparent);
     animation: combo-pulse 0.4s ease-out;
 }
 
@@ -283,7 +283,7 @@
     background: var(--rose-soft);
     padding: 0.2rem 0.5rem;
     border-radius: 5px;
-    border: 1px solid hsl(347 50% 32%);
+    border: 1px solid color-mix(in srgb, var(--rose) 36%, transparent);
     animation: split-pulse 1.5s ease-in-out infinite;
 }
 
@@ -305,11 +305,11 @@
 
     0%,
     100% {
-        box-shadow: 0 0 4px hsl(347 77% 50% / 0.2);
+        box-shadow: 0 0 4px color-mix(in srgb, var(--rose) 20%, transparent);
     }
 
     50% {
-        box-shadow: 0 0 12px hsl(347 77% 50% / 0.35);
+        box-shadow: 0 0 12px color-mix(in srgb, var(--rose) 35%, transparent);
     }
 }
 
@@ -332,19 +332,19 @@
 .powerup-indicator.ghost {
     color: var(--violet);
     background: var(--violet-soft);
-    border: 1px solid hsl(258 60% 40%);
+    border: 1px solid color-mix(in srgb, var(--violet) 40%, transparent);
 }
 
 .powerup-indicator.speed {
     color: var(--sky);
     background: var(--sky-soft);
-    border: 1px solid hsl(199 60% 35%);
+    border: 1px solid color-mix(in srgb, var(--sky) 35%, transparent);
 }
 
 .powerup-indicator.split {
     color: var(--rose);
     background: var(--rose-soft);
-    border: 1px solid hsl(347 50% 32%);
+    border: 1px solid color-mix(in srgb, var(--rose) 36%, transparent);
 }
 
 @keyframes powerup-glow {
@@ -366,8 +366,8 @@
     border: 1px solid var(--game-canvas-border);
     border-radius: var(--radius);
     box-shadow:
-        0 2px 20px rgba(0, 0, 0, 0.4),
-        inset 0 0 40px rgba(0, 0, 0, 0.5);
+        0 2px 20px color-mix(in srgb, black 40%, transparent),
+        inset 0 0 40px color-mix(in srgb, black 50%, transparent);
     image-rendering: auto;
     transition: box-shadow var(--transition-base);
     max-width: 100%;
@@ -382,9 +382,9 @@
 
 .game-container canvas.playing {
     box-shadow:
-        0 2px 20px rgba(0, 0, 0, 0.4),
-        0 0 30px hsl(160 84% 39% / 0.06),
-        inset 0 0 40px rgba(0, 0, 0, 0.5);
+        0 2px 20px color-mix(in srgb, black 40%, transparent),
+        0 0 30px color-mix(in srgb, var(--emerald) 6%, transparent),
+        inset 0 0 40px color-mix(in srgb, black 50%, transparent);
 }
 
 
@@ -503,14 +503,14 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     box-shadow:
-        0 2px 8px hsl(160 84% 39% / 0.3);
+        0 2px 8px color-mix(in srgb, var(--emerald) 30%, transparent);
 }
 
 .restart-btn:hover {
-    background: hsl(160 84% 44%);
+    background: color-mix(in srgb, var(--emerald) 88%, white);
     transform: translateY(-1px);
     box-shadow:
-        0 4px 16px hsl(160 84% 39% / 0.35);
+        0 4px 16px color-mix(in srgb, var(--emerald) 35%, transparent);
 }
 
 .restart-btn:active {
@@ -679,14 +679,14 @@
 
 :root[data-theme="frutiger-aero"] .game-floating {
     background:
-        radial-gradient(circle at 16% 10%, rgba(255, 255, 255, 0.7), transparent 26%),
-        radial-gradient(circle at 86% 14%, rgba(103, 232, 249, 0.18), transparent 24%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 20%),
-        linear-gradient(165deg, rgba(247, 253, 255, 0.74), rgba(219, 247, 252, 0.68));
+        radial-gradient(circle at 16% 10%, color-mix(in srgb, var(--glass-highlight) 100%, transparent), transparent 26%),
+        radial-gradient(circle at 86% 14%, color-mix(in srgb, var(--frutiger-overlay-accent) 90%, transparent), transparent 24%),
+        linear-gradient(180deg, color-mix(in srgb, var(--glass-highlight) 50%, transparent), transparent 20%),
+        linear-gradient(165deg, color-mix(in srgb, var(--surface-glass-strong) 100%, transparent), color-mix(in srgb, var(--surface-glass-soft) 94%, transparent));
     box-shadow:
-        0 28px 56px rgba(85, 170, 194, 0.22),
-        0 0 0 1px rgba(149, 232, 250, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+        0 28px 56px color-mix(in srgb, var(--frutiger-button-shadow) 92%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--surface-border) 100%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 100%, transparent);
 }
 
 :root[data-theme="frutiger-aero"] .game-floating .game-header,
@@ -695,17 +695,17 @@
 :root[data-theme="frutiger-aero"] .high-scores,
 :root[data-theme="frutiger-aero"] .game-controls kbd {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(220, 248, 253, 0.24)),
-        rgba(255, 255, 255, 0.14);
+        linear-gradient(180deg, color-mix(in srgb, var(--glass-highlight) 80%, transparent), color-mix(in srgb, var(--surface-glass-soft) 38%, transparent)),
+        color-mix(in srgb, var(--surface-glass) 24%, transparent);
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.8) inset,
-        0 14px 30px rgba(86, 170, 193, 0.12);
+        0 1px 0 color-mix(in srgb, var(--glass-highlight) 100%, transparent) inset,
+        0 14px 30px color-mix(in srgb, var(--glass-shadow) 75%, transparent);
 }
 
 :root[data-theme="frutiger-aero"] .game-container canvas {
     box-shadow:
-        0 16px 34px rgba(56, 125, 145, 0.18),
-        inset 0 0 40px rgba(0, 0, 0, 0.34);
+        0 16px 34px color-mix(in srgb, var(--glass-shadow) 100%, transparent),
+        inset 0 0 40px color-mix(in srgb, black 34%, transparent);
 }
 
 /* ---- Reduced motion ---- */
