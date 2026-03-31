@@ -585,6 +585,9 @@ Priority order now that the major structural phases are in place:
 2. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
 3. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
 
+Recent note:
+- runtime fallback literals for game/preview canvases are now centralized in `js/ui/runtimeColorFallbacks.js` instead of being duplicated across the renderers
+
 Use the Architecture Adjustment Plan above as the default path for these changes.
 
 If a future feature feels hard to place cleanly, the first question is module ownership and integration style — not token availability. Extend the shared controller or service layer first instead of shipping another exception.

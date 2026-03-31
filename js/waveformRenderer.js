@@ -1,3 +1,8 @@
+import {
+    COLOR_NORMALIZE_SENTINEL,
+    RUNTIME_THEME_TOKEN_DEFAULTS
+} from './ui/runtimeColorFallbacks.js';
+
 const DEFAULT_ROOT = typeof document !== 'undefined' ? document.documentElement : null;
 
 const readThemeValue = (styles, name, fallback) => styles.getPropertyValue(name).trim() || fallback;
@@ -16,7 +21,7 @@ const withAlpha = (color, alpha, documentRef) => {
         return color;
     }
 
-    context.fillStyle = '#000000';
+    context.fillStyle = COLOR_NORMALIZE_SENTINEL;
     context.fillStyle = color;
     const normalized = context.fillStyle;
 
@@ -56,13 +61,13 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_RO
 
     const styles = getComputedStyle(root);
     const documentRef = root?.ownerDocument || (typeof document !== 'undefined' ? document : null);
-    const sky = readThemeValue(styles, '--sky', 'hsl(199 89% 48%)');
-    const emerald = readThemeValue(styles, '--emerald', 'hsl(160 84% 39%)');
-    const heroOrb = readThemeValue(styles, '--hero-orb', sky);
-    const foreground = readThemeValue(styles, '--foreground', 'hsl(210 20% 96%)');
-    const mutedForeground = readThemeValue(styles, '--muted-foreground', withAlpha(foreground, 0.35, documentRef));
-    const glassHighlight = readThemeValue(styles, '--glass-highlight', withAlpha(foreground, 0.1, documentRef));
-    const surfaceGlassSoft = readThemeValue(styles, '--surface-glass-soft', withAlpha(foreground, 0.08, documentRef));
+    const sky = readThemeValue(styles, '--sky', RUNTIME_THEME_TOKEN_DEFAULTS.sky);
+    const emerald = readThemeValue(styles, '--emerald', RUNTIME_THEME_TOKEN_DEFAULTS.emerald);
+    const heroOrb = readThemeValue(styles, '--hero-orb', RUNTIME_THEME_TOKEN_DEFAULTS.heroOrb);
+    const foreground = readThemeValue(styles, '--foreground', RUNTIME_THEME_TOKEN_DEFAULTS.foreground);
+    const mutedForeground = readThemeValue(styles, '--muted-foreground', RUNTIME_THEME_TOKEN_DEFAULTS.mutedForeground);
+    const glassHighlight = readThemeValue(styles, '--glass-highlight', RUNTIME_THEME_TOKEN_DEFAULTS.glassHighlight);
+    const surfaceGlassSoft = readThemeValue(styles, '--surface-glass-soft', RUNTIME_THEME_TOKEN_DEFAULTS.surfaceGlassSoft);
 
     ctx.clearRect(0, 0, width, height);
 

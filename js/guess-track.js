@@ -2,23 +2,26 @@
  * Guess the Track - Mini Game Logic
  */
 
+import { RUNTIME_THEME_TOKEN_DEFAULTS } from './ui/runtimeColorFallbacks.js';
+
 let _getRandomTracks = null;
 
 const readThemeValue = (styles, name, fallback) => styles.getPropertyValue(name).trim() || fallback;
 
 const getBurstConfigs = (root = document.documentElement) => {
     const styles = getComputedStyle(root);
-    const emerald = readThemeValue(styles, '--emerald', '#34d399');
-    const amber = readThemeValue(styles, '--amber', '#fbbf24');
-    const sky = readThemeValue(styles, '--sky', '#7dd3fc');
-    const rose = readThemeValue(styles, '--rose', '#fb7185');
-    const roseSoft = readThemeValue(styles, '--rose-soft', '#fda4af');
-    const heroHeadlight = readThemeValue(styles, '--hero-headlight', '#facc15');
+    const emerald = readThemeValue(styles, '--emerald', RUNTIME_THEME_TOKEN_DEFAULTS.emerald);
+    const amber = readThemeValue(styles, '--amber', RUNTIME_THEME_TOKEN_DEFAULTS.amber);
+    const sky = readThemeValue(styles, '--sky', RUNTIME_THEME_TOKEN_DEFAULTS.sky);
+    const rose = readThemeValue(styles, '--rose', RUNTIME_THEME_TOKEN_DEFAULTS.rose);
+    const roseSoft = readThemeValue(styles, '--rose-soft', RUNTIME_THEME_TOKEN_DEFAULTS.roseSoft);
+    const heroHeadlight = readThemeValue(styles, '--hero-headlight', RUNTIME_THEME_TOKEN_DEFAULTS.heroHeadlight);
+    const foreground = readThemeValue(styles, '--foreground', RUNTIME_THEME_TOKEN_DEFAULTS.foreground);
 
     return {
         success: { count: 14, symbols: ['✦', '•', '♪'], colors: [emerald, amber, sky] },
         streak: { count: 18, symbols: ['🔥', '✦', '♫'], colors: [rose, amber, heroHeadlight] },
-        miss: { count: 10, symbols: ['✕', '•'], colors: [rose, roseSoft, readThemeValue(styles, '--foreground', '#fecdd3')] }
+        miss: { count: 10, symbols: ['✕', '•'], colors: [rose, roseSoft, foreground] }
     };
 };
 
