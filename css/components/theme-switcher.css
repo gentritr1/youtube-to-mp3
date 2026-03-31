@@ -45,7 +45,7 @@
 }
 
 .theme-option.active {
-    background: color-mix(in srgb, var(--hero-orb) 17%, rgba(255, 255, 255, 0.06));
+    background: color-mix(in srgb, var(--hero-orb) 17%, var(--surface-overlay-strong));
     border-color: color-mix(in srgb, var(--hero-orb) 68%, transparent);
     box-shadow:
         0 16px 28px color-mix(in srgb, var(--hero-orb) 16%, transparent),
@@ -57,7 +57,7 @@
     height: 0.9rem;
     border-radius: 999px;
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid color-mix(in srgb, white 18%, transparent);
 }
 
 .theme-option-copy {
@@ -79,19 +79,19 @@
 }
 
 .theme-option[data-theme-value="space"] .theme-option-swatch {
-    background: linear-gradient(135deg, #93c5fd, #1d4ed8 55%, #111827);
+    background: var(--theme-preview-space);
 }
 
 .theme-option[data-theme-value="green"] .theme-option-swatch {
-    background: linear-gradient(135deg, #86efac, #16a34a 55%, #052e16);
+    background: var(--theme-preview-green);
 }
 
 .theme-option[data-theme-value="frutiger-aero"] .theme-option-swatch {
-    background: linear-gradient(135deg, #d9f9ff, #6ee7f9 55%, #22c55e);
+    background: var(--theme-preview-frutiger);
 }
 
 .theme-option[data-theme-value="sunshine"] .theme-option-swatch {
-    background: linear-gradient(135deg, #fff1cf, #fb923c 48%, #38bdf8);
+    background: var(--theme-preview-sunshine);
 }
 
 @media (max-width: 720px) {

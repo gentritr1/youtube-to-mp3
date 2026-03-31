@@ -464,6 +464,9 @@
     --preview-playhead-ring:
         0 0 0 6px color-mix(in srgb, var(--hero-orb-soft) 46%, transparent),
         0 0 18px color-mix(in srgb, var(--hero-orb) 28%, transparent);
+    --preview-waveform-shade-top: color-mix(in srgb, var(--background) 42%, transparent);
+    --preview-waveform-shade-bottom: color-mix(in srgb, var(--secondary) 34%, transparent);
+    --preview-progress-track-overlay: color-mix(in srgb, var(--secondary) 18%, transparent);
 
     position: relative;
     overflow: hidden;
@@ -681,7 +684,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(180deg, color-mix(in srgb, hsl(220 25% 8%) 42%, transparent), transparent 38%),
+        linear-gradient(180deg, var(--preview-waveform-shade-top), transparent 38%),
         radial-gradient(circle at 0% 50%, color-mix(in srgb, var(--hero-orb) 24%, transparent), transparent 42%);
     pointer-events: none;
 }
@@ -692,7 +695,7 @@
     inset: auto 0 0 0;
     height: 44%;
     background:
-        linear-gradient(180deg, transparent, color-mix(in srgb, hsl(220 18% 8%) 34%, transparent)),
+        linear-gradient(180deg, transparent, var(--preview-waveform-shade-bottom)),
         linear-gradient(90deg, color-mix(in srgb, var(--hero-orb) 8%, transparent), transparent 28%, color-mix(in srgb, var(--sky) 8%, transparent));
     pointer-events: none;
 }
@@ -933,7 +936,7 @@
     flex: 1;
     height: 8px;
     background:
-        linear-gradient(180deg, color-mix(in srgb, hsl(220 12% 18%) 18%, transparent), transparent),
+        linear-gradient(180deg, var(--preview-progress-track-overlay), transparent),
         color-mix(in srgb, var(--game-canvas) 24%, var(--surface-glass-soft));
     border-radius: 999px;
     cursor: pointer;

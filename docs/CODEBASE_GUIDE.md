@@ -513,10 +513,6 @@ Definition of done:
 This is real maintenance work that should continue in parallel with the structural phases above. It improves visual consistency across themes but does not itself solve ownership, integration style, or extensibility.
 
 Focus:
-- `css/components/karaoke-panel.css` for older lyric and player surfaces
-- `css/components/guess-track.css` for game overlays and state treatments
-- `css/components/game.css` for canvas-adjacent state chrome
-- `css/components/header.css` and `css/components/theme-switcher.css` for remaining theme-preview literals
 - canvas-driven color fallbacks in `js/features.js`, `js/game/*`, and `js/guess-track.js`
 
 Actions:
@@ -530,10 +526,12 @@ Progress so far:
 - `css/components/karaoke-panel.css` now consumes the same shared overlay, outline, warning, and surface-shadow tokens, eliminating its remaining direct color/shadow literals
 - `css/components/guess-track.css` now drives its success/error/hot-state surfaces, Frutiger glass overrides, and option-state chrome through token-backed custom properties instead of raw component literals
 - `css/components/game.css` now uses semantic state borders, canvas shadows, restart-button glow treatment, and Frutiger glass overrides without raw component literals
+- `css/components/header.css`, `css/components/theme-switcher.css`, and the remaining `css/components/features.css` waveform shading now use semantic or header/preview-scoped variables instead of raw component literals
 
 Definition of done:
 - themes own palette choices
 - components mostly read from semantic tokens
+- remaining visual exceptions live only where JavaScript/canvas rendering still needs an explicit fallback
 - new UI work does not introduce another visual island
 
 ### Guardrails for new work
@@ -558,8 +556,8 @@ During review:
 
 1. verify SQLite and memory fallback behavior outside the unit suite
 2. deepen async race coverage for preview playback and studio request replacement
-3. continue token migration in parallel throughout
-4. manually verify visual states across themes and mobile/desktop layouts
+3. manually verify visual states across themes and mobile/desktop layouts
+4. audit remaining JS/canvas color fallbacks that still bypass semantic tokens
 5. keep migrating remaining legacy globals opportunistically when touched
 
 ## Practical Checklist
@@ -584,8 +582,8 @@ Priority order now that the major structural phases are in place:
 
 1. **Verify persistence behavior in runtime-like environments** — confirm `TASK_STORE=sqlite` and `TASK_STORE=memory` behavior outside isolated unit tests
 2. **Expand race-condition coverage** — add explicit tests for preview request replacement, preview playback transitions, and remaining studio request races
-3. **Continue token migration** — reduce hardcoded visual assumptions in karaoke-panel, guess-track, game, header, and theme-switcher CSS
-4. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
+3. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
+4. **Clean JS/canvas color fallbacks** — move the remaining visual fallbacks in preview/game JavaScript toward semantic tokens where practical
 5. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
 
 Use the Architecture Adjustment Plan above as the default path for these changes.
