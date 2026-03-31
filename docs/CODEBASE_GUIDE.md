@@ -356,7 +356,7 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 **Structural (extensibility blockers):**
 
 - task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
-- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; the remaining gap is mostly manual UI verification plus a few non-critical time-sync-page edges
+- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; the remaining gap is mostly manual UI verification and runtime checks rather than missing controller race guards
 
 **Maintenance (valuable but lower leverage):**
 
@@ -402,7 +402,7 @@ Current situation:
 - `server/services/taskStore.ts`: canonical entry point for routes and services
 - `server/services/sqliteTaskAdapter.ts`: default product path backed by `sqliteTaskManager.ts`
 - `server/services/memoryTaskAdapter.ts`: contingency path for environments that cannot use SQLite
-- `TASK_STORE` selects the adapter at startup, but the fallback path still needs explicit runtime verification and tighter operational documentation
+- `TASK_STORE` selects the adapter at startup, and both `memory` and `sqlite` modes have now been exercised through the real runtime import path outside Vitest; the remaining follow-through is operational documentation rather than adapter uncertainty
 
 Decision applied:
 - SQLite is the canonical task store
@@ -419,7 +419,7 @@ Definition of done:
 Status:
 - completed
 
-The harness now exists. The next gap is depth rather than setup: targeted follow-through on any remaining time-sync-page edges and manual browser verification.
+The harness now exists. The next gap is operational follow-through rather than setup: manual browser verification and runtime-like checks outside the unit suite.
 
 Recent coverage added:
 - `tests/lyricsRace.test.ts` covers stale subtitle loads and finish-after-load behavior
@@ -435,7 +435,6 @@ Before writing race tests, decide and wire up:
 
 Priority test targets:
 - stale subtitle responses in `js/lyrics.js` (request-scoped `requestId` guard)
-- late subtitle completion in `js/time-sync-page.js`
 - `finishPlayback()` when conversion completes before subtitles settle
 - fallback timing behavior and malformed subtitle input
 
@@ -558,11 +557,9 @@ During review:
 
 ### Recommended sequence
 
-1. verify SQLite and memory fallback behavior outside the unit suite
-2. decide whether `js/time-sync-page.js` still needs explicit late-completion coverage beyond the current lyric and studio request tests
-3. manually verify visual states across themes and mobile/desktop layouts
-4. finish the remaining JS/canvas fallback cleanup after the new runtime token-sync pass
-5. keep migrating remaining legacy globals opportunistically when touched
+1. manually verify visual states across themes and mobile/desktop layouts
+2. finish the remaining JS/canvas fallback cleanup after the new runtime token-sync pass
+3. keep migrating remaining legacy globals opportunistically when touched
 
 ## Practical Checklist
 
@@ -584,11 +581,9 @@ During review:
 
 Priority order now that the major structural phases are in place:
 
-1. **Verify persistence behavior in runtime-like environments** — confirm `TASK_STORE=sqlite` and `TASK_STORE=memory` behavior outside isolated unit tests
-2. **Expand race-condition coverage only if needed** — keep the new preview, review-player, and assistant request tests in place, then add more only where `js/time-sync-page.js` or future UI flows show a real stale-state risk
-3. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
-4. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
-5. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
+1. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
+2. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
+3. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
 
 Use the Architecture Adjustment Plan above as the default path for these changes.
 

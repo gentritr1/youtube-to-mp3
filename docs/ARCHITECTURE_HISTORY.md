@@ -145,6 +145,8 @@ These patterns worked well and should be carried forward:
 
 **Key design choice**: Object-based `createTask({ taskId, videoId, format, ... })` instead of positional args. `findExistingTask` returns `Task | null` instead of `string | null`. Callers adapt minimally; the facade absorbs the difference.
 
+**Follow-through**: Later runtime-like smoke runs exercised both `TASK_STORE=sqlite` and `TASK_STORE=memory` through the real module import path with create/get/update/delete cycles, so the remaining work here is documentation and operational guidance rather than adapter uncertainty.
+
 ### Architecture Cleanup — Phase 3: Frontend Test Harness (completed)
 
 **Problem**: No DOM/browser test environment for async UI flows. Can't write race-condition or stale-state tests.
@@ -153,7 +155,7 @@ These patterns worked well and should be carried forward:
 
 **Key design choice**: Per-file environment opt-in instead of global jsdom. Server tests stay in Node without DOM overhead.
 
-**Follow-through**: Later slices added direct `previewAudioEngine` request-race tests, `TimeSyncStudio` review-player replacement coverage, and `AssistantClient` stale-response tests on top of the earlier lyric timing coverage, so the remaining async-test gap is no longer centered in the main studio or preview request paths.
+**Follow-through**: Later slices added direct `previewAudioEngine` request-race tests, `TimeSyncStudio` review-player replacement coverage, and `AssistantClient` stale-response tests on top of the earlier lyric timing coverage. `time-sync-page.js` already layers its own `currentRequestId` guard over the lyric events, so the remaining work is operational verification rather than a known missing request-race guard.
 
 ### Architecture Cleanup — Phase 4: Module Decomposition (completed)
 
