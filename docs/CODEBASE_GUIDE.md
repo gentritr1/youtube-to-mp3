@@ -557,7 +557,7 @@ During review:
 1. verify SQLite and memory fallback behavior outside the unit suite
 2. deepen async race coverage for preview playback and studio request replacement
 3. manually verify visual states across themes and mobile/desktop layouts
-4. audit remaining JS/canvas color fallbacks that still bypass semantic tokens
+4. finish the remaining JS/canvas fallback cleanup after the new runtime token-sync pass
 5. keep migrating remaining legacy globals opportunistically when touched
 
 ## Practical Checklist
@@ -583,7 +583,7 @@ Priority order now that the major structural phases are in place:
 1. **Verify persistence behavior in runtime-like environments** — confirm `TASK_STORE=sqlite` and `TASK_STORE=memory` behavior outside isolated unit tests
 2. **Expand race-condition coverage** — add explicit tests for preview request replacement, preview playback transitions, and remaining studio request races
 3. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
-4. **Clean JS/canvas color fallbacks** — move the remaining visual fallbacks in preview/game JavaScript toward semantic tokens where practical
+4. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
 5. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
 
 Use the Architecture Adjustment Plan above as the default path for these changes.

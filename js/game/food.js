@@ -82,15 +82,15 @@ export class FoodSystem {
 
     drawGolden(ctx, fx, fy, baseRadius, pulse) {
         const gradient = ctx.createRadialGradient(fx, fy, 0, fx, fy, baseRadius + 4);
-        gradient.addColorStop(0, '#fcd34d');
-        gradient.addColorStop(0.6, '#fbbf24');
-        gradient.addColorStop(1, '#f59e0b');
+        gradient.addColorStop(0, COLORS.foodGradients.golden[0]);
+        gradient.addColorStop(0.6, COLORS.foodGradients.golden[1]);
+        gradient.addColorStop(1, COLORS.foodGradients.golden[2]);
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(fx, fy, baseRadius + pulse * 0.8, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.fillStyle = COLORS.foodHighlight;
         ctx.beginPath();
         ctx.arc(fx - 2, fy - 2, baseRadius * 0.3, 0, Math.PI * 2);
         ctx.fill();
@@ -107,7 +107,7 @@ export class FoodSystem {
             const angle = (sparkTime + i * 2) % (Math.PI * 2);
             const sparkX = fx + Math.cos(angle) * (baseRadius + 4);
             const sparkY = fy + Math.sin(angle) * (baseRadius + 4);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillStyle = COLORS.foodSpark;
             ctx.beginPath();
             ctx.arc(sparkX, sparkY, 1.5, 0, Math.PI * 2);
             ctx.fill();
@@ -122,7 +122,7 @@ export class FoodSystem {
         ctx.fill();
         ctx.globalAlpha = 1.0;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillStyle = COLORS.foodGhostEye;
         ctx.beginPath();
         ctx.arc(fx - 2, fy - 1, 1.5, 0, Math.PI * 2);
         ctx.arc(fx + 2, fy - 1, 1.5, 0, Math.PI * 2);
@@ -132,16 +132,16 @@ export class FoodSystem {
     drawSplit(ctx, fx, fy, baseRadius, pulse, time) {
         // Scissor-like icon for split
         const gradient = ctx.createRadialGradient(fx, fy, 0, fx, fy, baseRadius + 4);
-        gradient.addColorStop(0, '#fda4af');
-        gradient.addColorStop(0.6, '#f43f5e');
-        gradient.addColorStop(1, '#e11d48');
+        gradient.addColorStop(0, COLORS.foodGradients.split[0]);
+        gradient.addColorStop(0.6, COLORS.foodGradients.split[1]);
+        gradient.addColorStop(1, COLORS.foodGradients.split[2]);
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(fx, fy, baseRadius + pulse * 0.7, 0, Math.PI * 2);
         ctx.fill();
 
         // Scissor symbol (two arcs crossing)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.strokeStyle = COLORS.foodSplitStroke;
         ctx.lineWidth = 1.5;
         const rotation = time * 0.5;
 

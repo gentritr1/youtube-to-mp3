@@ -8,7 +8,7 @@ import { animationRegistry } from './js/ui/animationRegistry.js';
 import { ThemeController } from './js/ui/themeController.js';
 import { FeaturesModule, setOnConvertRequest, setAudioVisualizer } from './js/features.js';
 import { batchDownloads, setPreviewCallback } from './js/batch.js';
-import { SnakeGame } from './js/snake-game.js';
+import { SnakeGame } from './js/game/index.js';
 import { GuessTrackGame, setTrackProvider } from './js/guess-track.js';
 import { AudioVisualizer } from './js/visualizer.js';
 import './js/hero-runner.js'; // self-initializing side-effect module
@@ -80,6 +80,10 @@ try {
 } catch (error) {
     console.error('themeController.init failed', error);
 }
+
+themeController.subscribe(() => {
+    snakeGame?.syncTheme();
+});
 
 /**
  * Extract video ID from YouTube URL

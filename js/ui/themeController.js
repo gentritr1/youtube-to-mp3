@@ -8,6 +8,7 @@ export class ThemeController {
         this.mount = mount;
         this.metaThemeColor = metaThemeColor;
         this.activeTheme = DEFAULT_THEME.id;
+        this.listeners = new Set();
     }
 
     init() {
@@ -59,6 +60,17 @@ export class ThemeController {
         });
     }
 
+    subscribe(listener) {
+        if (typeof listener !== 'function') {
+            return () => {};
+        }
+
+        this.listeners.add(listener);
+        return () => {
+            this.listeners.delete(listener);
+        };
+    }
+
     applyTheme(themeId) {
         const theme = getThemeById(themeId);
         this.activeTheme = theme.id;
@@ -78,6 +90,10 @@ export class ThemeController {
             const isActive = button.dataset.themeValue === theme.id;
             button.classList.toggle('active', isActive);
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        this.listeners.forEach((listener) => {
+            listener(theme);
         });
     }
 }

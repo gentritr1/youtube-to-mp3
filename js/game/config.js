@@ -14,13 +14,17 @@ export const GAME_CONFIG = {
     comboMultipliers: [1, 1.5, 2, 2.5, 3, 4],
 };
 
-export const COLORS = {
+const FALLBACK_COLORS = {
     snakeHead: '#ffffff',
     snakeGradient: ['#10b981', '#059669', '#047857'],
     snakeGhostHead: 'rgba(167, 139, 250, 0.9)',
     snakeGhostBody: 'rgba(139, 92, 246, 0.6)',
     snakeSplitHead: 'rgba(251, 191, 36, 0.95)',
     snakeSplitBody: 'rgba(245, 158, 11, 0.7)',
+    snakeActiveRing: '#10b981',
+    snakeSecondaryRing: '#fbbf24',
+    snakeEye: '#0a0a0f',
+    snakeGhostEye: '#1a1a2e',
     food: {
         normal: '#10b981',
         golden: '#fbbf24',
@@ -28,8 +32,31 @@ export const COLORS = {
         ghost: '#a78bfa',
         split: '#f43f5e'
     },
+    foodGradients: {
+        golden: ['#fcd34d', '#fbbf24', '#f59e0b'],
+        split: ['#fda4af', '#f43f5e', '#e11d48']
+    },
+    foodHighlight: 'rgba(255, 255, 255, 0.4)',
+    foodSpark: 'rgba(255, 255, 255, 0.7)',
+    foodGhostEye: 'rgba(0, 0, 0, 0.4)',
+    foodSplitStroke: 'rgba(255, 255, 255, 0.6)',
     bg: 'rgba(8, 8, 12, 0.95)',
     grid: 'rgba(255, 255, 255, 0.02)',
+    overlayStart: 'rgba(0, 0, 0, 0.85)',
+    overlayEnd: 'rgba(0, 0, 0, 0.95)',
+    gameOverShadow: '#ef4444',
+    gameOverText: '#ffffff',
+    gameOverScore: '#10b981',
+    gameOverMuted: '#71717a',
+    gameOverCombo: '#fbbf24',
+    gameOverSplit: '#f43f5e',
+    switchHintBg: 'rgba(0, 0, 0, 0.6)',
+    switchHintText: '#fbbf24',
+    trail: {
+        normal: '#10b981',
+        split: '#fbbf24',
+        ghost: '#a78bfa'
+    },
     particles: {
         normal: ['#10b981', '#34d399', '#6ee7b7'],
         golden: ['#fbbf24', '#f59e0b', '#fcd34d'],
@@ -37,6 +64,136 @@ export const COLORS = {
         ghost: ['#a78bfa', '#8b5cf6', '#c4b5fd'],
         split: ['#f43f5e', '#fb7185', '#fda4af']
     }
+};
+
+export const COLORS = JSON.parse(JSON.stringify(FALLBACK_COLORS));
+const DEFAULT_ROOT = typeof document !== 'undefined' ? document.documentElement : null;
+
+let _colorContext = null;
+
+const getColorContext = () => {
+    if (_colorContext || typeof document === 'undefined') {
+        return _colorContext;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    _colorContext = canvas.getContext('2d');
+    return _colorContext;
+};
+
+const readToken = (styles, name, fallback) => {
+    const value = styles?.getPropertyValue(name)?.trim();
+    return value || fallback;
+};
+
+const normalizeColor = (value) => {
+    const context = getColorContext();
+    if (!context || !value) {
+        return value;
+    }
+
+    context.fillStyle = '#000000';
+    context.fillStyle = value;
+    return context.fillStyle || value;
+};
+
+const toRgba = (value, alpha) => {
+    const normalized = normalizeColor(value);
+    if (!normalized) {
+        return value;
+    }
+
+    if (normalized.startsWith('#')) {
+        let hex = normalized.slice(1);
+        if (hex.length === 3) {
+            hex = hex.split('').map((part) => part + part).join('');
+        }
+        if (hex.length === 6) {
+            const red = Number.parseInt(hex.slice(0, 2), 16);
+            const green = Number.parseInt(hex.slice(2, 4), 16);
+            const blue = Number.parseInt(hex.slice(4, 6), 16);
+            return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+        }
+    }
+
+    const rgbaMatch = normalized.match(/^rgba?\(([^)]+)\)$/i);
+    if (rgbaMatch) {
+        const [red, green, blue] = rgbaMatch[1].split(',').map((part) => part.trim());
+        return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    }
+
+    return value;
+};
+
+export const syncColors = (root = DEFAULT_ROOT) => {
+    if (!root || typeof getComputedStyle !== 'function') {
+        return COLORS;
+    }
+
+    const styles = getComputedStyle(root);
+    const foreground = readToken(styles, '--foreground', FALLBACK_COLORS.gameOverText);
+    const background = readToken(styles, '--background', '#0b1120');
+    const mutedForeground = readToken(styles, '--muted-foreground', FALLBACK_COLORS.gameOverMuted);
+    const emerald = readToken(styles, '--emerald', FALLBACK_COLORS.food.normal);
+    const amber = readToken(styles, '--amber', FALLBACK_COLORS.food.golden);
+    const sky = readToken(styles, '--sky', FALLBACK_COLORS.food.speed);
+    const violet = readToken(styles, '--violet', FALLBACK_COLORS.food.ghost);
+    const rose = readToken(styles, '--rose', FALLBACK_COLORS.food.split);
+    const gameCanvas = readToken(styles, '--game-canvas', FALLBACK_COLORS.bg);
+    const glassHighlight = readToken(styles, '--glass-highlight', 'rgba(255,255,255,0.08)');
+    const heroOrb = readToken(styles, '--hero-orb', emerald);
+    const heroHeadlight = readToken(styles, '--hero-headlight', amber);
+
+    COLORS.snakeHead = foreground;
+    COLORS.snakeGradient = [emerald, heroOrb, sky];
+    COLORS.snakeGhostHead = toRgba(violet, 0.9);
+    COLORS.snakeGhostBody = toRgba(violet, 0.6);
+    COLORS.snakeSplitHead = toRgba(amber, 0.95);
+    COLORS.snakeSplitBody = toRgba(amber, 0.7);
+    COLORS.snakeActiveRing = emerald;
+    COLORS.snakeSecondaryRing = amber;
+    COLORS.snakeEye = toRgba(background, 0.95);
+    COLORS.snakeGhostEye = toRgba(gameCanvas, 0.9);
+
+    COLORS.food.normal = emerald;
+    COLORS.food.golden = amber;
+    COLORS.food.speed = sky;
+    COLORS.food.ghost = violet;
+    COLORS.food.split = rose;
+
+    COLORS.foodGradients.golden = [heroHeadlight, amber, toRgba(amber, 0.82)];
+    COLORS.foodGradients.split = [toRgba(rose, 0.4), rose, toRgba(rose, 0.8)];
+    COLORS.foodHighlight = toRgba(foreground, 0.4);
+    COLORS.foodSpark = toRgba(foreground, 0.7);
+    COLORS.foodGhostEye = toRgba(background, 0.4);
+    COLORS.foodSplitStroke = toRgba(foreground, 0.6);
+
+    COLORS.bg = toRgba(gameCanvas, 0.95);
+    COLORS.grid = toRgba(glassHighlight, 0.18);
+    COLORS.overlayStart = toRgba(background, 0.85);
+    COLORS.overlayEnd = toRgba(background, 0.95);
+    COLORS.gameOverShadow = rose;
+    COLORS.gameOverText = foreground;
+    COLORS.gameOverScore = emerald;
+    COLORS.gameOverMuted = mutedForeground;
+    COLORS.gameOverCombo = amber;
+    COLORS.gameOverSplit = rose;
+    COLORS.switchHintBg = toRgba(background, 0.6);
+    COLORS.switchHintText = amber;
+
+    COLORS.trail.normal = emerald;
+    COLORS.trail.split = amber;
+    COLORS.trail.ghost = violet;
+
+    COLORS.particles.normal = [emerald, toRgba(emerald, 0.78), toRgba(emerald, 0.52)];
+    COLORS.particles.golden = [heroHeadlight, amber, toRgba(amber, 0.6)];
+    COLORS.particles.speed = [sky, toRgba(sky, 0.82), toRgba(sky, 0.56)];
+    COLORS.particles.ghost = [violet, toRgba(violet, 0.82), toRgba(violet, 0.56)];
+    COLORS.particles.split = [rose, toRgba(rose, 0.82), toRgba(rose, 0.56)];
+
+    return COLORS;
 };
 
 // Food types with their effects

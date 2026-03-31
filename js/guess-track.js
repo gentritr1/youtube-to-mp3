@@ -4,6 +4,24 @@
 
 let _getRandomTracks = null;
 
+const readThemeValue = (styles, name, fallback) => styles.getPropertyValue(name).trim() || fallback;
+
+const getBurstConfigs = (root = document.documentElement) => {
+    const styles = getComputedStyle(root);
+    const emerald = readThemeValue(styles, '--emerald', '#34d399');
+    const amber = readThemeValue(styles, '--amber', '#fbbf24');
+    const sky = readThemeValue(styles, '--sky', '#7dd3fc');
+    const rose = readThemeValue(styles, '--rose', '#fb7185');
+    const roseSoft = readThemeValue(styles, '--rose-soft', '#fda4af');
+    const heroHeadlight = readThemeValue(styles, '--hero-headlight', '#facc15');
+
+    return {
+        success: { count: 14, symbols: ['✦', '•', '♪'], colors: [emerald, amber, sky] },
+        streak: { count: 18, symbols: ['🔥', '✦', '♫'], colors: [rose, amber, heroHeadlight] },
+        miss: { count: 10, symbols: ['✕', '•'], colors: [rose, roseSoft, readThemeValue(styles, '--foreground', '#fecdd3')] }
+    };
+};
+
 /**
  * Inject the track provider callback. Called by app.js during init
  * so this module never imports features.js directly (it will be split in Phase 4).
@@ -441,11 +459,7 @@ export class GuessTrackGame {
 
         this.stopFeedback();
 
-        const configs = {
-            success: { count: 14, symbols: ['✦', '•', '♪'], colors: ['#34d399', '#fbbf24', '#7dd3fc'] },
-            streak: { count: 18, symbols: ['🔥', '✦', '♫'], colors: ['#fb7185', '#f59e0b', '#facc15'] },
-            miss: { count: 10, symbols: ['✕', '•'], colors: ['#fb7185', '#fda4af', '#fecdd3'] }
-        };
+        const configs = getBurstConfigs();
 
         const config = configs[type] || configs.success;
         const fragment = document.createDocumentFragment();

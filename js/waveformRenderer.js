@@ -1,4 +1,46 @@
-export const drawWaveform = (canvas, { seedSource = 'preview', root = document.documentElement } = {}) => {
+const DEFAULT_ROOT = typeof document !== 'undefined' ? document.documentElement : null;
+
+const readThemeValue = (styles, name, fallback) => styles.getPropertyValue(name).trim() || fallback;
+
+const getColorContext = (documentRef) => {
+    if (!documentRef) return null;
+    const canvas = documentRef.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    return canvas.getContext('2d');
+};
+
+const withAlpha = (color, alpha, documentRef) => {
+    const context = getColorContext(documentRef);
+    if (!context || !color) {
+        return color;
+    }
+
+    context.fillStyle = '#000000';
+    context.fillStyle = color;
+    const normalized = context.fillStyle;
+
+    if (normalized.startsWith('#')) {
+        let hex = normalized.slice(1);
+        if (hex.length === 3) {
+            hex = hex.split('').map((part) => part + part).join('');
+        }
+        const red = Number.parseInt(hex.slice(0, 2), 16);
+        const green = Number.parseInt(hex.slice(2, 4), 16);
+        const blue = Number.parseInt(hex.slice(4, 6), 16);
+        return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    }
+
+    const rgbaMatch = normalized.match(/^rgba?\(([^)]+)\)$/i);
+    if (rgbaMatch) {
+        const [red, green, blue] = rgbaMatch[1].split(',').map((part) => part.trim());
+        return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    }
+
+    return color;
+};
+
+export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_ROOT } = {}) => {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -13,19 +55,21 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = document.d
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const styles = getComputedStyle(root);
-    const sky = styles.getPropertyValue('--sky').trim() || '#38bdf8';
-    const emerald = styles.getPropertyValue('--emerald').trim() || '#34d399';
-    const heroOrb = styles.getPropertyValue('--hero-orb').trim() || sky;
-    const mutedForeground = styles.getPropertyValue('--muted-foreground').trim() || 'rgba(255,255,255,0.35)';
-    const glassHighlight = styles.getPropertyValue('--glass-highlight').trim() || 'rgba(255,255,255,0.1)';
-    const surfaceGlassSoft = styles.getPropertyValue('--surface-glass-soft').trim() || 'rgba(255,255,255,0.08)';
+    const documentRef = root?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+    const sky = readThemeValue(styles, '--sky', 'hsl(199 89% 48%)');
+    const emerald = readThemeValue(styles, '--emerald', 'hsl(160 84% 39%)');
+    const heroOrb = readThemeValue(styles, '--hero-orb', sky);
+    const foreground = readThemeValue(styles, '--foreground', 'hsl(210 20% 96%)');
+    const mutedForeground = readThemeValue(styles, '--muted-foreground', withAlpha(foreground, 0.35, documentRef));
+    const glassHighlight = readThemeValue(styles, '--glass-highlight', withAlpha(foreground, 0.1, documentRef));
+    const surfaceGlassSoft = readThemeValue(styles, '--surface-glass-soft', withAlpha(foreground, 0.08, documentRef));
 
     ctx.clearRect(0, 0, width, height);
 
     const backdrop = ctx.createLinearGradient(0, 0, 0, height);
-    backdrop.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
-    backdrop.addColorStop(0.55, 'rgba(255, 255, 255, 0.02)');
-    backdrop.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    backdrop.addColorStop(0, withAlpha(foreground, 0.08, documentRef));
+    backdrop.addColorStop(0.55, withAlpha(foreground, 0.02, documentRef));
+    backdrop.addColorStop(1, withAlpha(foreground, 0, documentRef));
     ctx.fillStyle = backdrop;
     ctx.fillRect(0, 0, width, height);
 
@@ -85,8 +129,8 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = document.d
     }
 
     const accentGlow = ctx.createRadialGradient(width * 0.22, centerY, 0, width * 0.22, centerY, width * 0.38);
-    accentGlow.addColorStop(0, 'rgba(255,255,255,0.16)');
-    accentGlow.addColorStop(1, 'rgba(255,255,255,0)');
+    accentGlow.addColorStop(0, withAlpha(foreground, 0.16, documentRef));
+    accentGlow.addColorStop(1, withAlpha(foreground, 0, documentRef));
     ctx.fillStyle = accentGlow;
     ctx.fillRect(0, 0, width, height);
 };

@@ -3,7 +3,7 @@
  * Orchestrates all game systems
  */
 
-import { GAME_CONFIG, FOOD_TYPES, KEYS } from './config.js';
+import { GAME_CONFIG, FOOD_TYPES, KEYS, syncColors } from './config.js';
 import { Snake } from './snake.js';
 import { FoodSystem } from './food.js';
 import { ParticleSystem } from './particles.js';
@@ -40,7 +40,9 @@ export class SnakeGame {
         // Combo
         this.lastEatTime = 0;
         this.comboCount = 0;
+        this.isEnded = false;
 
+        syncColors(document.documentElement);
         this.bindEvents();
     }
 
@@ -96,6 +98,7 @@ export class SnakeGame {
     }
 
     init() {
+        syncColors(document.documentElement);
         // Reset state
         this.snakes = [new Snake(10, 10, false)];
         this.activeSnakeIndex = 0;
@@ -105,6 +108,7 @@ export class SnakeGame {
         this.activePowerup = null;
         this.powerupEndTime = 0;
         this.canSplit = false;
+        this.isEnded = false;
         this.currentTickRate = GAME_CONFIG.baseTickRate;
 
         this.particles.clear();
@@ -305,7 +309,9 @@ export class SnakeGame {
 
     gameOver() {
         this.isRunning = false;
+        this.isEnded = true;
         cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
 
         this.scores.save(this.score);
         this.ui.showRestartButton();
@@ -321,6 +327,27 @@ export class SnakeGame {
     show() {
         this.ui.showContainer();
         this.scores.display();
-        if (!this.isRunning) this.init();
+        if (!this.isRunning) {
+            if (this.isEnded || this.snakes.length === 0) {
+                this.init();
+            } else {
+                this.isRunning = true;
+                this.lastTime = performance.now();
+                this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
+            }
+        }
+    }
+
+    hide() {
+        this.elements.container.classList.add('hidden');
+        this.isRunning = false;
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
+        this.animationFrameId = null;
+    }
+
+    syncTheme() {
+        syncColors(document.documentElement);
     }
 }
