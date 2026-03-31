@@ -146,6 +146,9 @@ export class GuessTrackGame {
         if (typeof _getRandomTracks !== 'function') {
             this.setStatus('danger', 'Feature unavailable', 'Track data is not ready yet.');
             this.isLoading = false;
+            this.isActive = false;
+            this.elements.startBtn.classList.remove('hidden');
+            this.elements.startBtn.textContent = 'Start Game';
             return;
         }
         const tracks = _getRandomTracks(4);

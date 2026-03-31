@@ -56,14 +56,16 @@ export const renderPreviewProgress = (elements, { currentTime, duration, percent
         return;
     }
 
+    const clampedPercent = Math.max(0, Math.min(1, percent));
+
     if (elements?.previewProgressFill) {
-        elements.previewProgressFill.style.transform = `scaleX(${percent})`;
+        elements.previewProgressFill.style.transform = `scaleX(${clampedPercent})`;
     }
     if (elements?.waveformProgress) {
-        elements.waveformProgress.style.transform = `scaleX(${percent})`;
+        elements.waveformProgress.style.transform = `scaleX(${clampedPercent})`;
     }
     if (elements?.waveformPlayhead) {
-        elements.waveformPlayhead.style.left = `${percent * 100}%`;
+        elements.waveformPlayhead.style.left = `${clampedPercent * 100}%`;
     }
     if (elements?.previewTimeCurrent) {
         elements.previewTimeCurrent.textContent = formatTime(currentTime);

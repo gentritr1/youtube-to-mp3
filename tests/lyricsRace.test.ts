@@ -51,12 +51,11 @@ function makeOkResponse(body: string): Response {
 describe('LyricsController race-condition guard', () => {
     let controller: InstanceType<typeof LyricsController>;
     let originalFetch: typeof globalThis.fetch;
-    let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
         controller = new LyricsController();
         originalFetch = globalThis.fetch;
-        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterEach(() => {

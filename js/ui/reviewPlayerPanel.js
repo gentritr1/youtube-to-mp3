@@ -64,7 +64,7 @@ export const buildReviewPlayerViewModel = ({
 
     return {
         summary,
-        playDisabled: !reviewPlayerReady || !selectedPoint,
+        playDisabled: !reviewPlayerReady || !selectedPoint || !Number.isFinite(selectedTimeMs),
         playLabel: isPlaying ? 'Pause' : 'Play',
         jumpDisabled: !reviewPlayerReady || !selectedPoint || !Number.isFinite(selectedTimeMs),
         loopDisabled: !reviewPlayerReady || !selectedPoint || !Number.isFinite(selectedTimeMs),

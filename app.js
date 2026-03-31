@@ -7,7 +7,7 @@ import { AnimationController } from './js/ui/animationController.js';
 import { animationRegistry } from './js/ui/animationRegistry.js';
 import { ThemeController } from './js/ui/themeController.js';
 import { FeaturesModule, setOnConvertRequest, setAudioVisualizer } from './js/features.js';
-import { batchDownloads, setPreviewCallback } from './js/batch.js';
+import { batchDownloads, setApiBaseUrl, setPreviewCallback } from './js/batch.js';
 import { SnakeGame } from './js/game/index.js';
 import { GuessTrackGame, setTrackProvider } from './js/guess-track.js';
 import { AudioVisualizer } from './js/visualizer.js';
@@ -691,7 +691,12 @@ console.log('YT Converter initialized. Current format:', state.format);
 // Wire convert handoff: features.js calls this instead of synthetic event dispatch
 setOnConvertRequest((url) => {
     elements.urlInput.value = url;
-    elements.form.dispatchEvent(new Event('submit'));
+    if (typeof elements.form.requestSubmit === 'function') {
+        elements.form.requestSubmit();
+        return;
+    }
+
+    elements.form.submit();
 });
 
 // Wire visualizer into features.js
@@ -699,6 +704,7 @@ setAudioVisualizer(AudioVisualizer);
 
 // Wire preview callback into batch.js (instead of batch importing features directly)
 setPreviewCallback((previewData) => FeaturesModule.showPreview(previewData));
+setApiBaseUrl(API_URL);
 
 // Wire track provider into guess-track.js (instead of bare FeaturesModule global)
 setTrackProvider((count) => FeaturesModule.getRandomTracks(count));

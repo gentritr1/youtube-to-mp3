@@ -3,16 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PreviewAudioEngine } from '../js/previewAudioEngine.js';
 import { AudioStub } from './helpers/audiostub.ts';
-
-const deferred = <T>() => {
-    let resolve!: (value: T) => void;
-    let reject!: (reason?: unknown) => void;
-    const promise = new Promise<T>((res, rej) => {
-        resolve = res;
-        reject = rej;
-    });
-    return { promise, resolve, reject };
-};
+import { deferred } from './helpers/deferred.ts';
 
 describe('PreviewAudioEngine request races', () => {
     let engine: PreviewAudioEngine;
@@ -71,7 +62,10 @@ describe('PreviewAudioEngine request races', () => {
         const firstLoad = deferred<AudioStub>();
         const secondLoad = deferred<AudioStub>();
 
-        vi.spyOn(engine, 'createPreviewAudio')
+        vi.spyOn(engine, 'buildPreviewAudio')
+            .mockReturnValueOnce(firstAudio as any)
+            .mockReturnValueOnce(secondAudio as any);
+        vi.spyOn(engine, 'awaitPreviewCanPlay')
             .mockReturnValueOnce(firstLoad.promise as any)
             .mockReturnValueOnce(secondLoad.promise as any);
 
@@ -111,9 +105,12 @@ describe('PreviewAudioEngine request races', () => {
         engine.previewAudio = outgoingAudio as any;
         engine.isPreviewPlaying = true;
 
-        vi.spyOn(engine, 'createPreviewAudio').mockResolvedValue(incomingAudio as any);
+        vi.spyOn(engine, 'buildPreviewAudio').mockReturnValue(incomingAudio as any);
+        vi.spyOn(engine, 'awaitPreviewCanPlay').mockResolvedValue(incomingAudio as any);
 
         const request = engine.beginRequest();
+        // Direct assignment is intentional here: this test exercises a stale
+        // outgoing audio instance during handoff, not the initial load path.
         await expect(engine.loadPreview('https://example.com/incoming.mp3', {
             requestId: request.requestId,
             outgoingAudio,
@@ -132,7 +129,8 @@ describe('PreviewAudioEngine request races', () => {
         const lateAudio = new AudioStub('https://example.com/late.mp3');
         const pendingLoad = deferred<AudioStub>();
 
-        vi.spyOn(engine, 'createPreviewAudio').mockReturnValueOnce(pendingLoad.promise as any);
+        vi.spyOn(engine, 'buildPreviewAudio').mockReturnValueOnce(lateAudio as any);
+        vi.spyOn(engine, 'awaitPreviewCanPlay').mockReturnValueOnce(pendingLoad.promise as any);
 
         const request = engine.beginRequest();
         const pending = engine.loadPreview('https://example.com/late.mp3', {

@@ -24,6 +24,7 @@ export class AssistantClient {
     }
 
     clearResponse() {
+        this.pendingRequestId += 1;
         this.currentResponse = null;
         this.onResponseChange(this.currentResponse);
     }

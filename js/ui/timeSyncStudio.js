@@ -283,6 +283,9 @@ export class TimeSyncStudio {
     }
 
     bindEvents() {
+        this.clearAutosyncTimer();
+        this.stopReviewPlaybackLoop();
+        this.reviewPlayerRequestId += 1;
         this.destroy();
         this.disposeEventBindings = bindStudioEvents({
             documentRef: document,
@@ -379,6 +382,8 @@ export class TimeSyncStudio {
     }
 
     destroy() {
+        this.clearAutosyncTimer();
+        this.reviewPlayerRequestId += 1;
         this.disposeEventBindings?.();
         this.disposeEventBindings = null;
 

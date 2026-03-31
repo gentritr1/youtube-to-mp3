@@ -6,11 +6,49 @@ export interface CreateTaskParams extends Partial<Task> {
     format: string;
 }
 
+const cloneTask = (task: Task | null): Task | null => {
+    if (!task) {
+        return null;
+    }
+
+    if (typeof structuredClone === 'function') {
+        return structuredClone(task);
+    }
+
+    return JSON.parse(JSON.stringify(task));
+};
+
+const hasOwn = (value: object, key: string) => Object.prototype.hasOwnProperty.call(value, key);
+
 export class MemoryTaskAdapter {
     private readonly tasks = new Map<string, Task>();
 
     createTask(params: CreateTaskParams): Task {
         const now = Date.now();
+        const existing = this.tasks.get(params.taskId);
+        if (existing) {
+            const next: Task = {
+                ...existing,
+                taskId: existing.taskId,
+                videoId: existing.videoId,
+                format: existing.format,
+                state: existing.state,
+                progress: existing.progress,
+                createdAt: existing.createdAt ?? now,
+                updatedAt: params.updatedAt ?? now,
+            };
+
+            if (hasOwn(params, 'status')) next.status = params.status;
+            if (hasOwn(params, 'title')) next.title = params.title;
+            if (hasOwn(params, 'filename')) next.filename = params.filename;
+            if (hasOwn(params, 'downloadUrl')) next.downloadUrl = params.downloadUrl;
+            if (hasOwn(params, 'error')) next.error = params.error;
+            if (hasOwn(params, 'audioStats')) next.audioStats = params.audioStats;
+
+            this.tasks.set(next.taskId, next);
+            return cloneTask(next)!;
+        }
+
         const task: Task = {
             taskId: params.taskId,
             videoId: params.videoId,
@@ -28,11 +66,11 @@ export class MemoryTaskAdapter {
         };
 
         this.tasks.set(task.taskId, task);
-        return task;
+        return cloneTask(task)!;
     }
 
     getTask(taskId: string): Task | null {
-        return this.tasks.get(taskId) ?? null;
+        return cloneTask(this.tasks.get(taskId) ?? null);
     }
 
     findExistingTask(videoId: string, format: string): Task | null {
@@ -40,7 +78,7 @@ export class MemoryTaskAdapter {
             .filter((task) => task.videoId === videoId && task.format === format && task.state !== 'error')
             .sort((left, right) => (right.createdAt ?? 0) - (left.createdAt ?? 0));
 
-        return tasks[0] ?? null;
+        return cloneTask(tasks[0] ?? null);
     }
 
     updateTask(taskId: string, updates: Partial<Task>): Task | null {
@@ -59,7 +97,7 @@ export class MemoryTaskAdapter {
         };
 
         this.tasks.set(taskId, next);
-        return next;
+        return cloneTask(next);
     }
 
     deleteTask(taskId: string): void {

@@ -130,17 +130,19 @@ youtube-to-mp3/
 │       └── helpers.css        # Utility classes
 │
 ├── 📁 js/                     # Frontend modules
-│   ├── snake-game.js          # Full snake game (38KB!)
 │   ├── features.js            # Popular videos UI orchestration
 │   ├── popularBrowser.js      # Popular genre loading + carousel rendering
 │   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
 │   ├── previewPanel.js        # Preview panel UI state + progress rendering
+│   ├── game/                  # Snake game components
+│   ├── ui/assistantClient.js  # Studio assistant transport + stale-response guards
 │   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
 │   ├── ui/pointTimingEngine.js  # Studio autosync, point mutation, undo, snapshot math
 │   ├── ui/reviewPlayerPanel.js  # Studio review player panel state + rendering
 │   ├── ui/studioEventBindings.js  # Studio DOM listener binding + cleanup
 │   ├── ui/studioWorkflowState.js  # Studio workflow presets and status copy
-│   └── game/                  # Snake game components
+│   ├── ui/syncExporter.js     # Studio JSON export flow
+│   └── ui/youtubePlayerAdapter.js  # Studio YouTube IFrame player wrapper
 │
 ├── 📁 server/                 # Backend (Express)
 │   ├── index.ts               # Server entry point + graceful shutdown
@@ -200,16 +202,18 @@ youtube-to-mp3/
 | **Skeleton Loader** | `results.css` | Shimmer placeholders during loading |
 | **Progress Bar** | `app.js`, `results.css` | Real-time conversion progress |
 | **Download Section** | `app.js`, `results.css` | Orchestrated success animation |
-| **Snake Game** | `snake-game.js` | Entertainment during wait |
+| **Snake Game** | `js/game/index.js`, `js/game/config.js` | Entertainment during wait |
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
 | **Popular Browser UI** | `features.js`, `popularBrowser.js`, `features.css` | Genre loading, tab rendering, carousel cards, and random track selection |
 | **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
 | **Preview Panel UI** | `features.js`, `previewPanel.js`, `features.css` | Preview metadata, progress, loading state, and preview-state event emission |
-| **Sync Studio Point UI** | `timeSyncStudio.js`, `ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
-| **Sync Studio Timing Logic** | `timeSyncStudio.js`, `ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |
-| **Sync Studio Review Player UI** | `timeSyncStudio.js`, `ui/reviewPlayerPanel.js`, `ui/youtubePlayerAdapter.js` | Review-player panel state, loop decisions, and YouTube IFrame control wiring |
-| **Sync Studio Event Binding** | `timeSyncStudio.js`, `ui/studioEventBindings.js` | DOM listener registration, cleanup, and interaction sequencing |
-| **Sync Studio Workflow State** | `timeSyncStudio.js`, `ui/studioWorkflowState.js` | Setup/loading/empty/lyrics/export workflow presets and studio status copy |
+| **Sync Studio Assistant** | `js/ui/timeSyncStudio.js`, `js/ui/assistantClient.js` | Assistant request orchestration, response rendering, and action execution |
+| **Sync Studio Point UI** | `js/ui/timeSyncStudio.js`, `js/ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
+| **Sync Studio Timing Logic** | `js/ui/timeSyncStudio.js`, `js/ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |
+| **Sync Studio Review Player UI** | `js/ui/timeSyncStudio.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/youtubePlayerAdapter.js` | Review-player panel state, loop decisions, and YouTube IFrame control wiring |
+| **Sync Studio Event Binding** | `js/ui/timeSyncStudio.js`, `js/ui/studioEventBindings.js` | DOM listener registration, cleanup, and interaction sequencing |
+| **Sync Studio Workflow State** | `js/ui/timeSyncStudio.js`, `js/ui/studioWorkflowState.js` | Setup/loading/empty/lyrics/export workflow presets and studio status copy |
+| **Sync Studio Export** | `js/ui/timeSyncStudio.js`, `js/ui/syncExporter.js` | Sync JSON payload creation and download orchestration |
 | **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components

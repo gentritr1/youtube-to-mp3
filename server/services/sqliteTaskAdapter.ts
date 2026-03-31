@@ -13,7 +13,18 @@ import type { CreateTaskParams } from './memoryTaskAdapter.js';
 export class SqliteTaskAdapter {
     createTask(params: CreateTaskParams): Task {
         createSqliteTask(params.videoId, params.format, params.taskId, params);
-        return getTask(params.taskId) ?? {
+        const task = getTask(params.taskId);
+        if (task) {
+            return task;
+        }
+
+        console.warn('[TaskStore] SQLite task create succeeded but follow-up read was empty', {
+            taskId: params.taskId,
+            videoId: params.videoId,
+            format: params.format
+        });
+
+        return {
             taskId: params.taskId,
             videoId: params.videoId,
             format: params.format,

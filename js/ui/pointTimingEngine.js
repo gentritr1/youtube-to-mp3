@@ -49,7 +49,8 @@ export const buildPointSnapshot = ({
     );
     const pointsWindow = safePoints.slice(startIndex, startIndex + pointWindowSize);
     const counts = safePoints.reduce((acc, point) => {
-        acc[point.status] += 1;
+        const status = typeof point?.status === 'string' ? point.status : 'pending';
+        acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, { pending: 0, synced: 0, needs_review: 0 });
     const selectedPoint = safePoints.find((point) => point.id === selectedPointId) ?? null;

@@ -6,7 +6,8 @@
  */
 
 // Configuration
-const getApiUrl = () => '';
+let apiBaseUrl = '';
+const getApiUrl = () => apiBaseUrl;
 
 let _previewCallback = null;
 
@@ -18,6 +19,10 @@ export function setPreviewCallback(fn) {
     _previewCallback = fn;
 }
 
+export function setApiBaseUrl(baseUrl = '') {
+    apiBaseUrl = String(baseUrl ?? '');
+}
+
 // Batch state
 const batchState = {
     enabled: false,
@@ -25,7 +30,8 @@ const batchState = {
     maxItems: 10,
     currentBatchId: null,
     isProcessing: false,
-    isClearing: false
+    isClearing: false,
+    initialized: false
 };
 
 // Constants
@@ -38,9 +44,18 @@ let batchElements = null;
  * Initialize batch downloads feature
  */
 function initBatchDownloads() {
+    if (batchState.initialized) {
+        return;
+    }
+
     createBatchUI();
+    if (!batchElements) {
+        return;
+    }
+
     attachBatchEventListeners();
     document.addEventListener('preview-state-change', handlePreviewStateChange);
+    batchState.initialized = true;
     console.log('[Batch] Initialized with max items:', batchState.maxItems);
 }
 

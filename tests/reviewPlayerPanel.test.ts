@@ -14,10 +14,10 @@ const formatTime = (timeMs: number | null) => {
         return '';
     }
 
-    const totalSeconds = Math.floor((timeMs ?? 0) / 1000);
+    const totalSeconds = Math.floor(timeMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = String(totalSeconds % 60).padStart(2, '0');
-    const milliseconds = String((timeMs ?? 0) % 1000).padStart(3, '0');
+    const milliseconds = String(timeMs % 1000).padStart(3, '0');
     return `${minutes}:${seconds}.${milliseconds}`;
 };
 

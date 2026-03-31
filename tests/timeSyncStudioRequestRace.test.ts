@@ -2,16 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { TimeSyncStudio } from '../js/ui/timeSyncStudio.js';
-
-const deferred = () => {
-    let resolve;
-    let reject;
-    const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-    });
-    return { promise, resolve, reject };
-};
+import { deferred } from './helpers/deferred.ts';
 
 const createStudio = () => {
     const reviewPlayerFrame = document.createElement('div');

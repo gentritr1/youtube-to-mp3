@@ -7,6 +7,14 @@ const addBinding = (bindings, element, type, handler, options) => {
     bindings.push(() => element.removeEventListener(type, handler, options));
 };
 
+const getClosestFromTarget = (target, selector) => {
+    if (typeof Element === 'undefined' || !(target instanceof Element)) {
+        return null;
+    }
+
+    return target.closest(selector);
+};
+
 export const bindStudioEvents = ({
     documentRef = document,
     tabs = [],
@@ -63,7 +71,7 @@ export const bindStudioEvents = ({
     });
 
     addBinding(bindings, pointRailWindow, 'click', (event) => {
-        const button = event.target.closest('button.point-hit');
+        const button = getClosestFromTarget(event.target, 'button.point-hit');
         if (!button) {
             return;
         }
@@ -75,7 +83,7 @@ export const bindStudioEvents = ({
     });
 
     addBinding(bindings, pointRailWindow, 'pointerover', (event) => {
-        const button = event.target.closest('button.point-hit');
+        const button = getClosestFromTarget(event.target, 'button.point-hit');
         if (!button) {
             return;
         }
@@ -93,7 +101,7 @@ export const bindStudioEvents = ({
     });
 
     addBinding(bindings, pointList, 'click', (event) => {
-        const card = event.target.closest('[data-point-card]');
+        const card = getClosestFromTarget(event.target, '[data-point-card]');
         if (!card) {
             return;
         }
@@ -138,8 +146,10 @@ export const bindStudioEvents = ({
         }
     });
 
-    addBinding(bindings, assistantAction, 'click', async () => {
-        await onAssistantActionClick();
+    addBinding(bindings, assistantAction, 'click', () => {
+        Promise.resolve(onAssistantActionClick()).catch((error) => {
+            console.error('[TimeSyncStudio] Assistant action failed:', error);
+        });
     });
 
     addBinding(bindings, applyPointTimeButton, 'click', () => {

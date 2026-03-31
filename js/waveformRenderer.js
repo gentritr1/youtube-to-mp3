@@ -89,7 +89,7 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_RO
 
     const random = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
-        return seed / 4294967295;
+        return seed / 4294967296;
     };
 
     const barWidth = 5;

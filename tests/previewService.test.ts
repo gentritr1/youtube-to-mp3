@@ -97,45 +97,46 @@ describe('previewService', () => {
     });
 
     it('validates preview video IDs defensively', () => {
-        expect(validatePreviewVideoId('abc123_-')).toBe('abc123_-');
+        expect(validatePreviewVideoId('abc123_DEF-')).toBe('abc123_DEF-');
         expect(validatePreviewVideoId('../escape')).toBeNull();
         expect(validatePreviewVideoId('bad/slash')).toBeNull();
         expect(validatePreviewVideoId('bad space')).toBeNull();
+        expect(validatePreviewVideoId('too-short')).toBeNull();
         expect(validatePreviewVideoId(42)).toBeNull();
     });
 
     it('generates and reuses cached previews', async () => {
-        const first = await generatePreview('preview123');
-        const previewPath = getPreviewPath('preview123');
+        const first = await generatePreview('preview1234');
+        const previewPath = getPreviewPath('preview1234');
 
         expect(first.cached).toBe(false);
-        expect(first.previewUrl).toBe('/api/preview/preview123');
-        expect(previewPath).toBe(path.join(downloadsDir, 'previews', 'preview123_preview.mp3'));
+        expect(first.previewUrl).toBe('/api/preview/preview1234');
+        expect(previewPath).toBe(path.join(downloadsDir, 'previews', 'preview1234_preview.mp3'));
         expect(fs.existsSync(previewPath!)).toBe(true);
         expect(spawnMock).toHaveBeenCalledTimes(2);
 
-        const second = await generatePreview('preview123');
+        const second = await generatePreview('preview1234');
 
         expect(second.cached).toBe(true);
         expect(spawnMock).toHaveBeenCalledTimes(2);
     });
 
     it('drops cache entries when the preview file disappears', async () => {
-        await generatePreview('vanish123');
-        const previewPath = getPreviewPath('vanish123');
+        await generatePreview('vanish12345');
+        const previewPath = getPreviewPath('vanish12345');
 
         expect(previewPath).toBeTruthy();
         fs.unlinkSync(previewPath!);
 
-        expect(getPreviewPath('vanish123')).toBeNull();
+        expect(getPreviewPath('vanish12345')).toBeNull();
     });
 
     it('cleans up expired previews', async () => {
         const nowSpy = vi.spyOn(Date, 'now');
         nowSpy.mockReturnValue(1_000);
 
-        await generatePreview('stale123');
-        const previewPath = getPreviewPath('stale123');
+        await generatePreview('stale123456');
+        const previewPath = getPreviewPath('stale123456');
 
         expect(previewPath).toBeTruthy();
         expect(fs.existsSync(previewPath!)).toBe(true);
@@ -144,6 +145,6 @@ describe('previewService', () => {
 
         expect(cleanupPreviews()).toBe(1);
         expect(fs.existsSync(previewPath!)).toBe(false);
-        expect(getPreviewPath('stale123')).toBeNull();
+        expect(getPreviewPath('stale123456')).toBeNull();
     });
 });

@@ -22,13 +22,22 @@ export const exportSyncProject = ({
 }) => {
     const exportPayload = buildSyncExportPayload({ sessionId, title, points });
     const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    let url = '';
+    let link = null;
+
+    try {
+        url = URL.createObjectURL(blob);
+        link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+    } finally {
+        link?.remove();
+        if (url) {
+            URL.revokeObjectURL(url);
+        }
+    }
+
     return exportPayload;
 };

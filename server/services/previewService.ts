@@ -9,7 +9,7 @@ export const PREVIEW_DURATION = 30;
 const PREVIEW_START_OFFSET = 30;
 const PREVIEW_MAX_AGE_MS = 30 * 60 * 1000;
 const PREVIEW_TIMEOUT_MS = 60 * 1000;
-const SAFE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{1,20}$/;
+const SAFE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 
 export interface PreviewResult {
     previewId: string;
@@ -246,8 +246,12 @@ export function cleanupPreviews(): number {
             }
             previewCache.delete(videoId);
             cleaned++;
-        } catch {
-            // Ignore cleanup errors and leave the cache entry untouched.
+        } catch (error) {
+            console.debug('[Preview] Failed to clean expired preview', {
+                videoId,
+                path: data.path,
+                error
+            });
         }
     }
 

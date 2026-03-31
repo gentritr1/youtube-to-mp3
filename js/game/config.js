@@ -22,6 +22,11 @@ export const GAME_CONFIG = {
 
 const FALLBACK_COLORS = JSON.parse(JSON.stringify(GAME_COLOR_DEFAULTS));
 
+/**
+ * Shared runtime palette for the modular Snake game.
+ * syncColors() mutates this exported object in place so existing importers
+ * pick up theme updates without recreating their color references.
+ */
 export const COLORS = JSON.parse(JSON.stringify(FALLBACK_COLORS));
 const DEFAULT_ROOT = typeof document !== 'undefined' ? document.documentElement : null;
 
@@ -66,11 +71,14 @@ const toRgba = (value, alpha) => {
         if (hex.length === 3) {
             hex = hex.split('').map((part) => part + part).join('');
         }
-        if (hex.length === 6) {
+        if (hex.length === 6 || hex.length === 8) {
             const red = Number.parseInt(hex.slice(0, 2), 16);
             const green = Number.parseInt(hex.slice(2, 4), 16);
             const blue = Number.parseInt(hex.slice(4, 6), 16);
-            return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+            const embeddedAlpha = hex.length === 8
+                ? Number.parseInt(hex.slice(6, 8), 16) / 255
+                : 1;
+            return `rgba(${red}, ${green}, ${blue}, ${embeddedAlpha * alpha})`;
         }
     }
 
@@ -83,6 +91,10 @@ const toRgba = (value, alpha) => {
     return value;
 };
 
+/**
+ * Re-reads theme tokens and updates the shared COLORS export in place.
+ * Clone COLORS after calling syncColors() if a caller needs immutability.
+ */
 export const syncColors = (root = DEFAULT_ROOT) => {
     if (!root || typeof getComputedStyle !== 'function') {
         return COLORS;

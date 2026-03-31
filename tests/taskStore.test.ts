@@ -9,6 +9,7 @@ describe('Task Store', () => {
     });
 
     afterEach(() => {
+        vi.restoreAllMocks();
         if (previousTaskStore === undefined) {
             delete process.env.TASK_STORE;
         } else {

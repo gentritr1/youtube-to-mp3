@@ -92,8 +92,12 @@ export class ThemeController {
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
 
-        this.listeners.forEach((listener) => {
-            listener(theme);
+        [...this.listeners].forEach((listener) => {
+            try {
+                listener(theme);
+            } catch (error) {
+                console.error('[ThemeController] Theme subscriber failed:', error);
+            }
         });
     }
 }

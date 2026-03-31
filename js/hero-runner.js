@@ -9,20 +9,17 @@
  * Inspired by Three.js render-loop patterns, but zero dependencies.
  */
 
-{
-  'use strict';
+/* ── helpers ──────────────────────────────────────────── */
 
-  /* ── helpers ──────────────────────────────────────────── */
-
-  const lerp  = (a, b, t) => a + (b - a) * t;
-  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
-  const remap = (v, iLo, iHi, oLo, oHi) =>
-    oLo + ((v - iLo) / (iHi - iLo)) * (oHi - oLo);
-  const vary  = (base, pct) => base * (1 + (Math.random() - 0.5) * 2 * pct);
+const lerp  = (a, b, t) => a + (b - a) * t;
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+const remap = (v, iLo, iHi, oLo, oHi) =>
+  oLo + ((v - iLo) / (iHi - iLo)) * (oHi - oLo);
+const vary  = (base, pct) => base * (1 + (Math.random() - 0.5) * 2 * pct);
 
   /* ── tunables ─────────────────────────────────────────── */
 
-  const CFG = {
+const CFG = {
     accelForce:      65,       // px / s²  — gentle push-off
     cruiseSpeed:     62,       // px / s   — lazy drift, like carried by wind
     decelForce:      55,       // px / s²  — soft braking
@@ -50,7 +47,7 @@
 
   /* ── state ────────────────────────────────────────────── */
 
-  const STATES = {
+const STATES = {
     IDLE:    'idle',
     ACCEL:   'accel',
     CRUISE:  'cruise',
@@ -61,7 +58,7 @@
 
   /* ── animator class ──────────────────────────────────── */
 
-  class HeroRunnerAnimator {
+class HeroRunnerAnimator {
     constructor() {
       // DOM references (resolved in init)
       this.runner      = null;
@@ -428,17 +425,16 @@
       this.runner.style.transition = 'transform 4s ease-in-out';
       this.runner.style.opacity = '0.85';
     }
-  }
-
-  /* ── bootstrap ───────────────────────────────────────── */
-
-  const animator = new HeroRunnerAnimator();
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => animator.init());
-  } else {
-    animator.init();
-  }
-
-  // Expose for debugging in dev console only — no window global
 }
+
+/* ── bootstrap ───────────────────────────────────────── */
+
+const animator = new HeroRunnerAnimator();
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => animator.init());
+} else {
+  animator.init();
+}
+
+// Expose for debugging in dev console only — no window global

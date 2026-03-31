@@ -1,15 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssistantClient } from '../js/ui/assistantClient.js';
-
-const deferred = () => {
-    let resolve;
-    let reject;
-    const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-    });
-    return { promise, resolve, reject };
-};
+import { deferred } from './helpers/deferred.ts';
 
 const makeOkResponse = (payload) => ({
     ok: true,
@@ -91,5 +82,20 @@ describe('AssistantClient request races', () => {
         expect(onRender).toHaveBeenCalledTimes(1);
         expect(onFallback).not.toHaveBeenCalled();
         expect(client.getCurrentResponse()).toEqual({ assistantText: 'fresh', nextAction: null });
+    });
+
+    it('invalidates an in-flight request when the response is cleared', async () => {
+        const pendingRequest = deferred();
+
+        globalThis.fetch = vi.fn(() => pendingRequest.promise);
+
+        const pending = client.requestUpdate(() => ({ version: 'A' }), 'first');
+        client.clearResponse();
+
+        pendingRequest.resolve(makeOkResponse({ assistantText: 'stale', nextAction: null }));
+
+        await expect(pending).resolves.toBe(null);
+        expect(onRender).not.toHaveBeenCalled();
+        expect(client.getCurrentResponse()).toBe(null);
     });
 });

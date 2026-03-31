@@ -8,6 +8,12 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const parsedPort = Number.parseInt(process.env.PORT ?? '', 10);
+const normalizedTaskStore = (process.env.TASK_STORE ?? 'sqlite').trim().toLowerCase();
+const allowedTaskStores = new Set(['sqlite', 'memory']);
+
+if (!allowedTaskStores.has(normalizedTaskStore)) {
+    throw new Error(`Unsupported TASK_STORE value "${process.env.TASK_STORE}". Expected one of: sqlite, memory.`);
+}
 
 export const config = {
     PORT: Number.isFinite(parsedPort) ? parsedPort : 3000,
@@ -27,7 +33,7 @@ export const config = {
     WATCH_GENRES: process.env.WATCH_GENRES
         ? process.env.WATCH_GENRES === 'true'
         : process.env.NODE_ENV !== 'production',
-    TASK_STORE: process.env.TASK_STORE || 'sqlite',
+    TASK_STORE: normalizedTaskStore,
 
     // Timeouts
     CLEANUP_INTERVAL_MS: 60 * 60 * 1000, // 1 hour

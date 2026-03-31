@@ -84,13 +84,14 @@ export class PreviewAudioEngine {
     }
 
     async loadPreview(previewUrl, { requestId, outgoingAudio, shouldAutoplay, seedSource }) {
-        const incomingAudio = await this.createPreviewAudio(previewUrl);
+        const incomingAudio = this.buildPreviewAudio(previewUrl);
+        this.attachPreviewAudioEvents(incomingAudio, seedSource, requestId);
+        await this.awaitPreviewCanPlay(incomingAudio);
         if (!this.isCurrentRequest(requestId)) {
             this.disposeAudio(incomingAudio);
             return false;
         }
 
-        this.attachPreviewAudioEvents(incomingAudio, seedSource);
         this.previewAudio = incomingAudio;
 
         if (shouldAutoplay && outgoingAudio) {
@@ -283,7 +284,7 @@ export class PreviewAudioEngine {
         audio.load();
     }
 
-    attachPreviewAudioEvents(audio, seedSource) {
+    attachPreviewAudioEvents(audio, seedSource, requestId = null) {
         const listeners = [];
         const addListener = (type, handler) => {
             audio.addEventListener(type, handler);
@@ -307,7 +308,7 @@ export class PreviewAudioEngine {
         };
 
         const onLoadedMetadata = () => {
-            if (this.previewAudio !== audio) {
+            if (this.previewAudio !== audio && !(Number.isFinite(requestId) && this.isCurrentRequest(requestId))) {
                 return;
             }
 
@@ -347,10 +348,18 @@ export class PreviewAudioEngine {
     }
 
     createPreviewAudio(previewUrl) {
-        return new Promise((resolve, reject) => {
-            const audio = new Audio(previewUrl);
-            audio.preload = 'auto';
+        const audio = this.buildPreviewAudio(previewUrl);
+        return this.awaitPreviewCanPlay(audio);
+    }
 
+    buildPreviewAudio(previewUrl) {
+        const audio = new Audio(previewUrl);
+        audio.preload = 'auto';
+        return audio;
+    }
+
+    awaitPreviewCanPlay(audio) {
+        return new Promise((resolve, reject) => {
             const onCanPlay = () => {
                 cleanup();
                 resolve(audio);
@@ -363,11 +372,18 @@ export class PreviewAudioEngine {
 
             const cleanup = () => {
                 audio.removeEventListener('canplay', onCanPlay);
+                audio.removeEventListener('loadeddata', onCanPlay);
                 audio.removeEventListener('error', onError);
             };
 
             audio.addEventListener('canplay', onCanPlay, { once: true });
+            audio.addEventListener('loadeddata', onCanPlay, { once: true });
             audio.addEventListener('error', onError, { once: true });
+            audio.load();
+
+            if (audio.readyState >= 3) {
+                onCanPlay();
+            }
         });
     }
 

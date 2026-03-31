@@ -14,7 +14,44 @@ import {
 
 const router = Router();
 
-const INVALID_VIDEO_ID_MESSAGE = 'Invalid video ID. Must be alphanumeric with dashes/underscores only.';
+const INVALID_VIDEO_ID_MESSAGE = 'Invalid YouTube video ID. Expected 11 URL-safe characters.';
+
+const handlePreviewStreamError = (res: Response, error: Error) => {
+    console.error('[Preview] Stream error:', error);
+    if (res.headersSent) {
+        res.destroy(error);
+        return;
+    }
+
+    res.statusCode = 500;
+    res.end();
+};
+
+const pipePreviewStream = (stream: fs.ReadStream, res: Response) => {
+    const cleanup = () => {
+        stream.off('error', onError);
+        stream.off('end', onEnd);
+        stream.off('close', onClose);
+    };
+
+    const onError = (error: Error) => {
+        cleanup();
+        handlePreviewStreamError(res, error);
+    };
+
+    const onEnd = () => {
+        cleanup();
+    };
+
+    const onClose = () => {
+        cleanup();
+    };
+
+    stream.on('error', onError);
+    stream.on('end', onEnd);
+    stream.on('close', onClose);
+    stream.pipe(res);
+};
 
 // Generate audio preview
 router.post('/', async (req: Request, res: Response) => {
@@ -61,65 +98,95 @@ router.get('/:videoId', async (req: Request, res: Response) => {
         });
     }
 
-    const stat = fs.statSync(previewPath);
-    const fileSize = stat.size;
     const range = req.headers.range;
 
     if (range) {
-        // Parse range header
-        const rangeMatch = range.match(/bytes=(\d*)-(\d*)/);
-        if (!rangeMatch) {
-            // Malformed range header
-            res.writeHead(416, {
-                'Content-Range': `bytes */${fileSize}`
+        try {
+            const stat = fs.statSync(previewPath);
+            const fileSize = stat.size;
+            const rangeMatch = range.match(/bytes=(\d*)-(\d*)/);
+            if (!rangeMatch) {
+                res.writeHead(416, {
+                    'Content-Range': `bytes */${fileSize}`
+                });
+                return res.end();
+            }
+
+            let start = rangeMatch[1] ? parseInt(rangeMatch[1], 10) : 0;
+            let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : fileSize - 1;
+
+            if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < 0) {
+                res.writeHead(416, {
+                    'Content-Range': `bytes */${fileSize}`
+                });
+                return res.end();
+            }
+
+            start = Math.max(0, Math.min(start, fileSize - 1));
+            end = Math.max(start, Math.min(end, fileSize - 1));
+
+            if (start > end) {
+                res.writeHead(416, {
+                    'Content-Range': `bytes */${fileSize}`
+                });
+                return res.end();
+            }
+
+            const chunkSize = end - start + 1;
+            const stream = fs.createReadStream(previewPath, { start, end });
+
+            res.writeHead(206, {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunkSize,
+                'Content-Type': 'audio/mpeg'
             });
-            return res.end();
-        }
 
-        // Parse start and end
-        let start = rangeMatch[1] ? parseInt(rangeMatch[1], 10) : 0;
-        let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : fileSize - 1;
+            pipePreviewStream(stream, res);
+            return;
+        } catch (error) {
+            const fsError = error as NodeJS.ErrnoException;
+            if (fsError.code === 'ENOENT') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Preview not found. Generate it first via POST /api/preview'
+                });
+            }
 
-        // Validate parsed values are finite and non-negative
-        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < 0) {
-            res.writeHead(416, {
-                'Content-Range': `bytes */${fileSize}`
+            console.error('[Preview] Failed to stream ranged preview:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to stream preview'
             });
-            return res.end();
         }
+    }
 
-        // Clamp values within valid range
-        start = Math.max(0, Math.min(start, fileSize - 1));
-        end = Math.max(start, Math.min(end, fileSize - 1));
+    try {
+        const stat = fs.statSync(previewPath);
+        const stream = fs.createReadStream(previewPath);
 
-        // Validate start <= end
-        if (start > end) {
-            res.writeHead(416, {
-                'Content-Range': `bytes */${fileSize}`
-            });
-            return res.end();
-        }
-
-        const chunkSize = end - start + 1;
-
-        const stream = fs.createReadStream(previewPath, { start, end });
-
-        res.writeHead(206, {
-            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunkSize,
-            'Content-Type': 'audio/mpeg'
-        });
-
-        stream.pipe(res);
-    } else {
         res.writeHead(200, {
-            'Content-Length': fileSize,
+            'Content-Length': stat.size,
             'Content-Type': 'audio/mpeg',
             'Accept-Ranges': 'bytes'
         });
 
-        fs.createReadStream(previewPath).pipe(res);
+        pipePreviewStream(stream, res);
+        return;
+    } catch (error) {
+        const fsError = error as NodeJS.ErrnoException;
+        if (fsError.code === 'ENOENT') {
+            return res.status(404).json({
+                success: false,
+                message: 'Preview not found. Generate it first via POST /api/preview'
+            });
+        }
+
+        console.error('[Preview] Failed to stream preview:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to stream preview'
+        });
     }
 });
 
