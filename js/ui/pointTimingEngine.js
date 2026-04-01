@@ -250,8 +250,10 @@ export const nudgePointTiming = ({
         prevStatus: point.status,
         prevIssues: [...point.issues]
     };
-    const requestedTime = (point.timeMs ?? point.draftTimeMs ?? 0) + deltaMs;
-    const nextTime = typeof clampTimeMs === 'function' ? clampTimeMs(requestedTime) : requestedTime;
+    const safeDeltaMs = Number.isFinite(Number(deltaMs)) ? Number(deltaMs) : 0;
+    const requestedTime = (point.timeMs ?? point.draftTimeMs ?? 0) + safeDeltaMs;
+    const unclampedNextTime = typeof clampTimeMs === 'function' ? clampTimeMs(requestedTime) : requestedTime;
+    const nextTime = Number.isFinite(unclampedNextTime) ? unclampedNextTime : (point.timeMs ?? point.draftTimeMs ?? 0);
     const nextPoints = [...points];
     nextPoints[pointIndex] = {
         ...point,

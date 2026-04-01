@@ -146,6 +146,25 @@ describe('pointTimingEngine', () => {
         expect(result?.editorFeedback).toBeNull();
     });
 
+    it('treats non-finite deltaMs as zero', () => {
+        const result = nudgePointTiming({
+            points: [
+                { id: 'P1', index: 0, textPreview: 'Only', draftTimeMs: 1000, timeMs: 4900, status: 'needs_review', issues: ['late_start'] }
+            ],
+            pointId: 'P1',
+            deltaMs: Number.NaN,
+            history: createHistoryState(),
+            autosync: createAutosyncState({
+                issuesByPointId: { P1: ['late_start'] }
+            }),
+            stage: 'review',
+            getMediaDurationMs: () => 5000
+        });
+
+        expect(result?.points[0].timeMs).toBe(4900);
+        expect(result?.editorFeedback).toBeNull();
+    });
+
     it('applies a batch fix and undo restores the review state', () => {
         const fixed = applyNeedsReviewFix({
             points: [

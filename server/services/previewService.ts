@@ -10,6 +10,7 @@ export const PREVIEW_DURATION = 30;
 const PREVIEW_START_OFFSET = 30;
 const PREVIEW_MAX_AGE_MS = 30 * 60 * 1000;
 const PREVIEW_TIMEOUT_MS = 60 * 1000;
+const PREVIEW_TEMP_MAX_AGE_MS = PREVIEW_TIMEOUT_MS * 2;
 const STDERR_BUFFER_LIMIT = 2048;
 const SAFE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 
@@ -40,22 +41,27 @@ const getPreviewTempFilePath = (videoId: string): string => (
 
 const getPreviewFileState = (videoId: string): { path: string; createdAt: number } | null => {
     const previewPath = getPreviewFilePath(videoId);
-    if (!fs.existsSync(previewPath)) {
-        previewCache.delete(videoId);
-        return null;
+    try {
+        const stat = fs.statSync(previewPath);
+        const createdAt = stat.mtimeMs;
+        previewCache.set(videoId, {
+            path: previewPath,
+            createdAt
+        });
+
+        return {
+            path: previewPath,
+            createdAt
+        };
+    } catch (error) {
+        const fsError = error as NodeJS.ErrnoException;
+        if (fsError.code === 'ENOENT') {
+            previewCache.delete(videoId);
+            return null;
+        }
+
+        throw error;
     }
-
-    const stat = fs.statSync(previewPath);
-    const createdAt = stat.mtimeMs;
-    previewCache.set(videoId, {
-        path: previewPath,
-        createdAt
-    });
-
-    return {
-        path: previewPath,
-        createdAt
-    };
 };
 
 const appendStderrChunk = (currentValue: string, chunk: Buffer | string): string => {
@@ -309,27 +315,44 @@ export function cleanupPreviews(): number {
     }
 
     for (const fileName of fs.readdirSync(previewsDir)) {
-        if (!fileName.endsWith('_preview.mp3')) {
+        const isPreviewFile = fileName.endsWith('_preview.mp3');
+        const isTempFile = fileName.includes('_preview.mp3.tmp.');
+        if (!isPreviewFile && !isTempFile) {
             continue;
         }
 
         const previewPath = path.join(previewsDir, fileName);
-        const videoId = fileName.replace(/_preview\.mp3$/, '');
+        const videoId = fileName.replace(/_preview\.mp3(?:\.tmp\..+)?$/, '');
+        const maxAgeMs = isTempFile ? PREVIEW_TEMP_MAX_AGE_MS : PREVIEW_MAX_AGE_MS;
 
         try {
             const stat = fs.statSync(previewPath);
-            if (now - stat.mtimeMs <= PREVIEW_MAX_AGE_MS) {
-                previewCache.set(videoId, {
-                    path: previewPath,
-                    createdAt: stat.mtimeMs
-                });
+            if (now - stat.mtimeMs <= maxAgeMs) {
+                if (!isTempFile) {
+                    previewCache.set(videoId, {
+                        path: previewPath,
+                        createdAt: stat.mtimeMs
+                    });
+                }
                 continue;
             }
 
             fs.unlinkSync(previewPath);
+            if (!isTempFile) {
+                previewCache.set(videoId, {
+                    path: previewPath,
+                    createdAt: stat.mtimeMs
+                });
+            }
             previewCache.delete(videoId);
             cleaned++;
         } catch (error) {
+            const fsError = error as NodeJS.ErrnoException;
+            if (fsError.code === 'ENOENT') {
+                previewCache.delete(videoId);
+                continue;
+            }
+
             console.debug('[Preview] Failed to clean expired preview', {
                 videoId,
                 path: previewPath,
