@@ -3,6 +3,7 @@ const cloneIssuesByPointId = (issuesByPointId = {}) => Object.fromEntries(
 );
 const EARLY_START_THRESHOLD_MS = 500;
 const LATE_START_THRESHOLD_MS = 7000;
+const FALLBACK_VIDEO_END_MESSAGE = 'Reached the end of the video.';
 
 export const createAutosyncState = (overrides = {}) => ({
     status: overrides.status ?? 'not_run',
@@ -154,8 +155,8 @@ export const runAutosyncPass = ({
             confidence: coverage > 0.85 ? 'high' : coverage > 0.5 ? 'medium' : 'low',
             issuesByPointId
         }),
-        stage: reviewPoint?.status === 'needs_review' ? 'review' : 'export',
-        status: reviewPoint?.status === 'needs_review'
+        stage: reviewPoint ? 'review' : 'export',
+        status: reviewPoint
             ? {
                 badge: 'Review',
                 title: 'Review the flagged points.',
@@ -268,6 +269,11 @@ export const nudgePointTiming = ({
     const hasReviewPoints = nextPoints.some((entry) => entry.status === 'needs_review');
     const nextStage = !hasReviewPoints && stage !== 'lyrics' && stage !== 'autosync' ? 'export' : 'review';
     const mediaDurationMs = typeof getMediaDurationMs === 'function' ? getMediaDurationMs() : null;
+    const safeVideoEndMessage = Number.isFinite(mediaDurationMs)
+        ? typeof formatTime === 'function'
+            ? `Reached the end of the video at ${formatTime(mediaDurationMs)}.`
+            : FALLBACK_VIDEO_END_MESSAGE
+        : null;
 
     return {
         points: nextPoints,
@@ -286,7 +292,7 @@ export const nudgePointTiming = ({
             ? requestedTime < 0
                 ? { message: 'Reached the start of the track at 0:00.000.', tone: 'warning' }
                 : Number.isFinite(mediaDurationMs)
-                    ? { message: `Reached the end of the video at ${formatTime(mediaDurationMs)}.`, tone: 'warning' }
+                    ? { message: safeVideoEndMessage, tone: 'warning' }
                     : null
             : null
     };
@@ -297,7 +303,9 @@ export const undoPointChange = ({
     history,
     autosync
 } = {}) => {
-    const operation = history?.undoStack?.at(-1);
+    const operation = history?.undoStack?.length
+        ? history.undoStack[history.undoStack.length - 1]
+        : undefined;
     if (!operation) {
         return { applied: false };
     }
@@ -401,7 +409,10 @@ export const getLoopEndTime = ({
     const nextTimedPoint = points
         .slice(pointIndex + 1)
         .find((point) => Number.isFinite(point.timeMs ?? point.draftTimeMs));
+    const clamp = typeof clampTimeMs === 'function' ? clampTimeMs : (value) => value;
+    const getDuration = typeof getMediaDurationMs === 'function' ? getMediaDurationMs : () => null;
+
     return nextTimedPoint
-        ? clampTimeMs(nextTimedPoint.timeMs ?? nextTimedPoint.draftTimeMs)
-        : getMediaDurationMs();
+        ? clamp(nextTimedPoint.timeMs ?? nextTimedPoint.draftTimeMs)
+        : getDuration();
 };

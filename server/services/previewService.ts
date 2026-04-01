@@ -4,6 +4,7 @@ import path from 'path';
 import { config } from '../config.js';
 
 const previewCache = new Map<string, { path: string; createdAt: number }>();
+const previewBuilds = new Map<string, Promise<void>>();
 
 export const PREVIEW_DURATION = 30;
 const PREVIEW_START_OFFSET = 30;
@@ -31,6 +32,26 @@ const ensurePreviewsDir = (): void => {
 const getPreviewFilePath = (videoId: string): string => {
     ensurePreviewsDir();
     return path.join(getPreviewsDir(), `${videoId}_preview.mp3`);
+};
+
+const getPreviewFileState = (videoId: string): { path: string; createdAt: number } | null => {
+    const previewPath = getPreviewFilePath(videoId);
+    if (!fs.existsSync(previewPath)) {
+        previewCache.delete(videoId);
+        return null;
+    }
+
+    const stat = fs.statSync(previewPath);
+    const createdAt = stat.mtimeMs;
+    previewCache.set(videoId, {
+        path: previewPath,
+        createdAt
+    });
+
+    return {
+        path: previewPath,
+        createdAt
+    };
 };
 
 const appendStderrChunk = (currentValue: string, chunk: Buffer | string): string => {
@@ -201,9 +222,9 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
 };
 
 export async function generatePreview(videoId: string): Promise<PreviewResult> {
-    const cached = previewCache.get(videoId);
-    if (cached && fs.existsSync(cached.path)) {
-        const age = Date.now() - cached.createdAt;
+    const existingPreview = getPreviewFileState(videoId);
+    if (existingPreview) {
+        const age = Date.now() - existingPreview.createdAt;
         if (age < PREVIEW_MAX_AGE_MS) {
             return {
                 previewId: videoId,
@@ -215,12 +236,23 @@ export async function generatePreview(videoId: string): Promise<PreviewResult> {
     }
 
     const previewPath = getPreviewFilePath(videoId);
-    await createPreview(videoId, previewPath);
+    let build = previewBuilds.get(videoId);
+    if (!build) {
+        build = (async () => {
+            try {
+                await createPreview(videoId, previewPath);
+                const nextState = getPreviewFileState(videoId);
+                if (!nextState) {
+                    throw new Error('Preview generation completed without a preview file');
+                }
+            } finally {
+                previewBuilds.delete(videoId);
+            }
+        })();
+        previewBuilds.set(videoId, build);
+    }
 
-    previewCache.set(videoId, {
-        path: previewPath,
-        createdAt: Date.now()
-    });
+    await build;
 
     return {
         previewId: videoId,
@@ -231,40 +263,52 @@ export async function generatePreview(videoId: string): Promise<PreviewResult> {
 }
 
 export function getPreviewPath(videoId: string): string | null {
-    const cached = previewCache.get(videoId);
-    if (!cached) {
-        return null;
-    }
-
-    if (!fs.existsSync(cached.path)) {
-        previewCache.delete(videoId);
-        return null;
-    }
-
-    return cached.path;
+    return getPreviewFileState(videoId)?.path ?? null;
 }
 
 export function cleanupPreviews(): number {
     const now = Date.now();
     let cleaned = 0;
+    const previewsDir = getPreviewsDir();
 
-    for (const [videoId, data] of previewCache.entries()) {
-        if (now - data.createdAt <= PREVIEW_MAX_AGE_MS) {
+    if (!fs.existsSync(previewsDir)) {
+        previewCache.clear();
+        return 0;
+    }
+
+    for (const fileName of fs.readdirSync(previewsDir)) {
+        if (!fileName.endsWith('_preview.mp3')) {
             continue;
         }
 
+        const previewPath = path.join(previewsDir, fileName);
+        const videoId = fileName.replace(/_preview\.mp3$/, '');
+
         try {
-            if (fs.existsSync(data.path)) {
-                fs.unlinkSync(data.path);
+            const stat = fs.statSync(previewPath);
+            if (now - stat.mtimeMs <= PREVIEW_MAX_AGE_MS) {
+                previewCache.set(videoId, {
+                    path: previewPath,
+                    createdAt: stat.mtimeMs
+                });
+                continue;
             }
+
+            fs.unlinkSync(previewPath);
             previewCache.delete(videoId);
             cleaned++;
         } catch (error) {
             console.debug('[Preview] Failed to clean expired preview', {
                 videoId,
-                path: data.path,
+                path: previewPath,
                 error
             });
+        }
+    }
+
+    for (const [videoId, data] of previewCache.entries()) {
+        if (!fs.existsSync(data.path)) {
+            previewCache.delete(videoId);
         }
     }
 

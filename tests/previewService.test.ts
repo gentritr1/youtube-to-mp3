@@ -131,17 +131,71 @@ describe('previewService', () => {
         expect(getPreviewPath('vanish12345')).toBeNull();
     });
 
-    it('cleans up expired previews', async () => {
-        const nowSpy = vi.spyOn(Date, 'now');
-        nowSpy.mockReturnValue(1_000);
+    it('reconstructs preview paths from disk after the in-memory cache is reset', async () => {
+        await generatePreview('restart1234');
+        vi.resetModules();
 
+        ({ config } = await import('../server/config.ts'));
+        config.DOWNLOADS_DIR = downloadsDir;
+
+        ({
+            cleanupPreviews,
+            generatePreview,
+            getPreviewPath,
+            validatePreviewVideoId,
+        } = await import('../server/services/previewService.ts'));
+
+        const previewPath = getPreviewPath('restart1234');
+        expect(previewPath).toBe(path.join(downloadsDir, 'previews', 'restart1234_preview.mp3'));
+    });
+
+    it('deduplicates concurrent preview generation for the same video id', async () => {
+        let ffmpegProcessCount = 0;
+        spawnMock.mockImplementation((command: string, args: string[]) => {
+            const process = createMockProcess();
+
+            if (command === 'ffmpeg') {
+                ffmpegProcessCount += 1;
+                const previewPath = args[args.length - 1];
+                fs.mkdirSync(path.dirname(previewPath), { recursive: true });
+                fs.writeFileSync(previewPath, 'preview-bytes');
+                setTimeout(() => {
+                    process.emit('close', 0);
+                }, 10);
+                return process;
+            }
+
+            if (command === 'yt-dlp') {
+                setTimeout(() => {
+                    process.emit('close', 0);
+                }, 10);
+                return process;
+            }
+
+            throw new Error(`Unexpected command: ${command}`);
+        });
+
+        const [first, second] = await Promise.all([
+            generatePreview('dupebuild12'),
+            generatePreview('dupebuild12')
+        ]);
+
+        expect(first.previewUrl).toBe('/api/preview/dupebuild12');
+        expect(second.previewUrl).toBe('/api/preview/dupebuild12');
+        expect(first.cached || second.cached).toBe(true);
+        expect(ffmpegProcessCount).toBe(1);
+        expect(spawnMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('cleans up expired previews', async () => {
         await generatePreview('stale123456');
         const previewPath = getPreviewPath('stale123456');
 
         expect(previewPath).toBeTruthy();
         expect(fs.existsSync(previewPath!)).toBe(true);
 
-        nowSpy.mockReturnValue(1_000 + (31 * 60 * 1000));
+        const staleTimeSeconds = (Date.now() - (31 * 60 * 1000)) / 1000;
+        fs.utimesSync(previewPath!, staleTimeSeconds, staleTimeSeconds);
 
         expect(cleanupPreviews()).toBe(1);
         expect(fs.existsSync(previewPath!)).toBe(false);

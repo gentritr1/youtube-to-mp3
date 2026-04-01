@@ -88,6 +88,45 @@ describe('pointTimingEngine', () => {
         expect(result?.history.undoStack).toHaveLength(1);
     });
 
+    it('falls back safely when formatTime or loop callbacks are missing', () => {
+        const result = nudgePointTiming({
+            points: [
+                { id: 'P1', index: 0, textPreview: 'Only', draftTimeMs: 1000, timeMs: 4900, status: 'needs_review', issues: ['late_start'] }
+            ],
+            pointId: 'P1',
+            deltaMs: 500,
+            history: createHistoryState(),
+            autosync: createAutosyncState({
+                issuesByPointId: { P1: ['late_start'] }
+            }),
+            stage: 'review',
+            clampTimeMs: (timeMs: number) => Math.min(timeMs, 5000),
+            getMediaDurationMs: () => 5000
+        });
+
+        expect(result?.editorFeedback).toEqual({
+            message: 'Reached the end of the video.',
+            tone: 'warning'
+        });
+        expect(
+            getLoopEndTime({
+                points: [
+                    { id: 'P1', index: 0, textPreview: 'A', draftTimeMs: 0, timeMs: 1000, status: 'synced', issues: [] },
+                    { id: 'P2', index: 1, textPreview: 'B', draftTimeMs: 0, timeMs: 2500, status: 'synced', issues: [] }
+                ],
+                pointId: 'P1'
+            })
+        ).toBe(2500);
+        expect(
+            getLoopEndTime({
+                points: [
+                    { id: 'P1', index: 0, textPreview: 'A', draftTimeMs: 0, timeMs: 1000, status: 'synced', issues: [] }
+                ],
+                pointId: 'P1'
+            })
+        ).toBeNull();
+    });
+
     it('applies a batch fix and undo restores the review state', () => {
         const fixed = applyNeedsReviewFix({
             points: [
