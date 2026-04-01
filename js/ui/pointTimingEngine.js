@@ -110,9 +110,10 @@ export const runAutosyncPass = ({
 } = {}) => {
     let timedPoints = 0;
     let previousTime = 0;
+    const safeEstimateGapMs = Number.isFinite(estimateGapMs) ? estimateGapMs : 0;
     const issuesByPointId = {};
     const nextPoints = (Array.isArray(points) ? points : []).map((point, index) => {
-        const fallbackTime = index === 0 ? 0 : previousTime + estimateGapMs;
+        const fallbackTime = index === 0 ? 0 : previousTime + safeEstimateGapMs;
         const nextTime = Number.isFinite(point.draftTimeMs) ? point.draftTimeMs : fallbackTime;
         const issues = [];
 
@@ -250,7 +251,7 @@ export const nudgePointTiming = ({
         prevIssues: [...point.issues]
     };
     const requestedTime = (point.timeMs ?? point.draftTimeMs ?? 0) + deltaMs;
-    const nextTime = clampTimeMs(requestedTime);
+    const nextTime = typeof clampTimeMs === 'function' ? clampTimeMs(requestedTime) : requestedTime;
     const nextPoints = [...points];
     nextPoints[pointIndex] = {
         ...point,
@@ -307,6 +308,10 @@ export const undoPointChange = ({
         ? history.undoStack[history.undoStack.length - 1]
         : undefined;
     if (!operation) {
+        return { applied: false };
+    }
+
+    if (operation.type !== 'NUDGE_POINT' && operation.type !== 'APPLY_FIX') {
         return { applied: false };
     }
 

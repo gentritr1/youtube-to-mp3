@@ -127,6 +127,25 @@ describe('pointTimingEngine', () => {
         ).toBeNull();
     });
 
+    it('falls back safely when clampTimeMs is missing', () => {
+        const result = nudgePointTiming({
+            points: [
+                { id: 'P1', index: 0, textPreview: 'Only', draftTimeMs: 1000, timeMs: 4900, status: 'needs_review', issues: ['late_start'] }
+            ],
+            pointId: 'P1',
+            deltaMs: 500,
+            history: createHistoryState(),
+            autosync: createAutosyncState({
+                issuesByPointId: { P1: ['late_start'] }
+            }),
+            stage: 'review',
+            getMediaDurationMs: () => 5000
+        });
+
+        expect(result?.points[0].timeMs).toBe(5400);
+        expect(result?.editorFeedback).toBeNull();
+    });
+
     it('applies a batch fix and undo restores the review state', () => {
         const fixed = applyNeedsReviewFix({
             points: [
@@ -166,6 +185,28 @@ describe('pointTimingEngine', () => {
             P2: ['early_start'],
             P3: ['timing_estimated']
         });
+    });
+
+    it('treats unsupported undo operations as a no-op', () => {
+        const autosync = createAutosyncState({
+            issuesByPointId: { P2: ['late_start'] }
+        });
+        const history = createHistoryState({
+            undoStack: [{ type: 'UNKNOWN_OPERATION', id: 'P2' }]
+        });
+
+        const result = undoPointChange({
+            points: [
+                { id: 'P1', index: 0, textPreview: 'A', draftTimeMs: 0, timeMs: 0, status: 'synced', issues: [] },
+                { id: 'P2', index: 1, textPreview: 'B', draftTimeMs: 2000, timeMs: 2500, status: 'needs_review', issues: ['late_start'] }
+            ],
+            history,
+            autosync
+        });
+
+        expect(result).toEqual({ applied: false });
+        expect(history.undoStack).toHaveLength(1);
+        expect(autosync.issuesByPointId).toEqual({ P2: ['late_start'] });
     });
 
     it('finds the active point, computes loop ends, and builds assistant snapshots', () => {

@@ -34,6 +34,10 @@ const getPreviewFilePath = (videoId: string): string => {
     return path.join(getPreviewsDir(), `${videoId}_preview.mp3`);
 };
 
+const getPreviewTempFilePath = (videoId: string): string => (
+    `${getPreviewFilePath(videoId)}.tmp.${process.pid}.${Date.now()}`
+);
+
 const getPreviewFileState = (videoId: string): { path: string; createdAt: number } | null => {
     const previewPath = getPreviewFilePath(videoId);
     if (!fs.existsSync(previewPath)) {
@@ -84,12 +88,19 @@ export const validatePreviewVideoId = (videoId: unknown): string | null => {
 
 const createPreview = async (videoId: string, previewPath: string): Promise<void> => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
+    const tempPreviewPath = getPreviewTempFilePath(videoId);
 
     await new Promise<void>((resolve, reject) => {
         let ytdlp: ChildProcess | null = null;
         let ffmpeg: ChildProcess | null = null;
         let timeoutId: NodeJS.Timeout | null = null;
         let isSettled = false;
+
+        const cleanupTempFile = () => {
+            if (fs.existsSync(tempPreviewPath)) {
+                fs.unlinkSync(tempPreviewPath);
+            }
+        };
 
         const cleanup = () => {
             if (timeoutId) {
@@ -123,6 +134,11 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
             cleanup();
 
             if (error) {
+                try {
+                    cleanupTempFile();
+                } catch {
+                    // Ignore temp cleanup errors during rejection.
+                }
                 reject(error);
                 return;
             }
@@ -149,7 +165,7 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
             '-acodec', 'libmp3lame',
             '-ab', '128k',
             '-ar', '44100',
-            previewPath
+            tempPreviewPath
         ]);
 
         const ytdlpStdout = ytdlp.stdout;
@@ -212,6 +228,12 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
 
         ffmpeg.on('close', (code) => {
             if (code === 0) {
+                try {
+                    fs.renameSync(tempPreviewPath, previewPath);
+                } catch (error) {
+                    settle(error as Error);
+                    return;
+                }
                 settle();
                 return;
             }
@@ -222,48 +244,58 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
 };
 
 export async function generatePreview(videoId: string): Promise<PreviewResult> {
-    const existingPreview = getPreviewFileState(videoId);
+    const safeVideoId = validatePreviewVideoId(videoId);
+    if (!safeVideoId) {
+        throw new Error('Invalid preview video ID');
+    }
+
+    const existingPreview = getPreviewFileState(safeVideoId);
     if (existingPreview) {
         const age = Date.now() - existingPreview.createdAt;
         if (age < PREVIEW_MAX_AGE_MS) {
             return {
-                previewId: videoId,
-                previewUrl: `/api/preview/${videoId}`,
+                previewId: safeVideoId,
+                previewUrl: `/api/preview/${safeVideoId}`,
                 duration: PREVIEW_DURATION,
                 cached: true
             };
         }
     }
 
-    const previewPath = getPreviewFilePath(videoId);
-    let build = previewBuilds.get(videoId);
+    const previewPath = getPreviewFilePath(safeVideoId);
+    let build = previewBuilds.get(safeVideoId);
     if (!build) {
         build = (async () => {
             try {
-                await createPreview(videoId, previewPath);
-                const nextState = getPreviewFileState(videoId);
+                await createPreview(safeVideoId, previewPath);
+                const nextState = getPreviewFileState(safeVideoId);
                 if (!nextState) {
                     throw new Error('Preview generation completed without a preview file');
                 }
             } finally {
-                previewBuilds.delete(videoId);
+                previewBuilds.delete(safeVideoId);
             }
         })();
-        previewBuilds.set(videoId, build);
+        previewBuilds.set(safeVideoId, build);
     }
 
     await build;
 
     return {
-        previewId: videoId,
-        previewUrl: `/api/preview/${videoId}`,
+        previewId: safeVideoId,
+        previewUrl: `/api/preview/${safeVideoId}`,
         duration: PREVIEW_DURATION,
         cached: false
     };
 }
 
 export function getPreviewPath(videoId: string): string | null {
-    return getPreviewFileState(videoId)?.path ?? null;
+    const safeVideoId = validatePreviewVideoId(videoId);
+    if (!safeVideoId) {
+        return null;
+    }
+
+    return getPreviewFileState(safeVideoId)?.path ?? null;
 }
 
 export function cleanupPreviews(): number {

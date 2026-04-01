@@ -105,6 +105,12 @@ describe('previewService', () => {
         expect(validatePreviewVideoId(42)).toBeNull();
     });
 
+    it('rejects invalid video ids at exported API boundaries', async () => {
+        await expect(generatePreview('../escape')).rejects.toThrow('Invalid preview video ID');
+        expect(getPreviewPath('../escape')).toBeNull();
+        expect(spawnMock).not.toHaveBeenCalled();
+    });
+
     it('generates and reuses cached previews', async () => {
         const first = await generatePreview('preview1234');
         const previewPath = getPreviewPath('preview1234');
@@ -182,7 +188,7 @@ describe('previewService', () => {
 
         expect(first.previewUrl).toBe('/api/preview/dupebuild12');
         expect(second.previewUrl).toBe('/api/preview/dupebuild12');
-        expect(first.cached || second.cached).toBe(true);
+        expect(fs.existsSync(path.join(downloadsDir, 'previews', 'dupebuild12_preview.mp3'))).toBe(true);
         expect(ffmpegProcessCount).toBe(1);
         expect(spawnMock).toHaveBeenCalledTimes(2);
     });
