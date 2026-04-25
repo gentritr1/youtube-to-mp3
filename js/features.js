@@ -580,7 +580,7 @@ export function setOnConvertRequest(callback) {
 
 /**
  * Inject AudioVisualizer reference. Called by app.js during init.
- * Avoids a direct import that would change when features.js is split in Phase 4.
+ * Keeps preview rendering independent from the visualizer implementation.
  */
 export function setAudioVisualizer(visualizer) {
     _audioVisualizer = visualizer;

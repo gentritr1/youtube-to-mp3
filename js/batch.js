@@ -13,7 +13,7 @@ let _previewCallback = null;
 
 /**
  * Inject preview callback. Called by app.js during init.
- * Avoids a direct import of features.js which will be split in Phase 4.
+ * Keeps preview integration explicit without importing the discovery controller.
  */
 export function setPreviewCallback(fn) {
     _previewCallback = fn;

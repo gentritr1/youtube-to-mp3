@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import { config } from '../config.js';
 import { Task } from '../types.js';
 
 export interface CreateTaskParams extends Partial<Task> {
@@ -78,7 +81,19 @@ export class MemoryTaskAdapter {
             .filter((task) => task.videoId === videoId && task.format === format && task.state !== 'error')
             .sort((left, right) => (right.createdAt ?? 0) - (left.createdAt ?? 0));
 
-        return cloneTask(tasks[0] ?? null);
+        for (const task of tasks) {
+            if (task.state === 'completed' && task.filename) {
+                const filePath = path.join(config.DOWNLOADS_DIR, task.filename);
+                if (!fs.existsSync(filePath)) {
+                    this.tasks.delete(task.taskId);
+                    continue;
+                }
+            }
+
+            return cloneTask(task);
+        }
+
+        return null;
     }
 
     updateTask(taskId: string, updates: Partial<Task>): Task | null {

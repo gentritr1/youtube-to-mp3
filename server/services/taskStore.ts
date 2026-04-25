@@ -1,7 +1,6 @@
 import { config } from '../config.js';
 import { Task } from '../types.js';
 import { MemoryTaskAdapter, type CreateTaskParams } from './memoryTaskAdapter.js';
-import { SqliteTaskAdapter } from './sqliteTaskAdapter.js';
 
 type TaskAdapter = {
     createTask(params: CreateTaskParams): Task;
@@ -17,7 +16,7 @@ const storeType = config.TASK_STORE === 'memory' ? 'memory' : 'sqlite';
 
 const adapter: TaskAdapter = storeType === 'memory'
     ? new MemoryTaskAdapter()
-    : new SqliteTaskAdapter();
+    : new (await import('./sqliteTaskAdapter.js')).SqliteTaskAdapter();
 
 export { storeType };
 export type { CreateTaskParams };

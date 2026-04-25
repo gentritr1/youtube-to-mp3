@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 describe('Task Store', () => {
     const previousTaskStore = process.env.TASK_STORE;
@@ -35,6 +38,17 @@ describe('Task Store', () => {
         expect(task?.title).toBe('Track One');
     });
 
+    it('does not load the SQLite adapter when memory mode is selected', async () => {
+        vi.doMock('../server/services/sqliteTaskAdapter.js', () => {
+            throw new Error('SQLite adapter should not load in memory mode');
+        });
+
+        const taskStore = await import('../server/services/taskStore.ts');
+
+        expect(taskStore.storeType).toBe('memory');
+        vi.doUnmock('../server/services/sqliteTaskAdapter.js');
+    });
+
     it('updates and deletes tasks', async () => {
         const taskStore = await import('../server/services/taskStore.ts');
 
@@ -69,6 +83,31 @@ describe('Task Store', () => {
         const found = taskStore.findExistingTask('vid123', 'mp3');
         expect(found?.taskId).toBe('task-3');
         expect(taskStore.findExistingTask('vid123', 'mp4')).toBeNull();
+    });
+
+    it('does not reuse completed memory tasks when the output file is missing', async () => {
+        const { config } = await import('../server/config.ts');
+        const taskStore = await import('../server/services/taskStore.ts');
+        const downloadsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'task-store-downloads-'));
+        const previousDownloadsDir = config.DOWNLOADS_DIR;
+        config.DOWNLOADS_DIR = downloadsDir;
+
+        try {
+            taskStore.createTask({
+                taskId: 'task-stale',
+                videoId: 'vid-stale',
+                format: 'mp3',
+                state: 'completed',
+                progress: 100,
+                filename: 'missing.mp3',
+            });
+
+            expect(taskStore.findExistingTask('vid-stale', 'mp3')).toBeNull();
+            expect(taskStore.getTask('task-stale')).toBeNull();
+        } finally {
+            config.DOWNLOADS_DIR = previousDownloadsDir;
+            fs.rmSync(downloadsDir, { recursive: true, force: true });
+        }
     });
 
     it('cleans up stale tasks in memory mode', async () => {

@@ -135,7 +135,7 @@ These patterns worked well and should be carried forward:
 
 **Solution**: Convert all global scripts to ES modules. Use dependency injection via `app.js` for cross-module communication instead of direct imports between modules that will later be split. Remove all `window.*` global assignments.
 
-**Key design choice**: `batch.js → features.js` dependency uses an injected callback from `app.js` (`setPreviewCallback`) instead of a direct import, because `features.js` will be split in Phase 4. Interface-first design prevents re-breaking the same file.
+**Key design choice**: `batch.js → features.js` dependency uses an injected callback from `app.js` (`setPreviewCallback`) instead of a direct import, because `features.js` was scheduled for Phase 4 decomposition. Interface-first design prevented re-breaking the same file.
 
 ### Architecture Cleanup — Phase 2: Task Persistence Consolidation (completed)
 
@@ -172,6 +172,14 @@ These patterns worked well and should be carried forward:
 **Problem**: `server/routes/preview.ts` owns process spawning, caching, streaming, and cleanup — responsibilities that belong in a service.
 
 **Solution**: New `previewService.ts` with `generatePreview()`, `getPreviewPath()`, `cleanupPreviews()`. Route file reduced to HTTP concerns only.
+
+### Architecture Cleanup — Batch Store Boundary (completed)
+
+**Problem**: `batchService.ts` owned orchestration and hidden in-memory batch state in the same module. That made batch durability an implicit behavior instead of an architectural decision.
+
+**Solution**: New `batchStore.ts` facade owns batch state. The current adapter is intentionally memory-backed and runtime-only, while individual conversion tasks still persist through `taskStore`. If durable batch history becomes a product requirement, add a persistent batch-store adapter rather than coupling persistence back into `batchService.ts`.
+
+**Follow-through**: `tests/batchStore.test.ts` verifies the store boundary, clone behavior, updates, and the documented `memory` store type. `docs/RUNTIME_VERIFICATION.md` now covers browser-level smoke checks that unit tests cannot prove.
 
 ### Architecture Cleanup — Parallel Track: CSS Token Migration (in progress)
 

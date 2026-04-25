@@ -287,7 +287,7 @@ If ownership is unclear, split the feature first.
 
 All new JavaScript must use `import`/`export`. Do not add new `window.*` globals.
 
-Remaining legacy-style integration points are concentrated in older feature files such as `js/batch.js`, `js/snake-game.js`, and `js/hero-runner.js`. They work today but compound drift — every new feature that follows them inherits the same coupling. Migrate them to ES modules opportunistically when touching those files.
+The active frontend runtime now uses ES module imports and explicit callbacks for feature handoffs. Older standalone files may remain for compatibility or historical context, but new feature work must not copy legacy global patterns.
 
 ### 3. Add tokens before exceptions
 
@@ -353,10 +353,11 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 
 ### Current pressure points
 
-**Structural (extensibility blockers):**
+**Structural decisions to preserve:**
 
-- task persistence now routes through `server/services/taskStore.ts` with SQLite default and memory fallback, but the fallback path still needs clearer operational documentation and explicit runtime verification outside tests
-- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; the remaining gap is mostly manual UI verification and runtime checks rather than missing controller race guards
+- task persistence routes through `server/services/taskStore.ts` with SQLite default and memory fallback
+- batch jobs now route through `server/services/batchStore.ts`; the current adapter is intentionally memory-backed/runtime-only, so durable batch history should be added as a new adapter instead of putting state back into `batchService.ts`
+- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; use `docs/RUNTIME_VERIFICATION.md` for browser checks that unit tests cannot prove
 
 **Maintenance (valuable but lower leverage):**
 
@@ -378,11 +379,12 @@ Rule in force:
 
 Completed migration targets:
 - `js/features.js` now ships as an ES module with named exports
+- `js/batch.js` now ships as an ES module with named exports
+- `js/hero-runner.js` is imported as a side-effect ES module by `app.js`
+- the active Snake runtime comes from `js/game/*` through ES module imports
 
-Remaining migration targets:
-- `js/batch.js` → ES module, replace legacy-style integration points with named exports only
-- `js/snake-game.js` → ES module, replace `window.SnakeGame` with default export
-- `js/hero-runner.js` → ES module, replace `window.__heroRunner` with module-scoped reference
+Remaining legacy target:
+- `js/snake-game.js` is no longer the active runtime entry; either keep it dormant or delete it after confirming there is no external dependency
 
 The practical test is: can a new feature import what it needs without checking `window`?
 
@@ -560,6 +562,7 @@ During review:
 1. manually verify visual states across themes and mobile/desktop layouts
 2. finish the remaining JS/canvas fallback cleanup after the new runtime token-sync pass
 3. keep migrating remaining legacy globals opportunistically when touched
+4. if batch durability becomes a product requirement, add a persistent `batchStore` adapter instead of coupling it to `batchService`
 
 ## Practical Checklist
 
@@ -572,6 +575,7 @@ During review:
 - avoid cross-module DOM mutations and synthetic event dispatches
 - check reduced-motion behavior for decorative motion
 - verify all visible states in all themes
+- run the browser smoke pass in `docs/RUNTIME_VERIFICATION.md` for runtime-sensitive changes
 - add a race-condition test for any new async UI flow
 - run `npm run build`
 - run `npm test`
@@ -582,8 +586,9 @@ During review:
 Priority order now that the major structural phases are in place:
 
 1. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
-2. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
-3. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
+2. **Run runtime smoke verification** — use `docs/RUNTIME_VERIFICATION.md` after frontend, preview, batch, service-worker, or studio changes
+3. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
+4. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
 
 Recent note:
 - runtime fallback literals for game/preview canvases are now centralized in `js/ui/runtimeColorFallbacks.js` instead of being duplicated across the renderers

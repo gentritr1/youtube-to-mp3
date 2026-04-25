@@ -27,7 +27,7 @@ const getBurstConfigs = (root = document.documentElement) => {
 
 /**
  * Inject the track provider callback. Called by app.js during init
- * so this module never imports features.js directly (it will be split in Phase 4).
+ * so this module never imports the discovery controller directly.
  */
 export function setTrackProvider(fn) {
     _getRandomTracks = fn;

@@ -166,6 +166,7 @@ youtube-to-mp3/
 │   │   ├── memoryTaskAdapter.ts  # In-memory contingency adapter
 │   │   ├── previewService.ts  # Audio preview orchestration
 │   │   ├── jobQueue.ts        # ✨ Bull + Redis queue
+│   │   ├── batchStore.ts      # Runtime batch-store facade
 │   │   └── batchService.ts    # ✨ Batch download orchestration
 │   └── utils/
 │       ├── formatDuration.ts  # Time formatting
@@ -178,6 +179,7 @@ youtube-to-mp3/
 │   ├── jobQueue.test.ts       # Job queue tests (10 tests)
 │   ├── sqliteTaskManager.test.ts  # SQLite tests
 │   ├── taskStore.test.ts      # Task-store facade tests
+│   ├── batchStore.test.ts     # Batch-store facade tests
 │   └── batchService.test.ts   # ✨ Batch service tests (18 tests)
 │
 ├── 📁 downloads/              # Temp file storage (gitignored)
@@ -236,6 +238,7 @@ youtube-to-mp3/
 | **Memory Task Adapter** | `server/services/memoryTaskAdapter.ts` | Contingency in-memory task backend |
 | **Preview Service** | `server/services/previewService.ts` | Generate, cache, and clean audio previews |
 | **Job Queue** | `server/services/jobQueue.ts` | Optional Redis-backed queue |
+| **Batch Store** | `server/services/batchStore.ts` | Runtime batch-state facade; currently memory-backed |
 | **Batch Service** | `server/services/batchService.ts` | Batch download orchestration |
 
 ---
@@ -321,6 +324,16 @@ When Redis is available and `USE_QUEUE=true`:
 
 **Fallback:** When Redis is unavailable, falls back to direct processing (current behavior).
 
+### Batch State
+
+Batch jobs route through `server/services/batchStore.ts`.
+
+Current behavior:
+- `batchStoreType=memory`
+- batch state is runtime-only and does not survive server restarts
+- individual conversion tasks remain durable through `taskStore`
+- if durable batch history becomes required, add a persistent batch-store adapter rather than moving state back into `batchService.ts`
+
 ---
 
 ## 🧪 Testing
@@ -340,7 +353,7 @@ npm test
 | `jobQueue.test.ts` | 10 | Queue API, disabled state, Redis fallback |
 | `sqliteTaskManager.test.ts` | 10+ | CRUD, idempotency, cleanup |
 
-### Total: 45+ tests
+### Total: 300+ tests
 
 ---
 
@@ -451,4 +464,4 @@ The modular design makes it easy to maintain and extend. Ready for production de
 
 ---
 
-*Updated: 2026-02-06*
+*Updated: 2026-04-25*
