@@ -364,7 +364,7 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 - `js/ui/timeSyncStudio.js` is now an orchestration shell at 1,127 lines; treat it as acceptable until new responsibilities accumulate, then split again by stable seam instead of adding back inline logic
 - `js/features.js` is now a 590-line controller shell for DOM creation, preview requests, and convert handoff; split it further only when one of those responsibilities grows materially
 - `app.js` still owns some sidecar panel state and mini-game wiring in addition to the main conversion flow
-- older component CSS files still contain direct visual assumptions instead of consuming the semantic token layer, even after tokenizing discovery/studio surface overlays and shadows
+- the visual token migration track is complete; keep new visual states on semantic tokens during review instead of introducing another visual island
 
 ### Phase 1. Freeze new globals and unify the module system direction
 
@@ -515,10 +515,13 @@ Definition of done:
 
 ### Parallel track: Reduce hardcoded visual assumptions
 
-This is real maintenance work that should continue in parallel with the structural phases above. It improves visual consistency across themes but does not itself solve ownership, integration style, or extensibility.
+This track completed the high-value token pass for repeated visual assumptions. It improves visual consistency across themes but does not itself solve ownership, integration style, or extensibility.
+
+Status:
+- completed
 
 Focus:
-- canvas-driven color fallbacks in `js/features.js`, `js/game/*`, and `js/guess-track.js`
+- semantic CSS surface tokens and canvas-driven runtime color fallbacks in `js/game/*`, `js/guess-track.js`, and `js/waveformRenderer.js`
 
 Actions:
 - convert repeated surfaces, borders, glow states, and status treatments into semantic tokens in `css/base.css`
@@ -532,12 +535,15 @@ Progress so far:
 - `css/components/guess-track.css` now drives its success/error/hot-state surfaces, Frutiger glass overrides, and option-state chrome through token-backed custom properties instead of raw component literals
 - `css/components/game.css` now uses semantic state borders, canvas shadows, restart-button glow treatment, and Frutiger glass overrides without raw component literals
 - `css/components/header.css`, `css/components/theme-switcher.css`, and the remaining `css/components/features.css` waveform shading now use semantic or header/preview-scoped variables instead of raw component literals
+- `css/components/form.css` now consumes semantic input inset-shadow tokens instead of owning repeated raw shadow literals
+- `js/game/config.js`, `js/guess-track.js`, and `js/waveformRenderer.js` now derive live rendering palettes from computed CSS tokens
+- runtime fallback literals are centralized in `js/ui/runtimeColorFallbacks.js` and are only for CSS-unavailable renderer defaults
 
 Definition of done:
-- themes own palette choices
-- components mostly read from semantic tokens
-- remaining visual exceptions live only where JavaScript/canvas rendering still needs an explicit fallback
-- new UI work does not introduce another visual island
+- themes own palette choices: done
+- components read from semantic tokens for reusable surfaces, borders, shadows, and state treatments: done
+- remaining visual exceptions live only where JavaScript/canvas rendering needs an explicit CSS-unavailable fallback: done
+- new UI work must not introduce another visual island: ongoing review guardrail
 
 ### Guardrails for new work
 
@@ -559,8 +565,8 @@ During review:
 
 ### Recommended sequence
 
-1. manually verify visual states across themes and mobile/desktop layouts
-2. finish the remaining JS/canvas fallback cleanup after the new runtime token-sync pass
+1. manually verify visual states across themes and mobile/desktop layouts before release
+2. keep runtime fallback defaults centralized in `js/ui/runtimeColorFallbacks.js` when renderers change
 3. keep migrating remaining legacy globals opportunistically when touched
 4. if batch durability becomes a product requirement, add a persistent `batchStore` adapter instead of coupling it to `batchService`
 
@@ -587,7 +593,7 @@ Priority order now that the major structural phases are in place:
 
 1. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
 2. **Run runtime smoke verification** — use `docs/RUNTIME_VERIFICATION.md` after frontend, preview, batch, service-worker, or studio changes
-3. **Finish runtime visual token cleanup** — the game, guess-track bursts, and waveform renderer now read semantic tokens at runtime; finish only the fallback scaffolding that still proves worth centralizing
+3. **Keep runtime fallbacks centralized** — the game, guess-track bursts, and waveform renderer read semantic tokens at runtime; fallback literals should stay in `js/ui/runtimeColorFallbacks.js`
 4. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
 
 Recent note:

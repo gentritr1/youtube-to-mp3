@@ -70,6 +70,8 @@
     --shadow-inset-soft: inset 0 2px 8px rgba(0, 0, 0, 0.05);
     --shadow-inset: inset 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-inset-strong: inset 0 2px 12px rgba(0, 0, 0, 0.15);
+    --shadow-input-inset: inset 0 10px 20px color-mix(in srgb, var(--glass-shadow) 36%, transparent);
+    --shadow-input-inset-focus: inset 0 12px 24px color-mix(in srgb, var(--glass-shadow) 36%, transparent);
 
     /* ---- Theming / hero ---- */
     --hero-surface: rgba(10, 15, 28, 0.76);

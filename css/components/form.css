@@ -99,7 +99,7 @@
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     box-shadow:
         0 1px 0 var(--glass-highlight) inset,
-        0 10px 20px rgba(0, 0, 0, 0.08) inset;
+        var(--shadow-input-inset);
     backdrop-filter: blur(16px) saturate(125%);
     -webkit-backdrop-filter: blur(16px) saturate(125%);
 }
@@ -112,7 +112,7 @@
     border-color: var(--ring);
     box-shadow:
         0 0 0 3px color-mix(in srgb, var(--hero-orb) 15%, transparent),
-        0 12px 24px rgba(0, 0, 0, 0.08) inset;
+        var(--shadow-input-inset-focus);
 }
 
 .paste-btn {
