@@ -250,6 +250,13 @@
         0 0 0 1px color-mix(in srgb, var(--hero-orb) 18%, transparent) inset;
 }
 
+.batch-item.is-preview-error {
+    border-color: color-mix(in srgb, var(--destructive) 58%, var(--hero-border));
+    box-shadow:
+        0 18px 34px color-mix(in srgb, var(--destructive) 12%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--destructive) 18%, transparent) inset;
+}
+
 .batch-item.removing {
     animation: slideOutLeft 0.3s ease forwards;
 }
@@ -385,6 +392,12 @@
     background: color-mix(in srgb, var(--hero-orb) 16%, transparent);
     border-color: color-mix(in srgb, var(--hero-orb) 52%, var(--hero-border));
     color: color-mix(in srgb, var(--hero-orb) 88%, var(--foreground));
+}
+
+.batch-item-preview.has-error {
+    background: color-mix(in srgb, var(--destructive) 12%, transparent);
+    border-color: color-mix(in srgb, var(--destructive) 50%, var(--hero-border));
+    color: color-mix(in srgb, var(--destructive) 86%, var(--foreground));
 }
 
 .batch-item-preview:disabled {

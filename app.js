@@ -6,6 +6,12 @@
 import { AnimationController } from './js/ui/animationController.js';
 import { animationRegistry } from './js/ui/animationRegistry.js';
 import { ThemeController } from './js/ui/themeController.js';
+import { FeaturesModule, setOnConvertRequest, setAudioVisualizer } from './js/features.js';
+import { batchDownloads, setApiBaseUrl, setPreviewCallback } from './js/batch.js';
+import { SnakeGame } from './js/game/index.js';
+import { GuessTrackGame, setTrackProvider } from './js/guess-track.js';
+import { AudioVisualizer } from './js/visualizer.js';
+import './js/hero-runner.js'; // self-initializing side-effect module
 
 // Configuration
 const API_URL = '';
@@ -74,6 +80,11 @@ try {
 } catch (error) {
     console.error('themeController.init failed', error);
 }
+
+themeController.subscribe(() => {
+    snakeGame?.syncTheme();
+    FeaturesModule.redrawWaveform();
+});
 
 /**
  * Extract video ID from YouTube URL
@@ -373,12 +384,12 @@ const handleSubmit = async (event) => {
         return;
     }
 
-    if (window.batchDownloads && window.batchDownloads.isEnabled()) {
+    if (batchDownloads.isEnabled()) {
         setLoading(true);
 
         try {
             const videoInfo = await fetchVideoInfo(videoId);
-            const added = window.batchDownloads.add(
+            const added = batchDownloads.add(
                 videoId,
                 state.format,
                 videoInfo.title,
@@ -675,3 +686,30 @@ document.addEventListener('keydown', (event) => {
 // Initialize
 elements.urlInput.focus();
 console.log('YT Converter initialized. Current format:', state.format);
+
+// ── Module wiring (Phase 1: split-aware dependency injection) ──
+
+// Wire convert handoff: features.js calls this instead of synthetic event dispatch
+setOnConvertRequest((url) => {
+    elements.urlInput.value = url;
+    if (typeof elements.form.requestSubmit === 'function') {
+        elements.form.requestSubmit();
+        return;
+    }
+
+    void handleSubmit({ preventDefault: () => {} });
+});
+
+// Wire visualizer into features.js
+setAudioVisualizer(AudioVisualizer);
+
+// Wire preview callback into batch.js (instead of batch importing features directly)
+setPreviewCallback((previewData) => FeaturesModule.showPreview(previewData));
+setApiBaseUrl(API_URL);
+
+// Wire track provider into guess-track.js (instead of bare FeaturesModule global)
+setTrackProvider((count) => FeaturesModule.getRandomTracks(count));
+
+// Initialize modules that were previously self-initializing via DOMContentLoaded
+FeaturesModule.init();
+batchDownloads.init();

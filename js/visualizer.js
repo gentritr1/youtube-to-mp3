@@ -4,7 +4,7 @@
  * to drive the background Zen animations dynamically based on the beat.
  */
 
-const AudioVisualizer = (() => {
+const _AudioVisualizer = (() => {
     let audioContext = null;
     let analyserNode = null;
     let currentAudioElement = null;
@@ -137,3 +137,5 @@ const AudioVisualizer = (() => {
 
     return { play, pause };
 })();
+
+export { _AudioVisualizer as AudioVisualizer };

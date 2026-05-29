@@ -70,7 +70,7 @@ export class ParticleSystem {
         // Draw trails
         this.trails.forEach(t => {
             ctx.globalAlpha = t.life * 0.15;
-            ctx.fillStyle = t.isGhost ? '#a78bfa' : (t.isSplit ? '#fbbf24' : '#10b981');
+            ctx.fillStyle = t.isGhost ? COLORS.trail.ghost : (t.isSplit ? COLORS.trail.split : COLORS.trail.normal);
             ctx.beginPath();
             ctx.arc(t.x, t.y, GAME_CONFIG.tileSize / 3, 0, Math.PI * 2);
             ctx.fill();

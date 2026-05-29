@@ -21,9 +21,12 @@ db.exec(`
         format TEXT NOT NULL,
         state TEXT DEFAULT 'processing',
         progress INTEGER DEFAULT 0,
+        title TEXT,
+        status TEXT,
         filename TEXT,
         download_url TEXT,
         error TEXT,
+        audio_stats TEXT,
         created_at INTEGER DEFAULT (strftime('%s', 'now')),
         updated_at INTEGER DEFAULT (strftime('%s', 'now'))
     );
@@ -33,11 +36,29 @@ db.exec(`
     CREATE INDEX IF NOT EXISTS idx_created_at ON tasks(created_at);
 `);
 
+try {
+    db.exec('ALTER TABLE tasks ADD COLUMN title TEXT');
+} catch {
+    // Column already exists.
+}
+
+try {
+    db.exec('ALTER TABLE tasks ADD COLUMN status TEXT');
+} catch {
+    // Column already exists.
+}
+
+try {
+    db.exec('ALTER TABLE tasks ADD COLUMN audio_stats TEXT');
+} catch {
+    // Column already exists.
+}
+
 // Prepared statements for better performance
 const statements = {
     insert: db.prepare(`
-        INSERT INTO tasks (id, video_id, format, state, progress)
-        VALUES (?, ?, ?, 'processing', 0)
+        INSERT INTO tasks (id, video_id, format, state, progress, title, status, audio_stats)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `),
 
     getById: db.prepare(`
@@ -53,7 +74,7 @@ const statements = {
 
     update: db.prepare(`
         UPDATE tasks 
-        SET state = ?, progress = ?, filename = ?, download_url = ?, error = ?,
+        SET state = ?, progress = ?, title = ?, status = ?, filename = ?, download_url = ?, error = ?, audio_stats = ?,
             updated_at = strftime('%s', 'now')
         WHERE id = ?
     `),
@@ -66,6 +87,10 @@ const statements = {
     cleanup: db.prepare(`
         DELETE FROM tasks 
         WHERE created_at < ? OR state = 'error'
+    `),
+
+    delete: db.prepare(`
+        DELETE FROM tasks WHERE id = ?
     `),
 
     getStats: db.prepare(`
@@ -87,29 +112,84 @@ interface TaskRow {
     filename: string | null;
     download_url: string | null;
     error: string | null;
+    audio_stats: string | null;
+    title: string | null;
+    status: string | null;
     created_at: number;
     updated_at: number;
 }
+
+const serializeAudioStats = (audioStats: Task['audioStats'] | null | undefined): string | null => {
+    return audioStats ? JSON.stringify(audioStats) : null;
+};
+
+const parseAudioStats = (audioStats: string | null): Task['audioStats'] | undefined => {
+    if (!audioStats) {
+        return undefined;
+    }
+
+    try {
+        const parsed = JSON.parse(audioStats);
+        return parsed && typeof parsed === 'object' ? parsed as Task['audioStats'] : undefined;
+    } catch {
+        return undefined;
+    }
+};
+
+const mapTaskRow = (row: TaskRow): Task => ({
+    taskId: row.id,
+    videoId: row.video_id,
+    format: row.format,
+    state: row.state,
+    progress: row.progress,
+    title: row.title || undefined,
+    status: row.status || undefined,
+    filename: row.filename || undefined,
+    downloadUrl: row.download_url || undefined,
+    error: row.error || undefined,
+    audioStats: parseAudioStats(row.audio_stats),
+    createdAt: row.created_at * 1000,
+    updatedAt: row.updated_at * 1000
+});
 
 /**
  * Generate unique task ID
  */
 const generateTaskId = (): string => {
-    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `task_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 };
 
 /**
  * Create a new task
+ * @param videoId - YouTube video ID
+ * @param format - Output format (mp3/mp4)
+ * @param externalId - Optional caller-provided task ID. If omitted, one is generated.
+ * @param taskData - Optional task metadata for richer facade callers.
  */
-export const createTask = (videoId: string, format: string): Partial<Task> => {
-    const taskId = generateTaskId();
+export const createTask = (
+    videoId: string,
+    format: string,
+    externalId?: string,
+    taskData: Partial<Task> = {}
+): Partial<Task> => {
+    const taskId = externalId ?? generateTaskId();
+    const state = taskData.state ?? 'processing';
+    const progress = taskData.progress ?? 0;
+    const title = taskData.title ?? null;
+    const status = taskData.status ?? null;
+    const audioStats = serializeAudioStats(taskData.audioStats);
 
-    statements.insert.run(taskId, videoId, format);
+    statements.insert.run(taskId, videoId, format, state, progress, title, status, audioStats);
 
     return {
         taskId,
-        state: 'processing',
-        progress: 0
+        videoId,
+        format,
+        state,
+        progress,
+        title: taskData.title,
+        status: taskData.status,
+        audioStats: taskData.audioStats
     };
 };
 
@@ -121,18 +201,7 @@ export const getTask = (taskId: string): Task | null => {
 
     if (!row) return null;
 
-    return {
-        taskId: row.id,
-        videoId: row.video_id,
-        format: row.format,
-        state: row.state,
-        progress: row.progress,
-        filename: row.filename || undefined,
-        downloadUrl: row.download_url || undefined,
-        error: row.error || undefined,
-        createdAt: row.created_at * 1000,
-        updatedAt: row.updated_at * 1000
-    };
+    return mapTaskRow(row);
 };
 
 /**
@@ -152,16 +221,7 @@ export const findExistingTask = (videoId: string, format: string): Task | null =
         }
     }
 
-    return {
-        taskId: row.id,
-        videoId: row.video_id,
-        format: row.format,
-        state: row.state,
-        progress: row.progress,
-        filename: row.filename || undefined,
-        downloadUrl: row.download_url || undefined,
-        error: row.error || undefined
-    };
+    return mapTaskRow(row);
 };
 
 /**
@@ -171,13 +231,16 @@ export const updateTask = (taskId: string, updates: Partial<Task>): Task | null 
     const current = getTask(taskId);
     if (!current) return null;
 
-    const state = updates.state || current.state;
+    const state = updates.state ?? current.state;
     const progress = updates.progress ?? current.progress;
-    const filename = updates.filename || current.filename || null;
-    const downloadUrl = updates.downloadUrl || current.downloadUrl || null;
-    const error = updates.error || current.error || null;
+    const title = updates.title ?? current.title ?? null;
+    const status = updates.status ?? current.status ?? null;
+    const filename = updates.filename ?? current.filename ?? null;
+    const downloadUrl = updates.downloadUrl ?? current.downloadUrl ?? null;
+    const error = updates.error ?? current.error ?? null;
+    const audioStats = serializeAudioStats(updates.audioStats ?? current.audioStats);
 
-    statements.update.run(state, progress, filename, downloadUrl, error, taskId);
+    statements.update.run(state, progress, title, status, filename, downloadUrl, error, audioStats, taskId);
 
     return getTask(taskId);
 };
@@ -196,6 +259,13 @@ export const cleanupOldTasks = (maxAgeMs: number = config.FILE_MAX_AGE_MS): numb
     const cutoff = Math.floor((Date.now() - maxAgeMs) / 1000);
     const result = statements.cleanup.run(cutoff);
     return result.changes;
+};
+
+/**
+ * Delete a task by ID.
+ */
+export const deleteTask = (taskId: string): void => {
+    statements.delete.run(taskId);
 };
 
 /**

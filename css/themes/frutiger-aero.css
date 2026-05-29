@@ -99,13 +99,40 @@
         radial-gradient(circle at 84% 16%, rgba(74, 222, 128, 0.12), transparent 22%),
         linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 20%),
         hsl(193 46% 20%);
-    --preview-live-bar-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(34, 211, 238, 0.94) 48%, rgba(74, 222, 128, 0.9));
-    --preview-live-bar-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.18),
-        0 0 12px rgba(34, 211, 238, 0.24);
-    --preview-playhead-ring:
-        0 0 0 6px rgba(186, 230, 253, 0.26),
-        0 0 18px rgba(34, 211, 238, 0.22);
+    --preview-energy-start: var(--sky);
+    --preview-energy-mid: var(--hero-orb);
+    --preview-energy-end: var(--emerald);
+    --preview-energy-glow: var(--sky);
+    --preview-energy-scan: rgba(186, 230, 253, 0.42);
+    --preview-energy-rest: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme="frutiger-aero"] .preview-player {
+    --preview-waveform-bg:
+        radial-gradient(circle at 18% 48%, rgba(49, 197, 233, 0.16), transparent 32%),
+        radial-gradient(circle at 80% 18%, rgba(74, 222, 128, 0.1), transparent 22%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(218, 249, 255, 0.22) 54%, rgba(174, 237, 249, 0.2)),
+        hsl(190 82% 88%);
+    --preview-waveform-border: rgba(65, 180, 208, 0.34);
+    --preview-waveform-shade-top: rgba(255, 255, 255, 0.3);
+    --preview-waveform-shade-bottom: rgba(49, 197, 233, 0.1);
+    --preview-progress-bg:
+        linear-gradient(90deg, rgba(20, 146, 170, 0.16), rgba(45, 202, 216, 0.14), rgba(30, 156, 116, 0.12)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
+    --preview-progress-opacity: 0.78;
+    --preview-progress-shadow: inset -8px 0 16px rgba(49, 197, 233, 0.12);
+    --preview-grid-opacity: 0.28;
+    --preview-grid-playing-opacity: 0.34;
+    --preview-playhead-bg: linear-gradient(180deg, #1492aa, #2dcad8);
+    --preview-playhead-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.74),
+        0 0 14px rgba(34, 211, 238, 0.24);
+    --preview-energy-start: #1492aa;
+    --preview-energy-mid: #2dcad8;
+    --preview-energy-end: #159c74;
+    --preview-energy-glow: rgba(34, 211, 238, 0.54);
+    --preview-energy-scan: rgba(34, 211, 238, 0.2);
+    --preview-energy-rest: rgba(20, 146, 170, 0.08);
 }
 
 :root[data-theme="frutiger-aero"] .theme-scene-wave,

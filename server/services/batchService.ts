@@ -5,21 +5,25 @@
  * and coordinating between multiple individual conversion tasks.
  * 
  * This is a focused, single-responsibility service that:
- * - Creates and stores batch jobs
+ * - Creates and updates batch jobs through the batch store facade
  * - Delegates individual conversions to the existing task system
  * - Aggregates progress from individual tasks
  */
 
 import { randomUUID } from 'crypto';
-import { BatchItem, BatchJob, BatchProgress, Task } from '../types.js';
-import { createTask as createSingleTask, getTask, updateTask } from './taskManager.js';
+import { BatchItem, BatchJob, BatchProgress } from '../types.js';
+import {
+    clearBatches as clearStoredBatches,
+    getAllBatches as getStoredBatches,
+    getBatch as getStoredBatch,
+    saveBatch,
+    updateBatch as updateStoredBatch,
+} from './batchStore.js';
+import { createTask as createSingleTask, getTask, updateTask } from './taskStore.js';
 import { convertVideo } from './ytdlp.js';
 
 // Constants
 export const MAX_BATCH_SIZE = 10;
-
-// In-memory batch store (could be moved to SQLite later)
-const batches = new Map<string, BatchJob>();
 
 /**
  * Generate unique batch ID
@@ -69,14 +73,14 @@ export const createBatch = (items: BatchItem[]): BatchJob => {
         const safeTitle = item.title || `Video ${index + 1}`;
 
         // Create task in task manager
-        createSingleTask(taskId, {
+        createSingleTask({
             taskId,
-            state: 'processing',
-            progress: 0,
-            status: 'Queued...',
             videoId: item.videoId,
             format: item.format,
             title: safeTitle,
+            state: 'processing',
+            progress: 0,
+            status: 'Queued...',
         });
 
         // Start conversion in background (non-blocking) with error handling
@@ -110,24 +114,23 @@ export const createBatch = (items: BatchItem[]): BatchJob => {
         updatedAt: now
     };
 
-    batches.set(batchId, batch);
     console.log(`[BatchService] Created batch ${batchId} with ${items.length} items`);
 
-    return batch;
+    return saveBatch(batch);
 };
 
 /**
  * Get batch by ID
  */
 export const getBatch = (batchId: string): BatchJob | null => {
-    return batches.get(batchId) || null;
+    return getStoredBatch(batchId);
 };
 
 /**
  * Get detailed batch progress by aggregating individual task states
  */
 export const getBatchProgress = (batchId: string): BatchProgress | null => {
-    const batch = batches.get(batchId);
+    const batch = getStoredBatch(batchId);
     if (!batch) return null;
 
     let totalProgress = 0;
@@ -179,12 +182,13 @@ export const getBatchProgress = (batchId: string): BatchProgress | null => {
         }
     }
 
-    // Update batch state in store
-    batch.state = batchState;
-    batch.completedItems = completedItems;
-    batch.failedItems = failedItems;
-    batch.processingItems = processingItems;
-    batch.updatedAt = Date.now();
+    updateStoredBatch(batchId, {
+        state: batchState,
+        completedItems,
+        failedItems,
+        processingItems,
+        updatedAt: Date.now()
+    });
 
     return {
         batchId: batch.batchId,
@@ -203,7 +207,7 @@ export const getBatchProgress = (batchId: string): BatchProgress | null => {
  * Only works if batch is still processing
  */
 export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
-    const batch = batches.get(batchId);
+    let batch = getStoredBatch(batchId);
 
     if (!batch) {
         throw new Error('Batch not found');
@@ -211,6 +215,10 @@ export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
 
     // Refresh batch state
     getBatchProgress(batchId);
+    batch = getStoredBatch(batchId);
+    if (!batch) {
+        throw new Error('Batch not found');
+    }
 
     if (batch.state === 'completed' || batch.state === 'partial' || batch.state === 'error') {
         throw new Error('Cannot add items to completed batch');
@@ -228,14 +236,14 @@ export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
     const url = `https://www.youtube.com/watch?v=${item.videoId}`;
     const safeTitle = item.title || `Video ${batch.items.length + 1}`;
 
-    createSingleTask(taskId, {
+    createSingleTask({
         taskId,
-        state: 'processing',
-        progress: 0,
-        status: 'Queued...',
         videoId: item.videoId,
         format: item.format,
         title: safeTitle,
+        state: 'processing',
+        progress: 0,
+        status: 'Queued...',
     });
 
     // Start conversion in background with error handling
@@ -249,35 +257,41 @@ export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
         });
     });
 
-    // Add to batch
     const newItem: BatchItem = {
         ...item,
         taskId,
         title: safeTitle
     };
 
-    batch.items.push(newItem);
-    batch.totalItems = batch.items.length;
-    batch.processingItems++;
-    batch.updatedAt = Date.now();
+    const nextItems = [...batch.items, newItem];
+    const updatedBatch = updateStoredBatch(batchId, {
+        items: nextItems,
+        totalItems: nextItems.length,
+        processingItems: batch.processingItems + 1,
+        updatedAt: Date.now()
+    });
 
-    console.log(`[BatchService] Added item to batch ${batchId}, now ${batch.items.length} items`);
+    if (!updatedBatch) {
+        throw new Error('Batch not found');
+    }
 
-    return batch;
+    console.log(`[BatchService] Added item to batch ${batchId}, now ${updatedBatch.items.length} items`);
+
+    return updatedBatch;
 };
 
 /**
  * Get all batches (for debugging/admin)
  */
 export const getAllBatches = (): Map<string, BatchJob> => {
-    return batches;
+    return getStoredBatches();
 };
 
 /**
  * Clear batches (for testing)
  */
 export const clearBatches = (): void => {
-    batches.clear();
+    clearStoredBatches();
 };
 
 // Re-export types for convenience

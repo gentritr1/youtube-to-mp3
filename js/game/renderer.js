@@ -42,41 +42,41 @@ export class Renderer {
             canvas.width / 2, canvas.height / 2, 0,
             canvas.width / 2, canvas.height / 2, canvas.width / 2
         );
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.85)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+        gradient.addColorStop(0, COLORS.overlayStart);
+        gradient.addColorStop(1, COLORS.overlayEnd);
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Game Over text with stronger glow
         ctx.shadowBlur = 30;
-        ctx.shadowColor = '#ef4444';
-        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = COLORS.gameOverShadow;
+        ctx.fillStyle = COLORS.gameOverText;
         ctx.font = 'bold 32px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 25);
 
         // Score with emerald glow
         ctx.shadowBlur = 20;
-        ctx.shadowColor = '#10b981';
+        ctx.shadowColor = COLORS.gameOverScore;
         ctx.font = 'bold 24px Inter, sans-serif';
-        ctx.fillStyle = '#10b981';
+        ctx.fillStyle = COLORS.gameOverScore;
         ctx.fillText(score.toString(), canvas.width / 2, canvas.height / 2 + 15);
 
         ctx.shadowBlur = 0;
         ctx.font = '12px Inter, sans-serif';
-        ctx.fillStyle = '#71717a';
+        ctx.fillStyle = COLORS.gameOverMuted;
         ctx.fillText('FINAL SCORE', canvas.width / 2, canvas.height / 2 + 32);
 
         // Show combo if achieved
         if (comboCount >= 2) {
             ctx.font = '13px Inter, sans-serif';
-            ctx.fillStyle = '#fbbf24';
+            ctx.fillStyle = COLORS.gameOverCombo;
             ctx.fillText(`🔥 Best Combo: x${comboCount}`, canvas.width / 2, canvas.height / 2 + 55);
         }
 
         // Show split achievement
         if (hasSplitSnake) {
-            ctx.fillStyle = '#f43f5e';
+            ctx.fillStyle = COLORS.gameOverSplit;
             ctx.fillText('✂️ Split Master!', canvas.width / 2, canvas.height / 2 + (comboCount >= 2 ? 75 : 55));
         }
     }
@@ -87,12 +87,12 @@ export class Renderer {
         const ctx = this.ctx;
 
         // Draw switch indicator at top
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillStyle = COLORS.switchHintBg;
         ctx.roundRect(this.canvas.width / 2 - 60, 8, 120, 24, 6);
         ctx.fill();
 
         ctx.font = '11px Inter, sans-serif';
-        ctx.fillStyle = '#fbbf24';
+        ctx.fillStyle = COLORS.switchHintText;
         ctx.textAlign = 'center';
         ctx.fillText(`🐍 Snake ${activeSnakeIndex + 1}/${totalSnakes} • Press X`, this.canvas.width / 2, 24);
     }

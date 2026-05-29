@@ -32,6 +32,10 @@ describe('Server Configuration', () => {
             expect(config.DB_PATH).toBeDefined();
             expect(config.DB_PATH).toContain('tasks.db');
         });
+
+        it('should have TASK_STORE defined', () => {
+            expect(['sqlite', 'memory']).toContain(config.TASK_STORE);
+        });
     });
 
     describe('Redis Config', () => {

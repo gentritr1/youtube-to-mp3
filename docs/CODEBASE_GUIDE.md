@@ -15,11 +15,13 @@ Use `docs/TESTING_STATUS.md` for transient build and environment notes only.
 
 - [Product Summary](#product-summary)
 - [Project Shape](#project-shape)
+- [Architecture Style](#architecture-style)
 - [Frontend Module Ownership](#frontend-module-ownership)
 - [Styling Architecture](#styling-architecture)
 - [Theme System](#theme-system)
 - [Current UI System](#current-ui-system)
 - [Workflow For New Features](#workflow-for-new-features)
+- [Architecture Adjustment Plan](#architecture-adjustment-plan)
 - [Practical Checklist](#practical-checklist)
 - [Near-Term Next Steps](#near-term-next-steps)
 
@@ -74,6 +76,27 @@ Primary frontend entry points:
   - subtitle loading, parsing, and karaoke timing
 - `js/ui/`
   - UI controllers and registries
+
+## Architecture Style
+
+The app is a pragmatic modular monolith.
+
+The backend is organized as thin Express routes over service modules:
+- routes validate HTTP input, choose status codes, and shape responses
+- services own orchestration, subprocesses, persistence, caching, and cleanup
+- adapters hide replaceable storage details behind facades such as `taskStore` and `batchStore`
+
+The frontend is not a framework app and is not class-heavy. It uses ES modules with small controllers and pure helpers:
+- feature controllers coordinate their own DOM and async state
+- renderer modules turn state into DOM/canvas output
+- engine modules own lifecycle-heavy behavior such as audio playback or timing math
+- explicit callbacks connect features when one workflow hands off to another
+
+There is some OOP where it pays for itself:
+- `PreviewAudioEngine` owns mutable audio lifecycle, playback state, request cancellation, and crossfade cleanup
+- studio/player adapters wrap imperative browser APIs behind narrow objects
+
+Most other code is functional/module-oriented. Prefer plain exported functions and scoped module state unless the feature has a real lifecycle that benefits from an instance.
 
 ## Frontend Module Ownership
 
@@ -139,10 +162,55 @@ Owns:
 ### `js/features.js`
 
 Owns:
-- discovery shelf
-- genre tabs
-- preview player
-- preview waveform/progress UI
+- discovery/preview orchestration
+- preview API request lifecycle
+- converting a previewed item through the callback injected by `app.js`
+- DOM template creation for the discovery preview panel
+
+Does not own:
+- genre/carousel rendering (`popularBrowser.js`)
+- preview audio lifecycle (`previewAudioEngine.js`)
+- preview panel state rendering (`previewPanel.js`)
+- waveform canvas drawing (`waveformRenderer.js`)
+- waveform audio-signal extraction (`waveformSignal.js`)
+
+### `js/popularBrowser.js`
+
+Owns:
+- loading popular genre data
+- rendering genre tabs and carousel cards
+- random-track selection for related surfaces
+
+### `js/previewAudioEngine.js`
+
+Owns:
+- `Audio` element creation and disposal
+- request cancellation and stale-preview guards
+- play/pause/seek/progress behavior
+- crossfade between previews
+- visualizer synchronization
+
+### `js/previewPanel.js`
+
+Owns:
+- preview metadata state
+- loading and error state
+- preview progress/playhead rendering
+- preview-state event emission
+
+### `js/waveformRenderer.js`
+
+Owns:
+- drawing the preview energy line onto canvas
+- reading theme tokens for canvas colors
+- rendering either signal-derived samples or a deterministic seeded fallback
+
+### `js/waveformSignal.js`
+
+Owns:
+- fetching generated preview audio for visualization
+- decoding audio with Web Audio
+- turning RMS/peak energy into normalized waveform samples
 
 ### `js/batch.js`
 
@@ -189,6 +257,7 @@ Owns:
 - `space`
 - `green`
 - `frutiger-aero`
+- `sunshine`
 
 ### Theme rules
 
@@ -262,6 +331,16 @@ The shelf owns:
 - preview progress and playback controls
 - one-click convert handoff
 
+Preview implementation details:
+- `features.js` calls `/api/preview` and coordinates request cancellation.
+- `previewAudioEngine.js` owns playback state, crossfade, progress loop, and stale audio cleanup.
+- `previewPanel.js` renders metadata, loading/error state, and playhead progress.
+- `waveformRenderer.js` draws the energy line using theme tokens.
+- `waveformSignal.js` decodes the generated preview MP3 and supplies real audio-energy samples; the renderer falls back to seeded bars if decoding is unavailable.
+- `service-worker-assets.js` must include any new browser module imported by the preview flow.
+
+Do not route preview playback through `app.js`. The only handoff from discovery to conversion should remain the explicit convert callback wired by `app.js`.
+
 ### Mini-Games and Stats
 
 Snake, Guess the Track, and nerd stats are now aligned to the theme token system and should remain sibling feature surfaces, not one-off visual islands.
@@ -282,7 +361,13 @@ Before coding, decide whether the work belongs to:
 
 If ownership is unclear, split the feature first.
 
-### 2. Add tokens before exceptions
+### 2. Use ES modules only
+
+All new JavaScript must use `import`/`export`. Do not add new `window.*` globals.
+
+The active frontend runtime now uses ES module imports and explicit callbacks for feature handoffs. Older standalone files may remain for compatibility or historical context, but new feature work must not copy legacy global patterns.
+
+### 3. Add tokens before exceptions
 
 If the feature introduces:
 - a new surface
@@ -292,7 +377,7 @@ If the feature introduces:
 
 Add the semantic token first, then consume it in the component.
 
-### 3. Keep rendering local to the feature
+### 4. Keep rendering local to the feature
 
 Good:
 - the module that owns the feature also owns its DOM state transitions
@@ -300,20 +385,36 @@ Good:
 Avoid:
 - adding more cross-component UI mutations to `app.js`
 - reaching across unrelated DOM trees from another feature module
+- dispatching synthetic events on elements owned by another module (e.g. `form.dispatchEvent(new Event('submit'))` from a discovery module)
 
-### 4. Prefer additive registries
+### 5. Prefer additive registries
 
 Use registries for things that can grow:
 - themes
 - animation variants
 - future card presets or visual modes
 
-### 5. Verify all themes and states
+### 6. Update generated browser assets when adding modules
+
+If a new browser module is imported from the app shell, run:
+
+```bash
+node scripts/sync-service-worker-assets.mjs
+```
+
+This keeps the service worker manifest aligned with reachable frontend assets and prevents stale PWA caches from missing new modules.
+
+### 7. Keep files under 500 lines
+
+If a module exceeds roughly 500 lines, look for stable boundaries to split before adding more work to it. The goal is not arbitrary splitting for its own sake; extract responsibilities that are already distinct, such as player adapter, export formatter, or assistant client.
+
+### 8. Verify all themes and states
 
 At minimum verify:
 - `space`
 - `green`
 - `frutiger-aero`
+- `sunshine`
 
 And verify:
 - idle
@@ -325,24 +426,270 @@ And verify:
 - popup/panel states
 - mobile and desktop layout
 
+## Architecture Adjustment Plan
+
+Use this plan when the goal is to keep the architecture simple, additive, and maintainable as the app grows.
+
+### Core principles
+
+- keep ownership local
+- keep routes thin and controllers focused
+- add tokens or adapters before adding exceptions
+- extract pure state logic before DOM renderers when a controller starts carrying both
+- make async flows request-scoped
+- no new `window.*` globals — use ES module `import`/`export`
+- prefer decisions over documentation when the ambiguity is structural
+
+### Current pressure points
+
+**Structural decisions to preserve:**
+
+- task persistence routes through `server/services/taskStore.ts` with SQLite default and memory fallback
+- batch jobs now route through `server/services/batchStore.ts`; the current adapter is intentionally memory-backed/runtime-only, so durable batch history should be added as a new adapter instead of putting state back into `batchService.ts`
+- frontend test infrastructure now has a jsdom harness for async UI flows, and the extracted `js/ui/pointTimingEngine.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/studioWorkflowState.js`, and `js/ui/studioEventBindings.js` seams have direct unit coverage; use `docs/RUNTIME_VERIFICATION.md` for browser checks that unit tests cannot prove
+
+**Maintenance (valuable but lower leverage):**
+
+- `js/ui/timeSyncStudio.js` is now an orchestration shell at roughly 1,130 lines; treat it as acceptable until new responsibilities accumulate, then split again by stable boundary instead of adding back inline logic
+- `js/features.js` is now a roughly 640-line controller shell for DOM creation, preview requests, signal-waveform coordination, and convert handoff; split it further only when one of those responsibilities grows materially
+- `app.js` still owns some sidecar panel state and mini-game wiring in addition to the main conversion flow
+- the visual token migration track is complete; keep new visual states on semantic tokens during review instead of introducing another visual island
+
+### Phase 1. Freeze new globals and unify the module system direction
+
+Status:
+- completed
+
+This is the single biggest barrier to additive features. Without it, every new feature inherits a module-system decision debt.
+
+Rule in force:
+- all new JavaScript uses `import`/`export` — no new `window.*` assignments
+- remaining globals are legacy and should be migrated when their files are touched for other work
+
+Completed migration targets:
+- `js/features.js` now ships as an ES module with named exports
+- `js/batch.js` now ships as an ES module with named exports
+- `js/hero-runner.js` is imported as a side-effect ES module by `app.js`
+- the active Snake runtime comes from `js/game/*` through ES module imports
+
+Remaining legacy target:
+- `js/snake-game.js` is no longer the active runtime entry; either keep it dormant or delete it after confirming there is no external dependency
+
+The practical test is: can a new feature import what it needs without checking `window`?
+
+Definition of done:
+- no new `window.*` globals appear in any PR
+- at least the next feature added uses only ES module integration
+- migration of existing globals progresses when files are touched
+
+### Phase 2. Resolve backend task persistence
+
+Status:
+- completed
+
+The current state is not a documentation gap; it is code duplication with divergent responsibilities.
+
+Current situation:
+- `server/services/taskStore.ts`: canonical entry point for routes and services
+- `server/services/sqliteTaskAdapter.ts`: default product path backed by `sqliteTaskManager.ts`
+- `server/services/memoryTaskAdapter.ts`: contingency path for environments that cannot use SQLite
+- `TASK_STORE` selects the adapter at startup, and both `memory` and `sqlite` modes have now been exercised through the real runtime import path outside Vitest; the remaining follow-through is operational documentation rather than adapter uncertainty
+
+Decision applied:
+- SQLite is the canonical task store
+- all route and service code imports the facade only
+- the in-memory path is a narrow contingency, not a peer architecture
+
+Definition of done:
+- one task persistence path is canonical
+- routes and services import from that path only
+- contingency behavior is tested and documented clearly enough that it does not become a second de facto architecture
+
+### Phase 3. Stand up a frontend async test harness
+
+Status:
+- completed
+
+The harness now exists. The next gap is operational follow-through rather than setup: manual browser verification and runtime-like checks outside the unit suite.
+
+Recent coverage added:
+- `tests/lyricsRace.test.ts` covers stale subtitle loads and finish-after-load behavior
+- `tests/previewAudioEngine.test.ts` covers preview request replacement, stale outgoing audio events, and stop-before-resolve behavior
+- `tests/timeSyncStudioRequestRace.test.ts` covers review-player request replacement and clear-while-loading behavior
+- `tests/assistantClient.test.ts` covers stale assistant success/failure handling when newer studio requests replace older ones
+
+Before writing race tests, decide and wire up:
+- test runner: vitest (already in package.json) with jsdom or happy-dom environment
+- fetch mocking: `vi.stubGlobal` or `msw`
+- timer control: `vi.useFakeTimers` for deterministic race tests
+- audio/media stubs: lightweight mocks for `Audio`, `requestAnimationFrame`
+
+Priority test targets:
+- stale subtitle responses in `js/lyrics.js` (request-scoped `requestId` guard)
+- `finishPlayback()` when conversion completes before subtitles settle
+- fallback timing behavior and malformed subtitle input
+
+Definition of done:
+- at least one test file runs against a DOM environment with fake timers
+- request-scoped behavior is covered directly, not only by happy-path tests
+- the harness is documented so future async UI features ship with race tests
+
+### Phase 4. Decompose oversized feature modules
+
+Status:
+- completed
+
+This phase has reached its intended stopping point. Both parent files are now orchestration shells with stable helper modules behind them.
+
+**`js/ui/timeSyncStudio.js` (roughly 1,130 lines)**
+
+Stable boundaries extracted:
+- `js/ui/youtubePlayerAdapter.js` owns IFrame loading, lifecycle, and playback loop glue
+- `js/ui/assistantClient.js` owns assistant request/response flow
+- `js/ui/syncExporter.js` owns export serialization and download trigger
+- `js/ui/pointWorkspaceRenderer.js` owns point rail, point list, tooltip, editor, and stage meta rendering
+- `js/ui/pointTimingEngine.js` owns autosync pass logic, point mutation, undo state, loop math, and assistant snapshot shaping
+- `js/ui/reviewPlayerPanel.js` owns review-player panel state, loop-tick decisions, and DOM control rendering
+- `js/ui/studioWorkflowState.js` owns setup/loading/empty/lyrics/export workflow presets and status copy
+- `js/ui/studioEventBindings.js` owns DOM listener binding/cleanup and interaction event sequencing
+
+Remaining in the parent module:
+- adapter coordination around review-player loading and lifecycle
+- editor feedback and top-level status messaging
+- final orchestration across extracted studio helpers
+
+This is the accepted resting state for now. If the studio grows again, split the next stable seam before adding more inline state or rendering logic.
+
+**`js/features.js` (roughly 640 lines)**
+
+Stable boundaries extracted:
+- `js/previewAudioEngine.js` now owns crossfade, playback loop, request cancellation, and audio lifecycle
+- `js/waveformRenderer.js` now owns waveform drawing
+- `js/waveformSignal.js` now owns audio decoding and waveform sample extraction
+- `js/popularBrowser.js` now owns genre loading, genre-tab rendering, carousel rendering, and random-track selection
+- `js/previewPanel.js` now owns preview panel metadata, progress, loading state, and state-change emission
+
+Remaining in the parent module:
+- DOM creation
+- preview request orchestration
+- waveform fallback/signal handoff
+- convert handoff
+
+Also: remove synthetic event dispatches (`form.dispatchEvent(new Event('submit'))`) and replace with an explicit callback or imported function. Cross-module DOM mutations are the exact coupling the architecture warns against.
+
+Definition of done:
+- extracted sub-modules have clear single-purpose APIs
+- the parent module imports from them rather than containing them inline
+- follow-up splits are driven by stable boundaries, not arbitrary line counts
+
+Current result:
+- `js/ui/timeSyncStudio.js` is roughly 1,130 lines after extracting `youtubePlayerAdapter.js`, `assistantClient.js`, `syncExporter.js`, `pointWorkspaceRenderer.js`, `pointTimingEngine.js`, `reviewPlayerPanel.js`, `studioWorkflowState.js`, and `studioEventBindings.js`
+- `js/features.js` is roughly 640 lines after extracting `previewAudioEngine.js`, `waveformRenderer.js`, `waveformSignal.js`, `popularBrowser.js`, and `previewPanel.js`
+- further decomposition is optional until those parent shells start growing again
+
+### Phase 5. Extract preview service from route
+
+Status:
+- completed
+
+This split is now in place:
+
+- `server/services/previewService.ts`: process spawning, caching, cleanup, file lifecycle
+- `server/routes/preview.ts`: request validation, response mapping, streaming
+
+This follows the same boundary used by convert/batch: routes validate and respond, services orchestrate.
+
+Definition of done:
+- route file handles only HTTP concerns
+- service is independently testable without Express
+- cache and cleanup logic live in the service
+
+### Parallel track: Reduce hardcoded visual assumptions
+
+This track completed the high-value token pass for repeated visual assumptions. It improves visual consistency across themes but does not itself solve ownership, integration style, or extensibility.
+
+Status:
+- completed
+
+Focus:
+- semantic CSS surface tokens and canvas-driven runtime color fallbacks in `js/game/*`, `js/guess-track.js`, and `js/waveformRenderer.js`
+
+Actions:
+- convert repeated surfaces, borders, glow states, and status treatments into semantic tokens in `css/base.css`
+- keep palette decisions in `css/themes/*.css`
+- treat new hardcoded presentation values in JavaScript as exceptions that need a documented data-driven reason
+
+Progress so far:
+- `css/components/conversion-animations.css` moved off its remaining direct color literals
+- `css/components/features.css` and `css/components/time-sync-page.css` now consume shared overlay, outline, scrim, and shadow tokens from `css/base.css` for repeated discovery/studio surface treatments
+- `css/components/karaoke-panel.css` now consumes the same shared overlay, outline, warning, and surface-shadow tokens, eliminating its remaining direct color/shadow literals
+- `css/components/guess-track.css` now drives its success/error/hot-state surfaces, Frutiger glass overrides, and option-state chrome through token-backed custom properties instead of raw component literals
+- `css/components/game.css` now uses semantic state borders, canvas shadows, restart-button glow treatment, and Frutiger glass overrides without raw component literals
+- `css/components/header.css`, `css/components/theme-switcher.css`, and the remaining `css/components/features.css` waveform shading now use semantic or header/preview-scoped variables instead of raw component literals
+- `css/components/form.css` now consumes semantic input inset-shadow tokens instead of owning repeated raw shadow literals
+- `js/game/config.js`, `js/guess-track.js`, and `js/waveformRenderer.js` now derive live rendering palettes from computed CSS tokens
+- runtime fallback literals are centralized in `js/ui/runtimeColorFallbacks.js` and are only for CSS-unavailable renderer defaults
+
+Definition of done:
+- themes own palette choices: done
+- components read from semantic tokens for reusable surfaces, borders, shadows, and state treatments: done
+- remaining visual exceptions live only where JavaScript/canvas rendering needs an explicit CSS-unavailable fallback: done
+- new UI work must not introduce another visual island: ongoing review guardrail
+
+### Guardrails for new work
+
+Before implementation:
+- decide module ownership first
+- use ES module `import`/`export` — no `window.*` globals
+- add semantic tokens before component-specific visual exceptions
+- add a controller before adding another branch to `app.js`
+- add a service before letting a route own more orchestration
+- add at least one race or stale-state test for any new async UI flow
+- if the target file exceeds ~500 lines, split it first
+
+During review:
+- reject changes that add new `window.*` globals
+- reject changes that centralize unrelated behavior just because the existing entry point is convenient
+- reject synthetic event dispatches across module boundaries
+- prefer narrow APIs between modules over shared mutable state
+- document the intended boundary whenever introducing a new server-side subsystem
+
+### Recommended sequence
+
+1. manually verify visual states across themes and mobile/desktop layouts before release
+2. keep runtime fallback defaults centralized in `js/ui/runtimeColorFallbacks.js` when renderers change
+3. keep migrating remaining legacy globals opportunistically when touched
+4. if batch durability becomes a product requirement, add a persistent `batchStore` adapter instead of coupling it to `batchService`
+
 ## Practical Checklist
 
 - define module ownership first
+- use ES module `import`/`export` — no new `window.*` globals
+- keep files under ~500 lines; split by stable boundaries if exceeded
 - keep visual tokens in `css/base.css` or `css/themes/*.css`
 - keep component styles in component CSS files
 - avoid adding presentation logic to `app.js`
+- avoid cross-module DOM mutations and synthetic event dispatches
 - check reduced-motion behavior for decorative motion
 - verify all visible states in all themes
+- run the browser smoke pass in `docs/RUNTIME_VERIFICATION.md` for runtime-sensitive changes
+- add a race-condition test for any new async UI flow
 - run `npm run build`
 - run `npm test`
 - record transient environment blockers only in `docs/TESTING_STATUS.md`
 
 ## Near-Term Next Steps
 
-Best next areas for improvement:
-- keep reducing hardcoded visual assumptions in older components
-- strengthen documentation around backend service boundaries if server-side work grows
-- add more explicit test coverage around lyric timing and request races
-- keep new features additive to the token/controller architecture instead of adding more central orchestration logic
+Priority order now that the major structural phases are in place:
 
-If a future feature feels hard to place cleanly, extend the shared token or controller layer first instead of shipping another exception.
+1. **Manually verify visual states** — check all supported themes, mobile/desktop layouts, reduced motion, and active/inactive panel states
+2. **Run runtime smoke verification** — use `docs/RUNTIME_VERIFICATION.md` after frontend, preview, batch, service-worker, or studio changes
+3. **Keep runtime fallbacks centralized** — the game, guess-track bursts, and waveform renderer read semantic tokens at runtime; fallback literals should stay in `js/ui/runtimeColorFallbacks.js`
+4. **Keep module boundaries additive** — when `timeSyncStudio.js`, `features.js`, or `app.js` grow again, split by stable seam before reintroducing central orchestration or new globals
+
+Recent note:
+- runtime fallback literals for game/preview canvases are now centralized in `js/ui/runtimeColorFallbacks.js` instead of being duplicated across the renderers
+
+Use the Architecture Adjustment Plan above as the default path for these changes.
+
+If a future feature feels hard to place cleanly, the first question is module ownership and integration style — not token availability. Extend the shared controller or service layer first instead of shipping another exception.

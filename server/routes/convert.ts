@@ -5,7 +5,7 @@
 
 import { Router, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
-import { findExistingTask, createTask } from '../services/taskManager.js';
+import { findExistingTask, createTask } from '../services/taskStore.js';
 import { convertVideo } from '../services/ytdlp.js';
 
 const router = Router();
@@ -22,9 +22,9 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Idempotency check
-    const existingTaskId = findExistingTask(videoId, format);
-    if (existingTaskId) {
-        return res.json({ taskId: existingTaskId });
+    const existingTask = findExistingTask(videoId, format);
+    if (existingTask) {
+        return res.json({ taskId: existingTask.taskId });
     }
 
     const taskId = randomUUID();
@@ -32,14 +32,14 @@ router.post('/', async (req: Request, res: Response) => {
     const safeTitle = title || 'video';
 
     // Initialize task
-    createTask(taskId, {
+    createTask({
         taskId,
-        state: 'processing',
-        progress: 0,
-        status: 'Starting...',
         videoId,
         format,
         title: safeTitle,
+        state: 'processing',
+        progress: 0,
+        status: 'Starting...',
     });
 
     // Start conversion in background

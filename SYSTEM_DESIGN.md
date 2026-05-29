@@ -16,13 +16,13 @@
 ## 🎯 Overview
 
 **YT Converter** is a full-stack web application that converts YouTube videos to MP3/MP4 format. It features:
-- A modern, animated frontend with skeleton loaders and orchestrated animations
+- A modern, themable frontend with skeleton loaders and orchestrated animations
 - A Node.js/Express backend that wraps `yt-dlp` for video processing
 - **SQLite-based task persistence** that survives server restarts
 - **Rate limiting** to prevent abuse
 - **Optional Redis job queue** for horizontal scaling
 - Task-based async processing with progress polling
-- A built-in Snake game to entertain users during conversion
+- Popular music discovery, 30-second previews, signal-based waveform rendering, karaoke lyrics, batch conversion, and mini-games
 
 ### Tech Stack
 
@@ -35,6 +35,22 @@
 | Rate Limiting | express-rate-limit |
 | Video Processing | yt-dlp + ffmpeg |
 | Deployment | Docker, Render, Netlify |
+
+### Architecture Style
+
+The project is a modular monolith rather than a framework-heavy SPA or microservice system.
+
+Backend pattern:
+- Express routes stay thin and handle HTTP validation/response mapping.
+- Service modules own orchestration, subprocess execution, persistence, caching, and cleanup.
+- Store facades such as `taskStore` and `batchStore` hide storage adapters from routes and higher-level services.
+
+Frontend pattern:
+- Browser code is vanilla ES modules.
+- Feature controllers coordinate local DOM state and async workflows.
+- Pure renderers own DOM/canvas output.
+- Lifecycle-heavy behavior uses narrow objects/classes where useful, such as `PreviewAudioEngine` for audio playback and crossfade state.
+- Cross-feature integration uses explicit callbacks or imports, not `window.*` globals or synthetic DOM events.
 
 ### Deployment Considerations
 - **Dockerfile Updates**: Whenever a new feature is added, especially one involving new system dependencies or build steps, ONLY the Dockerfile must be updated to reflect these changes.
@@ -123,16 +139,37 @@ youtube-to-mp3/
 │   ├── animations.css         # Keyframes, transitions
 │   ├── components/
 │   │   ├── form.css           # Input, buttons
-│   │   └── results.css        # Preview, download, skeleton
+│   │   ├── features.css       # Discovery and preview panel
+│   │   ├── batch.css          # Batch queue/results
+│   │   ├── karaoke-panel.css  # Lyrics sidecar
+│   │   └── results.css        # Conversion result/download UI
 │   ├── layout/
 │   │   └── main.css           # Container, grid
+│   ├── themes/
+│   │   ├── space.css
+│   │   ├── green.css
+│   │   ├── frutiger-aero.css
+│   │   └── sunshine.css
 │   └── utils/
 │       └── helpers.css        # Utility classes
 │
 ├── 📁 js/                     # Frontend modules
-│   ├── snake-game.js          # Full snake game (38KB!)
-│   ├── features.js            # Popular videos & audio preview module
-│   └── game/                  # Snake game components
+│   ├── features.js            # Popular videos UI orchestration
+│   ├── popularBrowser.js      # Popular genre loading + carousel rendering
+│   ├── previewAudioEngine.js  # Preview audio lifecycle + crossfade
+│   ├── previewPanel.js        # Preview panel UI state + progress rendering
+│   ├── waveformRenderer.js    # Canvas waveform drawing from theme tokens
+│   ├── waveformSignal.js      # Web Audio decode + waveform sample extraction
+│   ├── game/                  # Snake game components
+│   ├── ui/runtimeColorFallbacks.js  # Canvas fallback colors when CSS is unavailable
+│   ├── ui/assistantClient.js  # Studio assistant transport + stale-response guards
+│   ├── ui/pointWorkspaceRenderer.js  # Studio point rail/list/editor rendering
+│   ├── ui/pointTimingEngine.js  # Studio autosync, point mutation, undo, snapshot math
+│   ├── ui/reviewPlayerPanel.js  # Studio review player panel state + rendering
+│   ├── ui/studioEventBindings.js  # Studio DOM listener binding + cleanup
+│   ├── ui/studioWorkflowState.js  # Studio workflow presets and status copy
+│   ├── ui/syncExporter.js     # Studio JSON export flow
+│   └── ui/youtubePlayerAdapter.js  # Studio YouTube IFrame player wrapper
 │
 ├── 📁 server/                 # Backend (Express)
 │   ├── index.ts               # Server entry point + graceful shutdown
@@ -148,11 +185,16 @@ youtube-to-mp3/
 │   │   ├── download.ts        # GET /api/download/:taskId/:filename
 │   │   ├── batchConvert.ts    # ✨ POST /api/batch-convert (batch downloads)
 │   │   ├── batchProgress.ts   # ✨ GET /api/batch-progress/:batchId
+│   │   └── preview.ts         # POST/GET preview endpoints
 │   ├── services/
 │   │   ├── ytdlp.ts           # yt-dlp wrapper (core logic)
-│   │   ├── taskManager.ts     # Legacy in-memory tasks
-│   │   ├── sqliteTaskManager.ts  # ✨ SQLite persistence
+│   │   ├── taskStore.ts       # Canonical task persistence facade
+│   │   ├── sqliteTaskManager.ts  # SQLite persistence primitives
+│   │   ├── sqliteTaskAdapter.ts  # SQLite task-store adapter
+│   │   ├── memoryTaskAdapter.ts  # In-memory contingency adapter
+│   │   ├── previewService.ts  # Audio preview orchestration
 │   │   ├── jobQueue.ts        # ✨ Bull + Redis queue
+│   │   ├── batchStore.ts      # Runtime batch-store facade
 │   │   └── batchService.ts    # ✨ Batch download orchestration
 │   └── utils/
 │       ├── formatDuration.ts  # Time formatting
@@ -164,12 +206,17 @@ youtube-to-mp3/
 │   ├── rateLimiter.test.ts    # Rate limiter tests (6 tests)
 │   ├── jobQueue.test.ts       # Job queue tests (10 tests)
 │   ├── sqliteTaskManager.test.ts  # SQLite tests
-│   └── batchService.test.ts   # ✨ Batch service tests (18 tests)
+│   ├── taskStore.test.ts      # Task-store facade tests
+│   ├── batchStore.test.ts     # Batch-store facade tests
+│   ├── batchService.test.ts   # ✨ Batch service tests (18 tests)
+│   ├── previewService.test.ts # Preview service/ffmpeg behavior
+│   └── waveformSignal.test.ts # Preview waveform sample extraction
 │
 ├── 📁 downloads/              # Temp file storage (gitignored)
 ├── 📄 tasks.db                # SQLite database (gitignored)
 ├── 📄 Dockerfile              # Container build
 ├── 📄 package.json            # Dependencies
+├── 📄 service-worker-assets.js # Generated PWA precache manifest
 ├── 📄 SYSTEM_DESIGN.md        # This document
 └── 📄 README.md               # User documentation
 ```
@@ -188,9 +235,19 @@ youtube-to-mp3/
 | **Skeleton Loader** | `results.css` | Shimmer placeholders during loading |
 | **Progress Bar** | `app.js`, `results.css` | Real-time conversion progress |
 | **Download Section** | `app.js`, `results.css` | Orchestrated success animation |
-| **Snake Game** | `snake-game.js` | Entertainment during wait |
+| **Snake Game** | `js/game/index.js`, `js/game/config.js` | Entertainment during wait |
 | **Popular Videos** | `features.js`, `features.css` | Curated music suggestions by genre |
-| **Audio Preview** | `features.js`, `features.css` | 30-second audio preview with waveform |
+| **Popular Browser UI** | `features.js`, `popularBrowser.js`, `features.css` | Genre loading, tab rendering, carousel cards, and random track selection |
+| **Audio Preview** | `features.js`, `previewAudioEngine.js`, `features.css` | 30-second audio preview with waveform and crossfade |
+| **Preview Panel UI** | `features.js`, `previewPanel.js`, `features.css` | Preview metadata, progress, loading state, and preview-state event emission |
+| **Preview Waveform** | `waveformSignal.js`, `waveformRenderer.js`, `features.css` | Decode preview audio into normalized energy samples and draw themed canvas bars with seeded fallback |
+| **Sync Studio Assistant** | `js/ui/timeSyncStudio.js`, `js/ui/assistantClient.js` | Assistant request orchestration, response rendering, and action execution |
+| **Sync Studio Point UI** | `js/ui/timeSyncStudio.js`, `js/ui/pointWorkspaceRenderer.js` | Point rail, point list, tooltip, and editor rendering |
+| **Sync Studio Timing Logic** | `js/ui/timeSyncStudio.js`, `js/ui/pointTimingEngine.js` | Autosync pass, point mutations, undo, loop math, and assistant snapshot shaping |
+| **Sync Studio Review Player UI** | `js/ui/timeSyncStudio.js`, `js/ui/reviewPlayerPanel.js`, `js/ui/youtubePlayerAdapter.js` | Review-player panel state, loop decisions, and YouTube IFrame control wiring |
+| **Sync Studio Event Binding** | `js/ui/timeSyncStudio.js`, `js/ui/studioEventBindings.js` | DOM listener registration, cleanup, and interaction sequencing |
+| **Sync Studio Workflow State** | `js/ui/timeSyncStudio.js`, `js/ui/studioWorkflowState.js` | Setup/loading/empty/lyrics/export workflow presets and studio status copy |
+| **Sync Studio Export** | `js/ui/timeSyncStudio.js`, `js/ui/syncExporter.js` | Sync JSON payload creation and download orchestration |
 | **Batch Downloads** | `batch.js`, `batch.css` | Multi-video queue with animated UI |
 
 ### Backend Components
@@ -204,11 +261,16 @@ youtube-to-mp3/
 | **Convert Route** | `server/routes/convert.ts` | Start async conversion task |
 | **Progress Route** | `server/routes/progress.ts` | Poll task status |
 | **Download Route** | `server/routes/download.ts` | Serve converted file |
+| **Preview Route** | `server/routes/preview.ts` | Validate preview requests and stream generated previews |
 | **Batch Convert Route** | `server/routes/batchConvert.ts` | Create batch with multiple videos |
 | **Batch Progress Route** | `server/routes/batchProgress.ts` | Poll batch status |
 | **yt-dlp Service** | `server/services/ytdlp.ts` | Wrapper with retry logic |
-| **SQLite Task Manager** | `server/services/sqliteTaskManager.ts` | Persistent task storage |
+| **Task Store** | `server/services/taskStore.ts` | Canonical task facade with adapter selection |
+| **SQLite Task Adapter** | `server/services/sqliteTaskAdapter.ts` | Default persistent task backend |
+| **Memory Task Adapter** | `server/services/memoryTaskAdapter.ts` | Contingency in-memory task backend |
+| **Preview Service** | `server/services/previewService.ts` | Generate, cache, and clean audio previews |
 | **Job Queue** | `server/services/jobQueue.ts` | Optional Redis-backed queue |
+| **Batch Store** | `server/services/batchStore.ts` | Runtime batch-state facade; currently memory-backed |
 | **Batch Service** | `server/services/batchService.ts` | Batch download orchestration |
 
 ---
@@ -253,11 +315,13 @@ Returns:
 
 ## 💾 Persistence & Scalability
 
-### SQLite Task Persistence
+### Task Persistence
 
-Tasks are now stored in an SQLite database (`tasks.db`) that survives server restarts.
+Tasks route through `server/services/taskStore.ts`, which selects the backing adapter at startup.
 
 **Features:**
+- `TASK_STORE=sqlite` is the default product path
+- `TASK_STORE=memory` is available as a contingency path
 - WAL mode for better concurrency
 - Prepared statements for performance
 - Indexed on `video_id`, `format`, `state`
@@ -272,6 +336,8 @@ CREATE TABLE tasks (
     format TEXT NOT NULL,
     state TEXT DEFAULT 'processing',
     progress INTEGER DEFAULT 0,
+    title TEXT,
+    status TEXT,
     filename TEXT,
     download_url TEXT,
     error TEXT,
@@ -290,6 +356,16 @@ When Redis is available and `USE_QUEUE=true`:
 
 **Fallback:** When Redis is unavailable, falls back to direct processing (current behavior).
 
+### Batch State
+
+Batch jobs route through `server/services/batchStore.ts`.
+
+Current behavior:
+- `batchStoreType=memory`
+- batch state is runtime-only and does not survive server restarts
+- individual conversion tasks remain durable through `taskStore`
+- if durable batch history becomes required, add a persistent batch-store adapter rather than moving state back into `batchService.ts`
+
 ---
 
 ## 🧪 Testing
@@ -299,7 +375,7 @@ When Redis is available and `USE_QUEUE=true`:
 Run tests with:
 
 ```bash
-npm run test:node
+npm test
 ```
 
 | Test File | Tests | Coverage |
@@ -308,8 +384,10 @@ npm run test:node
 | `rateLimiter.test.ts` | 6 | Middleware exports, behavior |
 | `jobQueue.test.ts` | 10 | Queue API, disabled state, Redis fallback |
 | `sqliteTaskManager.test.ts` | 10+ | CRUD, idempotency, cleanup |
+| `previewService.test.ts` | 10 | Preview generation, retry, FFmpeg error shaping |
+| `waveformSignal.test.ts` | 2 | Audio-buffer energy sample extraction |
 
-### Total: 45+ tests
+### Total: 340 tests across 30 test files
 
 ---
 
@@ -347,6 +425,34 @@ npm run test:node
 12. BACKEND → res.download() → File sent to browser
 ```
 
+### Discovery Preview Flow
+
+```text
+1. USER → Selects a popular item or batch queue preview
+         ↓
+2. FRONTEND → features.js activates preview panel and starts request-scoped load
+         ↓
+3. FRONTEND → POST /api/preview { videoId }
+         ↓
+4. BACKEND ROUTE → Validate videoId and map service errors to user-safe responses
+         ↓
+5. PREVIEW SERVICE → yt-dlp/ffmpeg generate or reuse a 30s MP3 preview
+         ↓
+6. FRONTEND → previewAudioEngine loads Audio element, resets to 0, and manages play/crossfade/progress
+         ↓
+7. FRONTEND → waveformSignal fetches the generated preview MP3, decodes it with Web Audio, and creates energy samples
+         ↓
+8. FRONTEND → waveformRenderer redraws the canvas from real signal samples; seeded bars remain as fallback
+         ↓
+9. FRONTEND → previewPanel renders metadata, loading/error state, progress, and playhead
+```
+
+Important reliability choices:
+- Every preview request has a request id and abort controller.
+- Stale preview audio and stale waveform decode results are ignored.
+- FFmpeg/yt-dlp errors are logged technically server-side but mapped to user-safe preview messages.
+- New frontend modules must be added to `service-worker-assets.js` by running `node scripts/sync-service-worker-assets.mjs`.
+
 ---
 
 ## 🚀 Future Improvements
@@ -373,7 +479,7 @@ npm run test:node
 | Feature | Description |
 | :--- | :--- |
 | **Popular Videos** | Curated music suggestions by genre with carousel UI |
-| **Audio Preview** | 30s audio preview with waveform, robust error handling, and graceful state management |
+| **Audio Preview** | 30s audio preview with crossfade, request-scoped playback, signal-derived waveform, robust error handling, and graceful state management |
 | **Batch Downloads** | Convert up to 10 videos at once with aggregated progress tracking |
 
 ### Low Priority / Nice-to-Have
@@ -420,4 +526,4 @@ The modular design makes it easy to maintain and extend. Ready for production de
 
 ---
 
-*Updated: 2026-02-06*
+*Updated: 2026-05-29*

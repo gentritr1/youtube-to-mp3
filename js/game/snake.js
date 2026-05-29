@@ -138,13 +138,13 @@ export class Snake {
                 ctx.shadowBlur = isGhost ? 20 : (this.isSecondary ? 18 : 15);
 
                 if (isGhost) {
-                    ctx.shadowColor = 'rgba(167, 139, 250, 0.8)';
+                    ctx.shadowColor = COLORS.snakeGhostHead;
                     ctx.fillStyle = COLORS.snakeGhostHead;
                 } else if (this.isSecondary) {
-                    ctx.shadowColor = 'rgba(251, 191, 36, 0.8)';
+                    ctx.shadowColor = COLORS.snakeSplitHead;
                     ctx.fillStyle = COLORS.snakeSplitHead;
                 } else {
-                    ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+                    ctx.shadowColor = COLORS.snakeHead;
                     ctx.fillStyle = COLORS.snakeHead;
                 }
 
@@ -152,7 +152,7 @@ export class Snake {
 
                 // Active indicator ring
                 if (this.isActive) {
-                    ctx.strokeStyle = this.isSecondary ? '#fbbf24' : '#10b981';
+                    ctx.strokeStyle = this.isSecondary ? COLORS.snakeSecondaryRing : COLORS.snakeActiveRing;
                     ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.arc(drawX + size / 2, drawY + size / 2, size / 2 + 3, 0, Math.PI * 2);
@@ -195,7 +195,7 @@ export class Snake {
 
     drawEyes(ctx, drawX, drawY, ts, isGhost) {
         ctx.globalAlpha = 1;
-        ctx.fillStyle = isGhost ? '#1a1a2e' : (this.isSecondary ? '#1a1a2e' : '#0a0a0f');
+        ctx.fillStyle = isGhost || this.isSecondary ? COLORS.snakeGhostEye : COLORS.snakeEye;
 
         let eye1X = drawX + ts / 2 - 3;
         let eye1Y = drawY + ts / 2 - 2;

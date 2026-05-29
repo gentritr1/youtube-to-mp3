@@ -1,7 +1,39 @@
 /**
  * Guess the Track - Mini Game Logic
  */
-class GuessTrackGame {
+
+import { RUNTIME_THEME_TOKEN_DEFAULTS } from './ui/runtimeColorFallbacks.js';
+
+let _getRandomTracks = null;
+
+const readThemeValue = (styles, name, fallback) => styles.getPropertyValue(name).trim() || fallback;
+
+const getBurstConfigs = (root = document.documentElement) => {
+    const styles = getComputedStyle(root);
+    const emerald = readThemeValue(styles, '--emerald', RUNTIME_THEME_TOKEN_DEFAULTS.emerald);
+    const amber = readThemeValue(styles, '--amber', RUNTIME_THEME_TOKEN_DEFAULTS.amber);
+    const sky = readThemeValue(styles, '--sky', RUNTIME_THEME_TOKEN_DEFAULTS.sky);
+    const rose = readThemeValue(styles, '--rose', RUNTIME_THEME_TOKEN_DEFAULTS.rose);
+    const roseSoft = readThemeValue(styles, '--rose-soft', RUNTIME_THEME_TOKEN_DEFAULTS.roseSoft);
+    const heroHeadlight = readThemeValue(styles, '--hero-headlight', RUNTIME_THEME_TOKEN_DEFAULTS.heroHeadlight);
+    const foreground = readThemeValue(styles, '--foreground', RUNTIME_THEME_TOKEN_DEFAULTS.foreground);
+
+    return {
+        success: { count: 14, symbols: ['✦', '•', '♪'], colors: [emerald, amber, sky] },
+        streak: { count: 18, symbols: ['🔥', '✦', '♫'], colors: [rose, amber, heroHeadlight] },
+        miss: { count: 10, symbols: ['✕', '•'], colors: [rose, roseSoft, foreground] }
+    };
+};
+
+/**
+ * Inject the track provider callback. Called by app.js during init
+ * so this module never imports the discovery controller directly.
+ */
+export function setTrackProvider(fn) {
+    _getRandomTracks = fn;
+}
+
+export class GuessTrackGame {
     constructor(elements) {
         this.elements = elements;
         
@@ -111,12 +143,15 @@ class GuessTrackGame {
         this.elements.timerBarContainer.classList.add('hidden');
         this.elements.timerBar.style.width = '100%';
 
-        if (typeof FeaturesModule === 'undefined' || !FeaturesModule.getRandomTracks) {
+        if (typeof _getRandomTracks !== 'function') {
             this.setStatus('danger', 'Feature unavailable', 'Track data is not ready yet.');
             this.isLoading = false;
+            this.isActive = false;
+            this.elements.startBtn.classList.remove('hidden');
+            this.elements.startBtn.textContent = 'Start Game';
             return;
         }
-        const tracks = FeaturesModule.getRandomTracks(4);
+        const tracks = _getRandomTracks(4);
         if (tracks.length === 0) {
              this.setStatus('loading', 'Waiting for music feed', 'No tracks yet. Retrying in a moment.');
              this.scheduleRetry(1000);
@@ -430,11 +465,7 @@ class GuessTrackGame {
 
         this.stopFeedback();
 
-        const configs = {
-            success: { count: 14, symbols: ['✦', '•', '♪'], colors: ['#34d399', '#fbbf24', '#7dd3fc'] },
-            streak: { count: 18, symbols: ['🔥', '✦', '♫'], colors: ['#fb7185', '#f59e0b', '#facc15'] },
-            miss: { count: 10, symbols: ['✕', '•'], colors: ['#fb7185', '#fda4af', '#fecdd3'] }
-        };
+        const configs = getBurstConfigs();
 
         const config = configs[type] || configs.success;
         const fragment = document.createDocumentFragment();

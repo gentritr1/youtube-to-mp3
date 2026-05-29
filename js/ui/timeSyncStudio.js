@@ -1,3 +1,35 @@
+import { AssistantClient, renderAssistantFallback, renderAssistantResponse } from './assistantClient.js';
+import {
+    applyNeedsReviewFix,
+    buildPointSnapshot,
+    createAutosyncState,
+    createHistoryState,
+    findPointForTime,
+    getLoopEndTime,
+    nudgePointTiming,
+    runAutosyncPass,
+    undoPointChange
+} from './pointTimingEngine.js';
+import {
+    buildReviewPlayerViewModel,
+    getReviewPlayerDurationMs,
+    getReviewPlayerPlayheadMs,
+    normalizeReviewMediaSource,
+    renderReviewPlayerPanel,
+    stepReviewPlaybackLoop
+} from './reviewPlayerPanel.js';
+import {
+    getEmptyStudioState,
+    getFinishedPlaybackState,
+    getIdleStudioState,
+    getLoadingStudioState,
+    getLyricsStudioState
+} from './studioWorkflowState.js';
+import { bindStudioEvents } from './studioEventBindings.js';
+import { exportSyncProject } from './syncExporter.js';
+import { PointWorkspaceRenderer } from './pointWorkspaceRenderer.js';
+import { YouTubePlayerAdapter } from './youtubePlayerAdapter.js';
+
 const ACTION_TYPES = new Set(['OPEN_PANEL', 'SELECT_POINT', 'NUDGE_POINT', 'START_AUTOSYNC', 'APPLY_FIX', 'EXPORT']);
 const POINT_WINDOW_SIZE = 9;
 
@@ -76,51 +108,6 @@ const getTimePartsError = (minutesValue, secondsValue, millisecondsValue) => {
     }
 
     return '';
-};
-
-let youTubeApiPromise = null;
-const resetYouTubeApiPromise = (error, reject) => {
-    youTubeApiPromise = null;
-    reject(error);
-};
-
-const loadYouTubeApi = () => {
-    if (typeof window === 'undefined') {
-        return Promise.reject(new Error('YouTube API is not available in this environment.'));
-    }
-
-    if (window.YT?.Player) {
-        return Promise.resolve(window.YT);
-    }
-
-    if (youTubeApiPromise) {
-        return youTubeApiPromise;
-    }
-
-    youTubeApiPromise = new Promise((resolve, reject) => {
-        const existing = document.querySelector('script[data-youtube-iframe-api]');
-        const previousReady = window.onYouTubeIframeAPIReady;
-
-        window.onYouTubeIframeAPIReady = () => {
-            previousReady?.();
-            if (window.YT?.Player) {
-                resolve(window.YT);
-            } else {
-                resetYouTubeApiPromise(new Error('YouTube API loaded without player support.'), reject);
-            }
-        };
-
-        if (!existing) {
-            const script = document.createElement('script');
-            script.src = 'https://www.youtube.com/iframe_api';
-            script.async = true;
-            script.dataset.youtubeIframeApi = 'true';
-            script.onerror = () => resetYouTubeApiPromise(new Error('Could not load YouTube player API.'), reject);
-            document.head.appendChild(script);
-        }
-    });
-
-    return youTubeApiPromise;
 };
 
 export class TimeSyncStudio {
@@ -207,51 +194,84 @@ export class TimeSyncStudio {
         this.points = [];
         this.selectedPointId = null;
         this.nowPlayingPointId = null;
-        this.autosync = {
-            status: 'not_run',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        };
-        this.history = {
-            undoStack: [],
-            redoStack: []
-        };
+        this.autosync = createAutosyncState();
+        this.history = createHistoryState();
         this.errors = [];
         this.lastInputMode = 'mouse';
         this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
         this.motionMediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? null;
         this.sessionId = window.crypto?.randomUUID?.() ?? `sync_${Date.now()}`;
         this.currentAssistantResponse = null;
-        this.pendingAssistantRequestId = 0;
+        this.assistantClient = new AssistantClient({
+            sessionId: this.sessionId,
+            onRender: (response) => this.renderAssistant(response),
+            onFallback: (text) => this.renderAssistantFallback(text),
+            onResponseChange: (response) => {
+                this.currentAssistantResponse = response;
+            }
+        });
         this.autosyncTimerId = null;
         this.estimateGapMs = 2200;
         this.mediaSource = null;
         this.reviewLoopEnabled = false;
-        this.reviewPlayer = null;
-        this.reviewPlayerReady = false;
         this.reviewPlaybackTimerId = null;
         this.reviewPlayerRequestId = 0;
         this.reviewPlayerMountId = `yt-sync-player-${window.crypto?.randomUUID?.() ?? Date.now()}`;
+        this.reviewPlayerAdapter = new YouTubePlayerAdapter({
+            frameElement: this.reviewPlayerFrame,
+            mountId: this.reviewPlayerMountId,
+            onReady: () => {
+                this.renderReviewPlayer();
+            },
+            onStateChange: (event, YT) => {
+                const state = YT?.PlayerState ?? {};
+                if (event.data === state.PLAYING) {
+                    this.startReviewPlaybackLoop();
+                } else if (event.data === state.PAUSED || event.data === state.ENDED) {
+                    this.stopReviewPlaybackLoop();
+                }
+                this.renderReviewPlayer();
+            },
+            onError: (error) => {
+                console.error('ensureReviewPlayer failed', error);
+                this.renderReviewPlayer();
+            }
+        });
         this.editorFeedback = '';
         this.editorFeedbackTone = 'muted';
-        this._tabHandlers = [];
-        this._launchHandlers = [];
-        this._boundPointClick = null;
-        this._boundPointHover = null;
-        this._boundPointLeave = null;
-        this._boundPointListClick = null;
-        this._boundKeydown = null;
-        this._boundAssistantClick = null;
-        this._boundReducedMotion = null;
-        this._boundDocumentPointer = null;
-        this._boundApplyPointTime = null;
-        this._boundNudgeBack = null;
-        this._boundNudgeForward = null;
-        this._boundTimeInputKeydown = null;
-        this._boundReviewPlayToggle = null;
-        this._boundReviewJump = null;
-        this._boundReviewLoop = null;
+        this.disposeEventBindings = null;
+        this.pointWorkspaceRenderer = new PointWorkspaceRenderer({
+            stageBadge: this.stageBadge,
+            stageLabel: this.stageLabel,
+            progressLabel: this.progressLabel,
+            progressFill: this.progressFill,
+            countPending: this.countPending,
+            countSynced: this.countSynced,
+            countReview: this.countReview,
+            pointRail: this.pointRail,
+            pointRailWindow: this.pointRailWindow,
+            pointTooltip: this.pointTooltip,
+            pointList: this.pointList,
+            selectedPointSummary: this.selectedPointSummary,
+            selectedPointMinuteInput: this.selectedPointMinuteInput,
+            selectedPointSecondInput: this.selectedPointSecondInput,
+            selectedPointMillisecondInput: this.selectedPointMillisecondInput,
+            applyPointTimeButton: this.applyPointTimeButton,
+            nudgeBackButton: this.nudgeBackButton,
+            nudgeForwardButton: this.nudgeForwardButton,
+            formatTime,
+            escapeHtml,
+            splitTimeParts,
+            clamp
+        });
+    }
+
+    get reviewPlayer() {
+        return this.reviewPlayerAdapter.getPlayer();
+    }
+
+    get reviewPlayerReady() {
+        return this.reviewPlayerAdapter.isReady();
     }
 
     init() {
@@ -263,114 +283,43 @@ export class TimeSyncStudio {
     }
 
     bindEvents() {
+        this.clearAutosyncTimer();
+        this.stopReviewPlaybackLoop();
+        this.reviewPlayerRequestId += 1;
         this.destroy();
-
-        this.tabs.forEach((tab) => {
-            const handler = () => {
-                this.setMode(tab.dataset.panelMode || 'studio');
-            };
-
-            tab.addEventListener('click', handler);
-            this._tabHandlers.push({ element: tab, handler });
-        });
-
-        this.launchButtons.forEach((button) => {
-            const handler = () => {
-                const gameId = button.dataset.gameLaunch;
-                if (!gameId) return;
-
-                this.setMode('arcade');
-                this.onLaunchGame(gameId);
-            };
-
-            button.addEventListener('click', handler);
-            this._launchHandlers.push({ element: button, handler });
-        });
-
-        if (this.pointRailWindow) {
-            this._boundPointClick = (event) => {
-                const button = event.target.closest('button.point-hit');
-                if (!button) return;
-
-                this.lastInputMode = 'mouse';
-                this.selectPoint(button.dataset.pointId, { focus: true });
-                this.jumpToSelectedPoint();
-                this.requestAssistantUpdate();
-            };
-            this.pointRailWindow.addEventListener('click', this._boundPointClick);
-
-            this._boundPointHover = (event) => {
-                const button = event.target.closest('button.point-hit');
-                if (!button) return;
-
-                this.showTooltip(button.dataset.pointId, button);
-            };
-            this.pointRailWindow.addEventListener('pointerover', this._boundPointHover);
-
-            this._boundPointLeave = (event) => {
-                const relatedTarget = event.relatedTarget;
-                if (relatedTarget && this.pointRailWindow.contains(relatedTarget)) {
-                    return;
-                }
-
-                this.hideTooltip();
-            };
-            this.pointRailWindow.addEventListener('pointerout', this._boundPointLeave);
-        }
-
-        if (this.pointList) {
-            this._boundPointListClick = (event) => {
-                const card = event.target.closest('[data-point-card]');
-                if (!card) return;
-
-                this.selectPoint(card.dataset.pointCard, { focus: false });
-                this.jumpToSelectedPoint();
-                this.requestAssistantUpdate();
-            };
-            this.pointList.addEventListener('click', this._boundPointListClick);
-        }
-
-        if (this.pointRail) {
-            this._boundKeydown = (event) => {
-                this.lastInputMode = 'keyboard';
-
-                if (event.key === 'ArrowLeft') {
-                    event.preventDefault();
-                    this.moveSelection(-1);
-                    this.requestAssistantUpdate();
-                    return;
-                }
-
-                if (event.key === 'ArrowRight') {
-                    event.preventDefault();
-                    this.moveSelection(1);
-                    this.requestAssistantUpdate();
-                    return;
-                }
-
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    this.jumpToSelectedPoint();
-                    return;
-                }
-
-                if (event.key === '[') {
-                    event.preventDefault();
-                    this.nudgeSelectedPoint(event.shiftKey ? -200 : -50);
-                    return;
-                }
-
-                if (event.key === ']') {
-                    event.preventDefault();
-                    this.nudgeSelectedPoint(event.shiftKey ? 200 : 50);
-                    return;
-                }
-            };
-            this.pointRail.addEventListener('keydown', this._boundKeydown);
-        }
-
-        if (this.assistantAction) {
-            this._boundAssistantClick = async () => {
+        this.disposeEventBindings = bindStudioEvents({
+            documentRef: document,
+            tabs: this.tabs,
+            launchButtons: this.launchButtons,
+            pointRailWindow: this.pointRailWindow,
+            pointList: this.pointList,
+            pointRail: this.pointRail,
+            assistantAction: this.assistantAction,
+            applyPointTimeButton: this.applyPointTimeButton,
+            nudgeBackButton: this.nudgeBackButton,
+            nudgeForwardButton: this.nudgeForwardButton,
+            timeInputs: [
+                this.selectedPointMinuteInput,
+                this.selectedPointSecondInput,
+                this.selectedPointMillisecondInput
+            ],
+            reviewPlayButton: this.reviewPlayButton,
+            reviewJumpButton: this.reviewJumpButton,
+            reviewLoopButton: this.reviewLoopButton,
+            motionMediaQuery: this.motionMediaQuery,
+            onSetMode: (mode) => this.setMode(mode),
+            onLaunchGame: (gameId) => this.onLaunchGame(gameId),
+            onSelectPoint: (pointId, options) => this.selectPoint(pointId, options),
+            onJumpToSelectedPoint: () => this.jumpToSelectedPoint(),
+            onRequestAssistantUpdate: () => this.requestAssistantUpdate(),
+            onShowTooltip: (pointId, anchor) => this.showTooltip(pointId, anchor),
+            onHideTooltip: () => this.hideTooltip(),
+            onSetLastInputMode: (mode) => {
+                this.lastInputMode = mode;
+            },
+            onMoveSelection: (direction) => this.moveSelection(direction),
+            onNudgeSelectedPoint: (deltaMs) => this.nudgeSelectedPoint(deltaMs),
+            onAssistantActionClick: async () => {
                 if (!this.currentAssistantResponse?.uiAction) {
                     return;
                 }
@@ -387,12 +336,8 @@ export class TimeSyncStudio {
                 }
 
                 await this.executeAction(this.currentAssistantResponse.uiAction);
-            };
-            this.assistantAction.addEventListener('click', this._boundAssistantClick);
-        }
-
-        if (this.applyPointTimeButton) {
-            this._boundApplyPointTime = () => {
+            },
+            onApplyPointTime: () => {
                 const validationError = getTimePartsError(
                     this.selectedPointMinuteInput?.value,
                     this.selectedPointSecondInput?.value,
@@ -414,134 +359,33 @@ export class TimeSyncStudio {
                 }
 
                 this.setSelectedPointTime(timeMs);
-            };
-            this.applyPointTimeButton.addEventListener('click', this._boundApplyPointTime);
-        }
-
-        if (this.nudgeBackButton) {
-            this._boundNudgeBack = () => this.nudgeSelectedPoint(-100);
-            this.nudgeBackButton.addEventListener('click', this._boundNudgeBack);
-        }
-
-        if (this.nudgeForwardButton) {
-            this._boundNudgeForward = () => this.nudgeSelectedPoint(100);
-            this.nudgeForwardButton.addEventListener('click', this._boundNudgeForward);
-        }
-
-        if (this.selectedPointMinuteInput || this.selectedPointSecondInput || this.selectedPointMillisecondInput) {
-            this._boundTimeInputKeydown = (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    this._boundApplyPointTime?.();
-                    return;
-                }
-
-                this.clearEditorFeedback();
-            };
-            [this.selectedPointMinuteInput, this.selectedPointSecondInput, this.selectedPointMillisecondInput]
-                .filter(Boolean)
-                .forEach((input) => input.addEventListener('keydown', this._boundTimeInputKeydown));
-        }
-
-        if (this.reviewPlayButton) {
-            this._boundReviewPlayToggle = () => this.toggleReviewPlayback();
-            this.reviewPlayButton.addEventListener('click', this._boundReviewPlayToggle);
-        }
-
-        if (this.reviewJumpButton) {
-            this._boundReviewJump = () => this.jumpToSelectedPoint();
-            this.reviewJumpButton.addEventListener('click', this._boundReviewJump);
-        }
-
-        if (this.reviewLoopButton) {
-            this._boundReviewLoop = () => {
+            },
+            onClearEditorFeedback: () => this.clearEditorFeedback(),
+            onToggleReviewPlayback: () => this.toggleReviewPlayback(),
+            onReviewJump: () => this.jumpToSelectedPoint(),
+            onToggleReviewLoop: () => {
                 this.reviewLoopEnabled = !this.reviewLoopEnabled;
                 this.renderReviewPlayer();
-            };
-            this.reviewLoopButton.addEventListener('click', this._boundReviewLoop);
-        }
-
-        this._boundDocumentPointer = (event) => {
-            const pointerType = event?.pointerType;
-            this.lastInputMode = pointerType === 'touch'
-                ? 'touch'
-                : pointerType === 'pen'
-                    ? 'mouse'
-                    : 'mouse';
-        };
-        document.addEventListener('pointerdown', this._boundDocumentPointer, { passive: true });
-
-        if (this.motionMediaQuery) {
-            this._boundReducedMotion = (event) => {
-                this.reducedMotion = event.matches;
-                document.documentElement.dataset.motion = event.matches ? 'reduced' : 'full';
-            };
-
-            if (typeof this.motionMediaQuery.addEventListener === 'function') {
-                this.motionMediaQuery.addEventListener('change', this._boundReducedMotion);
-            } else if (typeof this.motionMediaQuery.addListener === 'function') {
-                this.motionMediaQuery.addListener(this._boundReducedMotion);
+            },
+            onPointerInputMode: (pointerType) => {
+                this.lastInputMode = pointerType === 'touch'
+                    ? 'touch'
+                    : pointerType === 'pen'
+                        ? 'mouse'
+                        : 'mouse';
+            },
+            onReducedMotionChange: (matches) => {
+                this.reducedMotion = matches;
+                document.documentElement.dataset.motion = matches ? 'reduced' : 'full';
             }
-        }
+        });
     }
 
     destroy() {
-        this._tabHandlers.forEach(({ element, handler }) => element.removeEventListener('click', handler));
-        this._launchHandlers.forEach(({ element, handler }) => element.removeEventListener('click', handler));
-        this._tabHandlers = [];
-        this._launchHandlers = [];
-
-        if (this.pointRailWindow && this._boundPointClick) {
-            this.pointRailWindow.removeEventListener('click', this._boundPointClick);
-        }
-        if (this.pointRailWindow && this._boundPointHover) {
-            this.pointRailWindow.removeEventListener('pointerover', this._boundPointHover);
-        }
-        if (this.pointRailWindow && this._boundPointLeave) {
-            this.pointRailWindow.removeEventListener('pointerout', this._boundPointLeave);
-        }
-        if (this.pointList && this._boundPointListClick) {
-            this.pointList.removeEventListener('click', this._boundPointListClick);
-        }
-        if (this.pointRail && this._boundKeydown) {
-            this.pointRail.removeEventListener('keydown', this._boundKeydown);
-        }
-        if (this.assistantAction && this._boundAssistantClick) {
-            this.assistantAction.removeEventListener('click', this._boundAssistantClick);
-        }
-        if (this.applyPointTimeButton && this._boundApplyPointTime) {
-            this.applyPointTimeButton.removeEventListener('click', this._boundApplyPointTime);
-        }
-        if (this.nudgeBackButton && this._boundNudgeBack) {
-            this.nudgeBackButton.removeEventListener('click', this._boundNudgeBack);
-        }
-        if (this.nudgeForwardButton && this._boundNudgeForward) {
-            this.nudgeForwardButton.removeEventListener('click', this._boundNudgeForward);
-        }
-        if (this._boundTimeInputKeydown) {
-            [this.selectedPointMinuteInput, this.selectedPointSecondInput, this.selectedPointMillisecondInput]
-                .filter(Boolean)
-                .forEach((input) => input.removeEventListener('keydown', this._boundTimeInputKeydown));
-        }
-        if (this.reviewPlayButton && this._boundReviewPlayToggle) {
-            this.reviewPlayButton.removeEventListener('click', this._boundReviewPlayToggle);
-        }
-        if (this.reviewJumpButton && this._boundReviewJump) {
-            this.reviewJumpButton.removeEventListener('click', this._boundReviewJump);
-        }
-        if (this.reviewLoopButton && this._boundReviewLoop) {
-            this.reviewLoopButton.removeEventListener('click', this._boundReviewLoop);
-        }
-        if (this._boundDocumentPointer) {
-            document.removeEventListener('pointerdown', this._boundDocumentPointer);
-        }
-        if (this.motionMediaQuery && this._boundReducedMotion) {
-            if (typeof this.motionMediaQuery.removeEventListener === 'function') {
-                this.motionMediaQuery.removeEventListener('change', this._boundReducedMotion);
-            } else if (typeof this.motionMediaQuery.removeListener === 'function') {
-                this.motionMediaQuery.removeListener(this._boundReducedMotion);
-            }
-        }
+        this.clearAutosyncTimer();
+        this.reviewPlayerRequestId += 1;
+        this.disposeEventBindings?.();
+        this.disposeEventBindings = null;
 
         this.stopReviewPlaybackLoop();
         this.destroyReviewPlayer();
@@ -599,126 +443,97 @@ export class TimeSyncStudio {
         }
     }
 
+    applyWorkflowState(nextState) {
+        if ('stage' in nextState) {
+            this.stage = nextState.stage;
+        }
+        if ('points' in nextState) {
+            this.points = nextState.points;
+        }
+        if ('selectedPointId' in nextState) {
+            this.selectedPointId = nextState.selectedPointId;
+        }
+        if ('nowPlayingPointId' in nextState) {
+            this.nowPlayingPointId = nextState.nowPlayingPointId;
+        }
+        if ('history' in nextState) {
+            this.history = nextState.history;
+        }
+        if ('errors' in nextState) {
+            this.errors = nextState.errors;
+        }
+        if ('autosync' in nextState) {
+            this.autosync = nextState.autosync;
+        }
+        if ('currentAssistantResponse' in nextState) {
+            this.currentAssistantResponse = nextState.currentAssistantResponse;
+        }
+        if (nextState.clearTooltip) {
+            this.hideTooltip();
+        }
+        if (nextState.status) {
+            this.setStatus(
+                nextState.status.badge,
+                nextState.status.title,
+                nextState.status.detail,
+                nextState.status.tone
+            );
+        }
+        if (nextState.assistantFallback) {
+            this.renderAssistantFallback(nextState.assistantFallback);
+        }
+        if (nextState.pointListPlaceholder) {
+            this.renderPointListPlaceholder(nextState.pointListPlaceholder);
+        }
+    }
+
     setIdle() {
         this.clearAutosyncTimer();
-        this.stage = 'setup';
-        this.points = [];
-        this.selectedPointId = null;
-        this.nowPlayingPointId = null;
-        this.history.undoStack = [];
-        this.history.redoStack = [];
-        this.errors = [];
-        this.autosync = {
-            status: 'not_run',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        };
-        this.currentAssistantResponse = null;
-        this.hideTooltip();
-
-        this.setStatus(
-            'Setup',
-            'Paste a video to build sync points.',
-            'If subtitles are available, this panel turns them into line-start points you can review one by one.',
-            'idle'
-        );
+        const nextState = getIdleStudioState();
+        this.applyWorkflowState(nextState);
+        this.assistantClient.clearResponse();
         this.renderStageMeta();
-        this.renderAssistantFallback('Add a video to create your first point rail.');
         this.renderPointRail();
-        this.renderPointListPlaceholder([
-            'The studio will create one point per lyric line start.',
-            'Auto-sync fills draft timestamps before you review flagged points.',
-            'You can also paste your own lyrics if the video does not include captions.'
-        ]);
         this.renderSelectedPointEditor();
         this.renderReviewPlayer();
     }
 
     setLoading() {
         this.clearAutosyncTimer();
-        this.stage = this.points.length > 0 ? this.stage : 'setup';
-        if (!this.points.length) {
-            this.selectedPointId = null;
-            this.nowPlayingPointId = null;
-            this.hideTooltip();
-        }
-        this.setStatus(
-            'Loading',
-            'Looking for subtitle lines.',
-            'When lyric data arrives, the point rail will appear here with one point per line start.',
-            'loading'
-        );
-        this.renderAssistantFallback('Loading lyric lines and point data…');
-
-        if (!this.points.length) {
-            this.renderPointListPlaceholder([
-                'Checking the video for subtitle cues.',
-                'If timing is missing, the studio will mark those points for review.'
-            ]);
-        }
+        const nextState = getLoadingStudioState({
+            stage: this.stage,
+            points: this.points
+        });
+        this.applyWorkflowState(nextState);
         this.renderSelectedPointEditor();
         this.renderReviewPlayer();
     }
 
     setEmpty() {
         this.clearAutosyncTimer();
-        this.stage = 'setup';
-        this.points = [];
-        this.selectedPointId = null;
-        this.nowPlayingPointId = null;
-        this.hideTooltip();
-        this.autosync = {
-            status: 'failed',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        };
-
-        this.setStatus(
-            'No lyrics',
-            'No subtitle track was found for this video.',
-            'Paste your own lyric lines to create approximate points, or try another video with captions.',
-            'muted'
-        );
+        const nextState = getEmptyStudioState();
+        this.applyWorkflowState(nextState);
         this.renderStageMeta();
-        this.renderAssistantFallback('No points were created because the video does not include usable subtitle lines.');
         this.renderPointRail();
-        this.renderPointListPlaceholder([
-            'Try a video that includes captions if you want to use the sync studio.',
-            'Pasted lyrics will still work even when subtitle timing is unavailable.'
-        ]);
         this.renderSelectedPointEditor();
         this.renderReviewPlayer();
     }
 
     setLyrics(lines) {
         this.clearAutosyncTimer();
-        this.stage = 'lyrics';
-        this.points = this.buildPoints(lines);
-        this.selectedPointId = this.points[0]?.id ?? null;
-        this.nowPlayingPointId = null;
-        this.history.undoStack = [];
-        this.history.redoStack = [];
-        this.autosync = {
-            status: 'not_run',
-            coverage: 0,
-            confidence: 'low',
-            issuesByPointId: {}
-        };
-        this.errors = [];
-
-        if (!this.points.length) {
-            this.setEmpty();
+        const nextState = getLyricsStudioState({
+            lines,
+            createPointId: toPointId
+        });
+        this.applyWorkflowState(nextState);
+        if (nextState.isEmpty) {
+            this.renderStageMeta();
+            this.renderPointRail();
+            this.renderSelectedPointEditor();
+            this.renderReviewPlayer();
             return;
         }
 
-        this.setStatus(
-            'Lyrics ready',
-            'Points are ready for Auto-sync.',
-            'Each point maps to a lyric line start. Run Auto-sync next, then fix only the flagged points.',
-            'ready'
-        );
         this.render();
         this.requestAssistantUpdate();
     }
@@ -734,22 +549,16 @@ export class TimeSyncStudio {
     }
 
     finishPlayback() {
-        if (!this.points.length) {
+        const nextState = getFinishedPlaybackState({
+            points: this.points,
+            stage: this.stage
+        });
+        if (nextState.shouldResetToIdle) {
             this.setIdle();
             return;
         }
 
-        const hasReviewPoints = this.points.some((point) => point.status === 'needs_review');
-        if (!hasReviewPoints && this.stage !== 'lyrics' && this.stage !== 'autosync') {
-            this.stage = 'export';
-        }
-
-        this.setStatus(
-            'Ready',
-            'The point pass is ready.',
-            'Use the assistant CTA to keep moving one point at a time, or export the timing JSON when you are done.',
-            'done'
-        );
+        this.applyWorkflowState(nextState);
         this.render();
         this.requestAssistantUpdate();
     }
@@ -763,14 +572,7 @@ export class TimeSyncStudio {
     }
 
     async setMediaSource(source) {
-        const nextSource = source?.kind === 'youtube' && source.videoId
-            ? {
-                kind: 'youtube',
-                videoId: source.videoId,
-                title: source.title || 'UNSPECIFIED',
-                durationMs: Number.isFinite(source.durationMs) ? source.durationMs : null
-            }
-            : null;
+        const nextSource = normalizeReviewMediaSource(source);
         const changed = JSON.stringify(this.mediaSource) !== JSON.stringify(nextSource);
 
         if (!changed) {
@@ -785,20 +587,6 @@ export class TimeSyncStudio {
 
         await this.ensureReviewPlayer(requestId);
         this.renderReviewPlayer();
-    }
-
-    buildPoints(lines) {
-        return (Array.isArray(lines) ? lines : []).map((line, index) => ({
-            id: toPointId(index),
-            index,
-            textPreview: line.text || `Line ${index + 1}`,
-            draftTimeMs: Number.isFinite(line.time) ? line.time : null,
-            timeMs: null,
-            status: 'pending',
-            issues: [],
-            sourceTimed: line.hasTiming !== false && Number.isFinite(line.time),
-            isApproximate: Boolean(line.isApproximate)
-        }));
     }
 
     async ensureReviewPlayer(requestId = this.reviewPlayerRequestId) {
@@ -817,61 +605,18 @@ export class TimeSyncStudio {
             return;
         }
 
-        if (this.reviewPlayer && this.reviewPlayer.__videoId === this.mediaSource.videoId) {
+        if (this.reviewPlayerAdapter.hasVideo(this.mediaSource.videoId)) {
             return;
         }
 
-        this.destroyReviewPlayer();
-        this.reviewPlayerFrame.innerHTML = `<div id="${this.reviewPlayerMountId}" class="review-player-embed"></div>`;
-
-        try {
-            const YT = await loadYouTubeApi();
-            if (requestId !== this.reviewPlayerRequestId || !this.mediaSource) {
-                return;
-            }
-            this.reviewPlayer = new YT.Player(this.reviewPlayerMountId, {
-                videoId: this.mediaSource.videoId,
-                playerVars: {
-                    playsinline: 1,
-                    rel: 0,
-                    modestbranding: 1
-                },
-                events: {
-                    onReady: () => {
-                        this.reviewPlayerReady = true;
-                        if (this.reviewPlayer) {
-                            this.reviewPlayer.__videoId = this.mediaSource?.videoId ?? '';
-                        }
-                        this.renderReviewPlayer();
-                    },
-                    onStateChange: (event) => {
-                        const state = YT?.PlayerState ?? {};
-                        if (event.data === state.PLAYING) {
-                            this.startReviewPlaybackLoop();
-                        } else if (event.data === state.PAUSED || event.data === state.ENDED) {
-                            this.stopReviewPlaybackLoop();
-                        }
-                        this.renderReviewPlayer();
-                    }
-                }
-            });
-            this.reviewPlayerReady = false;
-        } catch (error) {
-            console.error('ensureReviewPlayer failed', error);
-            this.destroyReviewPlayer();
-        }
+        await this.reviewPlayerAdapter.loadForVideo(this.mediaSource.videoId, {
+            isCurrentRequest: () => requestId === this.reviewPlayerRequestId && Boolean(this.mediaSource)
+        });
     }
 
     destroyReviewPlayer() {
         this.stopReviewPlaybackLoop();
-        if (this.reviewPlayer?.destroy) {
-            this.reviewPlayer.destroy();
-        }
-        this.reviewPlayer = null;
-        this.reviewPlayerReady = false;
-        if (this.reviewPlayerFrame) {
-            this.reviewPlayerFrame.innerHTML = '';
-        }
+        this.reviewPlayerAdapter.destroy();
     }
 
     setEstimateGapMs(value) {
@@ -881,61 +626,29 @@ export class TimeSyncStudio {
     }
 
     buildSnapshot() {
-        const selectedIndex = Math.max(0, this.points.findIndex((point) => point.id === this.selectedPointId));
-        const totalPoints = this.points.length;
-        const startIndex = clamp(selectedIndex - Math.floor(POINT_WINDOW_SIZE / 2), 0, Math.max(0, totalPoints - POINT_WINDOW_SIZE));
-        const pointsWindow = this.points.slice(startIndex, startIndex + POINT_WINDOW_SIZE);
-        const counts = this.points.reduce((acc, point) => {
-            acc[point.status] += 1;
-            return acc;
-        }, { pending: 0, synced: 0, needs_review: 0 });
-
         const playerSeconds = this.reviewPlayerReady && typeof this.reviewPlayer?.getCurrentTime === 'function'
             ? this.reviewPlayer.getCurrentTime()
             : null;
         const playerState = this.reviewPlayerReady && typeof this.reviewPlayer?.getPlayerState === 'function'
             ? this.reviewPlayer.getPlayerState()
             : null;
-        const selectedPoint = this.getSelectedPoint();
-        const loopStart = selectedPoint?.timeMs ?? selectedPoint?.draftTimeMs ?? 0;
-        const loopEnd = this.getLoopEndTime(selectedPoint?.id);
+        const snapshot = buildPointSnapshot({
+            stage: this.stage,
+            sessionId: this.sessionId,
+            getProjectTitle: this.getProjectTitle,
+            selectedPointId: this.selectedPointId,
+            points: this.points,
+            pointWindowSize: POINT_WINDOW_SIZE,
+            currentPlayheadMs: Number.isFinite(playerSeconds) ? Math.round(playerSeconds * 1000) : 0,
+            isPlaying: playerState === window.YT?.PlayerState?.PLAYING,
+            reviewLoopEnabled: this.reviewLoopEnabled,
+            reducedMotion: this.reducedMotion,
+            lastInputMode: this.lastInputMode,
+            getLoopEndTime: (pointId) => this.getLoopEndTime(pointId)
+        });
 
         return {
-            schemaVersion: '1.0',
-            stage: this.stage,
-            project: {
-                projectId: this.sessionId,
-                title: this.getProjectTitle()
-            },
-            pointFlow: {
-                totalPoints,
-                currentPointId: this.selectedPointId,
-                nextIncompletePointId: this.points.find((point) => point.status !== 'synced')?.id ?? null,
-                windowPointIds: pointsWindow.map((point) => point.id),
-                counts: {
-                    pending: counts.pending,
-                    synced: counts.synced,
-                    needsReview: counts.needs_review
-                },
-                confirmMode: 'implicit_undo'
-            },
-            pointsWindow: pointsWindow.map((point) => ({
-                id: point.id,
-                index: point.index,
-                textPreview: point.textPreview,
-                timeMs: Number.isFinite(point.timeMs) ? point.timeMs : point.draftTimeMs ?? 0,
-                status: point.status,
-                issues: [...point.issues]
-            })),
-            playback: {
-                playheadMs: Number.isFinite(playerSeconds) ? Math.round(playerSeconds * 1000) : 0,
-                isPlaying: playerState === window.YT?.PlayerState?.PLAYING,
-                loop: {
-                    on: this.reviewLoopEnabled,
-                    startMs: Number.isFinite(loopStart) ? loopStart : 0,
-                    endMs: Number.isFinite(loopEnd) ? loopEnd : (Number.isFinite(loopStart) ? loopStart : 0)
-                }
-            },
+            ...snapshot,
             autosync: {
                 status: this.autosync.status,
                 coverage: this.autosync.coverage,
@@ -959,76 +672,23 @@ export class TimeSyncStudio {
             return;
         }
 
-        const requestId = Date.now() + Math.random();
-        this.pendingAssistantRequestId = requestId;
-
-        try {
-            const response = await fetch('/api/assistant', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: this.sessionId,
-                    userText,
-                    uiSnapshot: this.buildSnapshot()
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Assistant request failed');
-            }
-
-            const payload = await response.json();
-            if (this.pendingAssistantRequestId !== requestId) {
-                return;
-            }
-
-            this.currentAssistantResponse = payload;
-            this.renderAssistant(payload);
-        } catch (error) {
-            if (this.pendingAssistantRequestId !== requestId) {
-                return;
-            }
-
-            this.currentAssistantResponse = null;
-            this.renderAssistantFallback('The assistant is unavailable right now. You can still select a point and nudge it manually.');
-        }
+        await this.assistantClient.requestUpdate(() => this.buildSnapshot(), userText);
     }
 
     async executeAction(action) {
-        if (!action || !ACTION_TYPES.has(action.type)) {
-            return;
-        }
-
-        switch (action.type) {
-        case 'OPEN_PANEL':
-            this.setMode('studio');
-            if (action.payload?.panel) {
-                this.openPanel(action.payload.panel);
-            } else {
-                this.pointRail?.focus();
-            }
-            break;
-        case 'SELECT_POINT':
-            this.selectPoint(action.payload?.pointId || action.targetPointId, { focus: true });
-            break;
-        case 'NUDGE_POINT':
-            this.nudgePoint(action.payload?.pointId || action.targetPointId, Number(action.payload?.deltaMs) || 0);
-            break;
-        case 'START_AUTOSYNC':
-            this.startAutosync();
-            return;
-        case 'APPLY_FIX':
-            this.applyFix(action.payload || {});
-            break;
-        case 'EXPORT':
-            this.exportProject();
-            break;
-        default:
-            break;
-        }
-
-        this.render();
-        await this.requestAssistantUpdate();
+        await this.assistantClient.executeAction(action, {
+            isActionType: (type) => ACTION_TYPES.has(type),
+            setMode: (mode) => this.setMode(mode),
+            openPanel: (panel) => this.openPanel(panel),
+            focusPointRail: () => this.pointRail?.focus(),
+            selectPoint: (pointId) => this.selectPoint(pointId, { focus: true }),
+            nudgePoint: (pointId, deltaMs) => this.nudgePoint(pointId, deltaMs),
+            startAutosync: () => this.startAutosync(),
+            applyFix: (payload) => this.applyFix(payload),
+            exportProject: () => this.exportProject(),
+            render: () => this.render(),
+            requestUpdate: () => this.requestAssistantUpdate()
+        });
     }
 
     startAutosync() {
@@ -1049,60 +709,20 @@ export class TimeSyncStudio {
         this.renderAssistantFallback('Auto-sync is running…');
 
         this.autosyncTimerId = window.setTimeout(() => {
-            let timedPoints = 0;
-            let previousTime = 0;
-            const issuesByPointId = {};
-
-            this.points = this.points.map((point, index) => {
-                const fallbackTime = index === 0 ? 0 : previousTime + this.estimateGapMs;
-                const nextTime = Number.isFinite(point.draftTimeMs) ? point.draftTimeMs : fallbackTime;
-                const issues = [];
-
-                if (point.sourceTimed) {
-                    timedPoints += 1;
-                } else {
-                    issues.push('timing_estimated');
-                }
-
-                const gap = index === 0 ? 0 : nextTime - previousTime;
-                if (index > 0 && gap < 500) {
-                    issues.push('early_start');
-                }
-                if (index > 0 && gap > 7000) {
-                    issues.push('late_start');
-                }
-
-                previousTime = nextTime;
-
-                if (issues.length > 0) {
-                    issuesByPointId[point.id] = issues;
-                }
-
-                return {
-                    ...point,
-                    timeMs: nextTime,
-                    issues,
-                    status: issues.length > 0 ? 'needs_review' : 'synced'
-                };
+            const nextState = runAutosyncPass({
+                points: this.points,
+                estimateGapMs: this.estimateGapMs,
+                selectedPointId: this.selectedPointId
             });
-
-            const reviewPoint = this.points.find((point) => point.status === 'needs_review') ?? this.points[0] ?? null;
-            this.selectedPointId = reviewPoint?.id ?? this.selectedPointId;
-            this.autosync = {
-                status: 'done',
-                coverage: this.points.length ? timedPoints / this.points.length : 0,
-                confidence: timedPoints / Math.max(this.points.length, 1) > 0.85 ? 'high' : timedPoints / Math.max(this.points.length, 1) > 0.5 ? 'medium' : 'low',
-                issuesByPointId
-            };
-            this.stage = reviewPoint?.status === 'needs_review' ? 'review' : 'export';
-
+            this.points = nextState.points;
+            this.selectedPointId = nextState.selectedPointId;
+            this.autosync = nextState.autosync;
+            this.stage = nextState.stage;
             this.setStatus(
-                reviewPoint?.status === 'needs_review' ? 'Review' : 'Ready',
-                reviewPoint?.status === 'needs_review' ? 'Review the flagged points.' : 'Auto-sync is complete.',
-                reviewPoint?.status === 'needs_review'
-                    ? 'Only the points that need attention stay in the critical path now.'
-                    : 'No obvious timing issues were flagged. You can export the timing JSON now.',
-                reviewPoint?.status === 'needs_review' ? 'ready' : 'done'
+                nextState.status.badge,
+                nextState.status.title,
+                nextState.status.detail,
+                nextState.status.tone
             );
             this.render();
             this.requestAssistantUpdate();
@@ -1116,43 +736,25 @@ export class TimeSyncStudio {
     }
 
     applyFix(payload) {
-        if (payload.scope !== 'needs_review') {
-            return;
-        }
-
-        const changedPoints = [];
-        this.points = this.points.map((point) => {
-            if (point.status !== 'needs_review') {
-                return point;
-            }
-
-            changedPoints.push({
-                id: point.id,
-                prevTimeMs: point.timeMs,
-                prevStatus: point.status,
-                prevIssues: [...point.issues]
-            });
-
-            return {
-                ...point,
-                status: 'synced',
-                issues: []
-            };
+        const nextState = applyNeedsReviewFix({
+            points: this.points,
+            history: this.history,
+            autosync: this.autosync,
+            payload
         });
-
-        if (changedPoints.length === 0) {
+        if (!nextState) {
             return;
         }
 
-        this.history.undoStack.push({ type: 'APPLY_FIX', changes: changedPoints });
-        this.history.redoStack = [];
-        this.autosync.issuesByPointId = {};
-        this.stage = 'export';
+        this.points = nextState.points;
+        this.history = nextState.history;
+        this.autosync = nextState.autosync;
+        this.stage = nextState.stage;
         this.setStatus(
-            'Ready',
-            'Flagged points were cleaned up.',
-            'You can still undo this batch fix if you want to inspect points one by one.',
-            'done'
+            nextState.status.badge,
+            nextState.status.title,
+            nextState.status.detail,
+            nextState.status.tone
         );
     }
 
@@ -1245,50 +847,35 @@ export class TimeSyncStudio {
     }
 
     nudgePoint(pointId, deltaMs) {
-        const pointIndex = this.points.findIndex((entry) => entry.id === pointId);
-        if (pointIndex === -1) {
+        const nextState = nudgePointTiming({
+            points: this.points,
+            pointId,
+            deltaMs,
+            history: this.history,
+            autosync: this.autosync,
+            stage: this.stage,
+            clampTimeMs: (timeMs) => this.clampTimeMs(timeMs),
+            getMediaDurationMs: () => this.getMediaDurationMs(),
+            formatTime
+        });
+        if (!nextState) {
             return;
         }
 
-        const point = this.points[pointIndex];
-        const previous = {
-            id: point.id,
-            prevTimeMs: point.timeMs,
-            prevStatus: point.status,
-            prevIssues: [...point.issues]
-        };
-
-        const requestedTime = (point.timeMs ?? point.draftTimeMs ?? 0) + deltaMs;
-        const nextTime = this.clampTimeMs(requestedTime);
-        this.history.undoStack.push({ type: 'NUDGE_POINT', ...previous });
-        this.history.redoStack = [];
-
-        this.points[pointIndex] = {
-            ...point,
-            timeMs: nextTime,
-            status: 'synced',
-            issues: []
-        };
-
-        delete this.autosync.issuesByPointId[pointId];
-        if (nextTime !== requestedTime) {
-            const mediaDurationMs = this.getMediaDurationMs();
-            if (requestedTime < 0) {
-                this.setEditorFeedback('Reached the start of the track at 0:00.000.', 'warning');
-            } else if (Number.isFinite(mediaDurationMs)) {
-                this.setEditorFeedback(`Reached the end of the video at ${formatTime(mediaDurationMs)}.`, 'warning');
-            }
+        this.points = nextState.points;
+        this.history = nextState.history;
+        this.autosync = nextState.autosync;
+        this.stage = nextState.stage;
+        if (nextState.editorFeedback) {
+            this.setEditorFeedback(nextState.editorFeedback.message, nextState.editorFeedback.tone);
         }
-        if (!this.points.some((entry) => entry.status === 'needs_review') && this.stage !== 'lyrics' && this.stage !== 'autosync') {
-            this.stage = 'export';
+        if (nextState.status) {
             this.setStatus(
-                'Ready',
-                'All flagged points are now confirmed.',
-                'Export the timing JSON when you want a clean handoff.',
-                'done'
+                nextState.status.badge,
+                nextState.status.title,
+                nextState.status.detail,
+                nextState.status.tone
             );
-        } else {
-            this.stage = 'review';
         }
 
         this.render();
@@ -1300,32 +887,31 @@ export class TimeSyncStudio {
         }
 
         this.reviewPlaybackTimerId = window.setInterval(() => {
-            const seconds = typeof this.reviewPlayer?.getCurrentTime === 'function'
-                ? this.reviewPlayer.getCurrentTime()
-                : null;
-            const playheadMs = Number.isFinite(seconds) ? Math.round(seconds * 1000) : null;
-            if (!Number.isFinite(playheadMs)) {
+            const selected = this.getSelectedPoint();
+            const loopState = stepReviewPlaybackLoop({
+                reviewPlayer: this.reviewPlayer,
+                reviewLoopEnabled: this.reviewLoopEnabled,
+                selectedPoint: selected,
+                nowPlayingPointId: this.nowPlayingPointId,
+                findPointForTime: (timeMs) => this.findPointForTime(timeMs),
+                getLoopEndTime: (pointId) => this.getLoopEndTime(pointId)
+            });
+            if (!Number.isFinite(loopState.playheadMs)) {
                 return;
             }
 
-            const pointForPlayhead = this.findPointForTime(playheadMs);
-            if (pointForPlayhead && pointForPlayhead.id !== this.nowPlayingPointId) {
-                this.nowPlayingPointId = pointForPlayhead.id;
+            if (loopState.nextNowPlayingPointId && loopState.nextNowPlayingPointId !== this.nowPlayingPointId) {
+                this.nowPlayingPointId = loopState.nextNowPlayingPointId;
                 this.renderPointRail();
                 this.renderPointList();
             }
 
-            if (this.reviewLoopEnabled) {
-                const selected = this.getSelectedPoint();
-                const loopStart = selected?.timeMs ?? selected?.draftTimeMs;
-                const loopEnd = this.getLoopEndTime(selected?.id);
-                if (selected && Number.isFinite(loopStart) && Number.isFinite(loopEnd) && playheadMs >= loopEnd) {
-                    this.reviewPlayer.seekTo(loopStart / 1000, true);
-                    this.reviewPlayer.playVideo();
-                }
+            if (Number.isFinite(loopState.shouldLoopToMs)) {
+                this.reviewPlayer.seekTo(loopState.shouldLoopToMs / 1000, true);
+                this.reviewPlayer.playVideo();
             }
 
-            this.renderReviewPlayer(playheadMs);
+            this.renderReviewPlayer(loopState.playheadMs);
         }, 150);
     }
 
@@ -1339,42 +925,24 @@ export class TimeSyncStudio {
     }
 
     findPointForTime(timeMs) {
-        if (!Number.isFinite(timeMs) || !this.points.length) {
-            return null;
-        }
-
-        for (let index = this.points.length - 1; index >= 0; index -= 1) {
-            const pointTime = this.points[index].timeMs ?? this.points[index].draftTimeMs;
-            if (Number.isFinite(pointTime) && timeMs >= pointTime) {
-                return this.points[index];
-            }
-        }
-
-        return this.points[0];
+        return findPointForTime(this.points, timeMs);
     }
 
     getLoopEndTime(pointId) {
-        const pointIndex = this.points.findIndex((point) => point.id === pointId);
-        if (pointIndex === -1) {
-            return null;
-        }
-
-        const nextTimedPoint = this.points.slice(pointIndex + 1)
-            .find((point) => Number.isFinite(point.timeMs ?? point.draftTimeMs));
-        return nextTimedPoint
-            ? this.clampTimeMs(nextTimedPoint.timeMs ?? nextTimedPoint.draftTimeMs)
-            : this.getMediaDurationMs();
+        return getLoopEndTime({
+            points: this.points,
+            pointId,
+            clampTimeMs: (timeMs) => this.clampTimeMs(timeMs),
+            getMediaDurationMs: () => this.getMediaDurationMs()
+        });
     }
 
     getMediaDurationMs() {
-        const playerDurationMs = this.reviewPlayerReady && typeof this.reviewPlayer?.getDuration === 'function'
-            ? Math.round((this.reviewPlayer.getDuration() ?? 0) * 1000)
-            : null;
-        if (Number.isFinite(playerDurationMs) && playerDurationMs > 0) {
-            return playerDurationMs;
-        }
-
-        return Number.isFinite(this.mediaSource?.durationMs) ? this.mediaSource.durationMs : null;
+        return getReviewPlayerDurationMs({
+            reviewPlayerReady: this.reviewPlayerReady,
+            reviewPlayer: this.reviewPlayer,
+            mediaSource: this.mediaSource
+        });
     }
 
     clampTimeMs(timeMs) {
@@ -1407,87 +975,32 @@ export class TimeSyncStudio {
     }
 
     undo() {
-        const operation = this.history.undoStack.pop();
-        if (!operation) return false;
-
-        if (operation.type === 'NUDGE_POINT') {
-            const pointIndex = this.points.findIndex((entry) => entry.id === operation.id);
-            if (pointIndex === -1) {
-                return false;
-            }
-
-            const current = this.points[pointIndex];
-            this.history.redoStack.push({
-                type: 'NUDGE_POINT',
-                id: current.id,
-                prevTimeMs: current.timeMs,
-                prevStatus: current.status,
-                prevIssues: [...current.issues]
-            });
-            this.points[pointIndex] = {
-                ...current,
-                timeMs: operation.prevTimeMs,
-                status: operation.prevStatus,
-                issues: [...operation.prevIssues]
-            };
-            if (operation.prevIssues.length > 0) {
-                this.autosync.issuesByPointId[operation.id] = [...operation.prevIssues];
-                this.stage = 'review';
-            }
+        const nextState = undoPointChange({
+            points: this.points,
+            history: this.history,
+            autosync: this.autosync
+        });
+        if (!nextState.applied) {
+            return false;
         }
 
-        if (operation.type === 'APPLY_FIX') {
-            operation.changes.forEach((change) => {
-                const pointIndex = this.points.findIndex((entry) => entry.id === change.id);
-                if (pointIndex === -1) return;
-
-                this.points[pointIndex] = {
-                    ...this.points[pointIndex],
-                    timeMs: change.prevTimeMs,
-                    status: change.prevStatus,
-                    issues: [...change.prevIssues]
-                };
-
-                if (change.prevIssues.length > 0) {
-                    this.autosync.issuesByPointId[change.id] = [...change.prevIssues];
-                }
-            });
-
-            this.history.redoStack.push(operation);
-            this.stage = 'review';
+        this.points = nextState.points;
+        this.history = nextState.history;
+        this.autosync = nextState.autosync;
+        if (nextState.stage) {
+            this.stage = nextState.stage;
         }
-
         this.render();
         this.requestAssistantUpdate();
         return true;
     }
 
     exportProject() {
-        const exportPayload = {
-            schemaVersion: '1.0',
-            exportedAt: new Date().toISOString(),
-            project: {
-                id: this.sessionId,
-                title: this.getProjectTitle()
-            },
-            points: this.points.map((point) => ({
-                id: point.id,
-                index: point.index,
-                textPreview: point.textPreview,
-                timeMs: point.timeMs,
-                status: point.status
-            }))
-        };
-
-        const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'lyrics-sync-points.json';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
+        exportSyncProject({
+            sessionId: this.sessionId,
+            title: this.getProjectTitle(),
+            points: this.points
+        });
 
         this.setStatus(
             'Exported',
@@ -1506,197 +1019,52 @@ export class TimeSyncStudio {
     }
 
     renderStageMeta() {
-        const counts = this.points.reduce((acc, point) => {
-            acc[point.status] += 1;
-            return acc;
-        }, { pending: 0, synced: 0, needs_review: 0 });
-        const confirmed = counts.synced;
-        const total = this.points.length;
-        const percent = total === 0 ? 0 : confirmed / total;
-
-        const stageLabels = {
-            setup: {
-                badge: 'Setup',
-                label: 'Add media and lyric lines first.'
-            },
-            lyrics: {
-                badge: 'Lyrics',
-                label: 'Points are parsed. Auto-sync is the next step.'
-            },
-            autosync: {
-                badge: 'Auto-sync',
-                label: 'Draft timings are being filled now.'
-            },
-            sync: {
-                badge: 'Sync',
-                label: 'Work one point at a time.'
-            },
-            review: {
-                badge: 'Review',
-                label: 'Only flagged points stay in view.'
-            },
-            export: {
-                badge: 'Export',
-                label: 'The current point pass is ready to hand off.'
-            }
-        };
-
-        if (this.stageBadge) {
-            this.stageBadge.textContent = stageLabels[this.stage].badge;
-        }
-        if (this.stageLabel) {
-            this.stageLabel.textContent = stageLabels[this.stage].label;
-        }
-        if (this.progressLabel) {
-            this.progressLabel.textContent = `${confirmed}/${total} points confirmed`;
-        }
-        if (this.progressFill) {
-            this.progressFill.style.transform = `scaleX(${percent})`;
-        }
-        if (this.countPending) {
-            this.countPending.textContent = String(counts.pending);
-        }
-        if (this.countSynced) {
-            this.countSynced.textContent = String(counts.synced);
-        }
-        if (this.countReview) {
-            this.countReview.textContent = String(counts.needs_review);
-        }
+        this.pointWorkspaceRenderer.renderStageMeta({
+            stage: this.stage,
+            points: this.points
+        });
     }
 
     renderAssistant(response) {
-        if (this.assistantText) {
-            this.assistantText.textContent = response.assistantText;
-        }
-
-        if (this.assistantAction) {
-            const actionType = response.nextAction?.type;
-            this.assistantAction.hidden = !actionType;
-            this.assistantAction.disabled = !actionType;
-            this.assistantAction.textContent = response.nextAction?.label || 'Continue';
-        }
-
-        if (this.assistantHint) {
-            const hint = response.hints?.[0];
-            this.assistantHint.textContent = hint?.text || '';
-            this.assistantHint.hidden = !hint?.text;
-        }
+        renderAssistantResponse({
+            assistantText: this.assistantText,
+            assistantAction: this.assistantAction,
+            assistantHint: this.assistantHint
+        }, response);
     }
 
     renderAssistantFallback(text) {
-        if (this.assistantText) {
-            this.assistantText.textContent = text;
-        }
-        if (this.assistantAction) {
-            this.assistantAction.hidden = true;
-            this.assistantAction.disabled = true;
-        }
-        if (this.assistantHint) {
-            this.assistantHint.hidden = true;
-            this.assistantHint.textContent = '';
-        }
+        renderAssistantFallback({
+            assistantText: this.assistantText,
+            assistantAction: this.assistantAction,
+            assistantHint: this.assistantHint
+        }, text);
     }
 
     renderPointRail() {
-        if (!this.pointRailWindow) return;
-
-        if (!this.points.length) {
-            this.hideTooltip();
-            this.pointRail?.classList.add('is-empty');
-            this.pointRailWindow.innerHTML = '<p class="point-rail-empty">No points yet.</p>';
-            return;
-        }
-
-        this.pointRail?.classList.remove('is-empty');
-
-        const currentIndex = Math.max(0, this.points.findIndex((point) => point.id === this.selectedPointId));
-        const startIndex = clamp(currentIndex - Math.floor(POINT_WINDOW_SIZE / 2), 0, Math.max(0, this.points.length - POINT_WINDOW_SIZE));
-        const windowPoints = this.points.slice(startIndex, startIndex + POINT_WINDOW_SIZE);
-
-        this.pointRailWindow.innerHTML = windowPoints.map((point) => {
-            const isSelected = point.id === this.selectedPointId;
-            const isNowPlaying = point.id === this.nowPlayingPointId;
-            const stateClass = `${point.status}${isSelected ? ' is-selected' : ''}${isNowPlaying ? ' is-now-playing' : ''}`;
-            const timeLabel = formatTime(point.timeMs ?? point.draftTimeMs) || 'Unassigned';
-            const lyricLabel = escapeHtml(point.textPreview.length > 22 ? `${point.textPreview.slice(0, 22)}…` : point.textPreview);
-            return `
-                <button
-                    type="button"
-                    class="point-hit ${stateClass}"
-                    data-point-id="${point.id}"
-                    aria-label="Point ${point.index + 1}, ${timeLabel}, ${point.status.replace('_', ' ')}"
-                    aria-current="${isSelected ? 'true' : 'false'}">
-                    <span class="point-label">${lyricLabel}</span>
-                    <span class="point-dot" aria-hidden="true"></span>
-                    <span class="point-time">${timeLabel}</span>
-                </button>
-            `;
-        }).join('');
+        this.pointWorkspaceRenderer.renderPointRail({
+            points: this.points,
+            selectedPointId: this.selectedPointId,
+            nowPlayingPointId: this.nowPlayingPointId,
+            pointWindowSize: POINT_WINDOW_SIZE
+        });
     }
 
     renderPointList() {
-        if (!this.pointList) return;
-
-        if (!this.points.length) {
-            this.renderPointListPlaceholder(['No points yet.']);
-            return;
-        }
-
-        const visiblePoints = this.stage === 'review'
-            ? this.points.filter((point) => point.status === 'needs_review')
-            : this.getPointWindowForList();
-
-        this.pointList.innerHTML = visiblePoints.map((point) => {
-            const issueLabel = point.status === 'pending'
-                ? 'waiting for timing'
-                : point.issues.length > 0
-                    ? point.issues.join(' · ').replaceAll('_', ' ')
-                    : 'confirmed';
-            const selected = point.id === this.selectedPointId ? ' is-selected' : '';
-            const playing = point.id === this.nowPlayingPointId ? ' is-now-playing' : '';
-            return `
-                <article class="point-card${selected}${playing}" data-point-card="${point.id}">
-                    <div class="point-card-meta">
-                        <span class="point-card-index">Point ${point.index + 1}</span>
-                        <span class="point-card-time">${formatTime(point.timeMs ?? point.draftTimeMs) || 'Unassigned'}</span>
-                    </div>
-                    <p class="point-card-text">${escapeHtml(point.textPreview)}</p>
-                    <div class="point-card-footer">
-                        <span class="point-card-status" data-status="${point.status}">${point.status.replace('_', ' ')}</span>
-                        <span class="point-card-issues">${escapeHtml(issueLabel)}</span>
-                    </div>
-                </article>
-            `;
-        }).join('');
+        this.pointWorkspaceRenderer.renderPointList({
+            points: this.points,
+            stage: this.stage,
+            selectedPointId: this.selectedPointId,
+            nowPlayingPointId: this.nowPlayingPointId
+        });
     }
 
     scrollSelectedPointCardIntoView() {
-        if (!this.pointList || !this.selectedPointId) {
-            return;
-        }
-
-        const card = this.pointList.querySelector(`[data-point-card="${this.selectedPointId}"]`);
-        card?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        this.pointWorkspaceRenderer.scrollSelectedPointCardIntoView(this.selectedPointId);
     }
 
     renderPointListPlaceholder(lines) {
-        if (!this.pointList) return;
-
-        const icons = ['•', '•', '•'];
-        this.pointList.innerHTML = lines.map((line, index) => `
-            <article class="point-card placeholder">
-                <div class="point-card-meta">
-                    <span class="point-card-index">${icons[index] || '•'}</span>
-                </div>
-                <p class="point-card-text">${escapeHtml(line)}</p>
-            </article>
-        `).join('');
-    }
-
-    getPointWindowForList() {
-        const currentIndex = Math.max(0, this.points.findIndex((point) => point.id === this.selectedPointId));
-        const startIndex = clamp(currentIndex - 3, 0, Math.max(0, this.points.length - 7));
-        return this.points.slice(startIndex, startIndex + 7);
+        this.pointWorkspaceRenderer.renderPointListPlaceholder(lines);
     }
 
     getSelectedPoint() {
@@ -1705,121 +1073,60 @@ export class TimeSyncStudio {
 
     renderSelectedPointEditor() {
         const selected = this.getSelectedPoint();
-
-        if (this.selectedPointSummary) {
-            this.selectedPointSummary.textContent = selected
-                ? `Point ${selected.index + 1}: ${selected.textPreview}`
-                : 'Select a point to edit its exact start time.';
-        }
-        if (!selected) {
-            this.clearEditorFeedback();
-        }
-
-        const timeParts = splitTimeParts(selected ? (selected.timeMs ?? selected.draftTimeMs) : null);
-        [this.selectedPointMinuteInput, this.selectedPointSecondInput, this.selectedPointMillisecondInput].forEach((input) => {
-            if (!input) return;
-            input.disabled = !selected;
-        });
-        const mediaDurationMs = this.getMediaDurationMs();
-        if (this.selectedPointMinuteInput) {
-            this.selectedPointMinuteInput.value = timeParts.minutes;
-            this.selectedPointMinuteInput.max = Number.isFinite(mediaDurationMs)
-                ? String(Math.floor(mediaDurationMs / 60000))
-                : '';
-        }
-        if (this.selectedPointSecondInput) {
-            this.selectedPointSecondInput.value = timeParts.seconds;
-        }
-        if (this.selectedPointMillisecondInput) {
-            this.selectedPointMillisecondInput.value = timeParts.milliseconds;
-        }
-
-        [this.applyPointTimeButton, this.nudgeBackButton, this.nudgeForwardButton].forEach((button) => {
-            if (!button) return;
-            button.disabled = !selected;
+        this.pointWorkspaceRenderer.renderSelectedPointEditor({
+            selectedPoint: selected,
+            mediaDurationMs: this.getMediaDurationMs(),
+            onDeselect: () => this.clearEditorFeedback()
         });
     }
 
     renderReviewPlayer(playheadMs = null) {
         const selected = this.getSelectedPoint();
         const selectedTime = selected?.timeMs ?? selected?.draftTimeMs;
-        const currentPlayheadMs = Number.isFinite(playheadMs)
-            ? playheadMs
-            : (this.reviewPlayerReady && typeof this.reviewPlayer?.getCurrentTime === 'function'
-                ? Math.round(this.reviewPlayer.getCurrentTime() * 1000)
-                : selectedTime ?? 0);
+        const currentPlayheadMs = getReviewPlayerPlayheadMs({
+            explicitPlayheadMs: playheadMs,
+            reviewPlayerReady: this.reviewPlayerReady,
+            reviewPlayer: this.reviewPlayer,
+            fallbackPlayheadMs: selectedTime ?? 0
+        });
         const hasMediaSource = Boolean(this.mediaSource && this.reviewPlayerFrame);
         const isPlaying = this.reviewPlayerReady
             && this.reviewPlayer
             && this.reviewPlayer.getPlayerState?.() === window.YT?.PlayerState?.PLAYING;
+        const loopEnd = this.getLoopEndTime(selected?.id);
+        const viewModel = buildReviewPlayerViewModel({
+            mediaSource: this.mediaSource,
+            selectedPoint: selected,
+            selectedTimeMs: selectedTime,
+            currentPlayheadMs,
+            reviewPlayerReady: this.reviewPlayerReady,
+            isPlaying,
+            reviewLoopEnabled: this.reviewLoopEnabled,
+            loopEndMs: loopEnd,
+            hasFrame: hasMediaSource,
+            formatTime
+        });
 
-        if (this.reviewPlayerSummary) {
-            if (!this.mediaSource) {
-                this.reviewPlayerSummary.textContent = 'Load a captioned YouTube video to review timing against playback.';
-            } else if (!selected) {
-                this.reviewPlayerSummary.textContent = 'Select a point to jump the review player to that line start.';
-            } else if (!Number.isFinite(selectedTime)) {
-                this.reviewPlayerSummary.textContent = `Point ${selected.index + 1} is still unassigned. Set a time first, then jump straight into review playback.`;
-            } else {
-                this.reviewPlayerSummary.textContent = `Review Point ${selected.index + 1} against the player. Clicking a point chip or card seeks directly to ${formatTime(selectedTime)}.`;
-            }
-        }
-
-        if (this.reviewPlayButton) {
-            this.reviewPlayButton.disabled = !this.reviewPlayerReady || !selected;
-            this.reviewPlayButton.textContent = isPlaying ? 'Pause' : 'Play';
-        }
-        if (this.reviewJumpButton) {
-            this.reviewJumpButton.disabled = !this.reviewPlayerReady || !selected || !Number.isFinite(selectedTime);
-        }
-        if (this.reviewLoopButton) {
-            this.reviewLoopButton.disabled = !this.reviewPlayerReady || !selected || !Number.isFinite(selectedTime);
-            this.reviewLoopButton.setAttribute('aria-pressed', this.reviewLoopEnabled ? 'true' : 'false');
-            this.reviewLoopButton.classList.toggle('is-active', this.reviewLoopEnabled);
-        }
-        if (this.reviewTimeReadout) {
-            this.reviewTimeReadout.textContent = formatTime(currentPlayheadMs) || '0:00.000';
-        }
-        if (this.reviewLoopRange) {
-            const loopEnd = this.getLoopEndTime(selected?.id);
-            this.reviewLoopRange.textContent = Number.isFinite(selectedTime) && Number.isFinite(loopEnd)
-                ? `Loop range: ${formatTime(selectedTime)} -> ${formatTime(loopEnd)}`
-                : 'Loop range appears when the selected point has timing.';
-        }
-        if (this.reviewPlayerFrame) {
-            this.reviewPlayerFrame.hidden = !hasMediaSource;
-            this.reviewPlayerFrame.classList.toggle('is-ready', hasMediaSource && this.reviewPlayerReady);
-        }
+        renderReviewPlayerPanel({
+            reviewPlayerSummary: this.reviewPlayerSummary,
+            reviewPlayButton: this.reviewPlayButton,
+            reviewJumpButton: this.reviewJumpButton,
+            reviewLoopButton: this.reviewLoopButton,
+            reviewTimeReadout: this.reviewTimeReadout,
+            reviewLoopRange: this.reviewLoopRange,
+            reviewPlayerFrame: this.reviewPlayerFrame
+        }, viewModel);
     }
 
     showTooltip(pointId, anchor) {
-        if (!this.pointTooltip) return;
-
-        const point = this.points.find((entry) => entry.id === pointId);
-        if (!point) return;
-
-        this.pointTooltip.hidden = false;
-        this.pointTooltip.innerHTML = `
-            <strong>Point ${point.index + 1}</strong>
-            <span>${formatTime(point.timeMs ?? point.draftTimeMs) || 'Unassigned'} · ${escapeHtml(point.status.replace('_', ' '))}</span>
-            <span>${escapeHtml(point.textPreview)}</span>
-        `;
-
-        const rect = anchor.getBoundingClientRect();
-        const tooltipRect = this.pointTooltip.getBoundingClientRect();
-        const desiredLeft = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-        const maxLeft = Math.max(16, window.innerWidth - tooltipRect.width - 16);
-        const left = clamp(desiredLeft, 16, maxLeft);
-        const top = rect.top - tooltipRect.height - 10 < 16
-            ? rect.bottom + 10
-            : rect.top - tooltipRect.height - 10;
-        this.pointTooltip.style.left = `${left}px`;
-        this.pointTooltip.style.top = `${top}px`;
+        this.pointWorkspaceRenderer.showTooltip({
+            points: this.points,
+            pointId,
+            anchor
+        });
     }
 
     hideTooltip() {
-        if (!this.pointTooltip) return;
-        this.pointTooltip.hidden = true;
-        this.pointTooltip.innerHTML = '';
+        this.pointWorkspaceRenderer.hideTooltip();
     }
 }

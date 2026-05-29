@@ -6,8 +6,22 @@
  */
 
 // Configuration
-// Use global API_URL if defined, otherwise default to relative path
-const getApiUrl = () => window.API_URL || '';
+let apiBaseUrl = '';
+const getApiUrl = () => apiBaseUrl;
+
+let _previewCallback = null;
+
+/**
+ * Inject preview callback. Called by app.js during init.
+ * Keeps preview integration explicit without importing the discovery controller.
+ */
+export function setPreviewCallback(fn) {
+    _previewCallback = fn;
+}
+
+export function setApiBaseUrl(baseUrl = '') {
+    apiBaseUrl = String(baseUrl ?? '');
+}
 
 // Batch state
 const batchState = {
@@ -16,7 +30,8 @@ const batchState = {
     maxItems: 10,
     currentBatchId: null,
     isProcessing: false,
-    isClearing: false
+    isClearing: false,
+    initialized: false
 };
 
 // Constants
@@ -29,9 +44,18 @@ let batchElements = null;
  * Initialize batch downloads feature
  */
 function initBatchDownloads() {
+    if (batchState.initialized) {
+        return;
+    }
+
     createBatchUI();
+    if (!batchElements) {
+        return;
+    }
+
     attachBatchEventListeners();
     document.addEventListener('preview-state-change', handlePreviewStateChange);
+    batchState.initialized = true;
     console.log('[Batch] Initialized with max items:', batchState.maxItems);
 }
 
@@ -364,10 +388,9 @@ function createBatchItemElement(item) {
 
 function previewBatchItem(itemId) {
     const item = batchState.items.find((candidate) => candidate.id === itemId);
-    const featuresModule = window.FeaturesModule;
-    if (!item || item.isLive || !featuresModule) return;
+    if (!item || item.isLive || !_previewCallback) return;
 
-    featuresModule.showPreview({
+    _previewCallback({
         videoId: item.videoId,
         title: item.title,
         thumbnail: item.thumbnail,
@@ -381,21 +404,23 @@ function previewBatchItem(itemId) {
 function handlePreviewStateChange(event) {
     if (!batchElements?.list) return;
 
-    const { videoId, source, isPlaying, isLoading } = event.detail || {};
+    const { videoId, source, isPlaying, isLoading, hasError } = event.detail || {};
     const batchItems = batchElements.list.querySelectorAll('.batch-item');
 
     batchItems.forEach((node) => {
         const item = batchState.items.find((candidate) => String(candidate.id) === node.dataset.id);
         const isActive = source === 'batch' && item?.videoId === videoId;
         node.classList.toggle('is-previewing', Boolean(isActive));
+        node.classList.toggle('is-preview-error', Boolean(isActive && hasError));
 
         const previewButton = node.querySelector('.batch-item-preview');
         if (previewButton) {
             previewButton.classList.toggle('is-active', Boolean(isActive));
+            previewButton.classList.toggle('has-error', Boolean(isActive && hasError));
             const label = previewButton.querySelector('span');
             if (label) {
                 label.textContent = isActive
-                    ? (isLoading ? 'Loading...' : (isPlaying ? 'Playing' : 'Selected'))
+                    ? (hasError ? 'Unavailable' : (isLoading ? 'Loading...' : (isPlaying ? 'Playing' : 'Selected')))
                     : 'Preview';
             }
         }
@@ -782,15 +807,9 @@ function isBatchModeEnabled() {
     return batchState.enabled;
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBatchDownloads);
-} else {
-    initBatchDownloads();
-}
-
 // Export functions for use by main app
-window.batchDownloads = {
+export const batchDownloads = {
+    init: initBatchDownloads,
     isEnabled: isBatchModeEnabled,
     add: addToBatch,
     getState: () => batchState

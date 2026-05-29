@@ -9,8 +9,7 @@
  * - Smooth gradient snake with trail effects
  */
 
-(function () {
-    'use strict';
+
 
     // ========================================
     // CONFIGURATION
@@ -452,7 +451,7 @@
     // ========================================
     // MAIN GAME CLASS
     // ========================================
-    class SnakeGame {
+    export class SnakeGame {
         constructor(elements) {
             this.elements = elements;
             this.canvas = elements.canvas;
@@ -1048,8 +1047,3 @@
         }
     }
 
-    // ========================================
-    // EXPORT TO GLOBAL SCOPE
-    // ========================================
-    window.SnakeGame = SnakeGame;
-})();

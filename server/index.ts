@@ -8,10 +8,10 @@ import cors from 'cors';
 import fs from 'fs';
 import { config } from './config.js';
 import routes from './routes/index.js';
-import { loadTasks } from './services/taskManager.js';
-import { cleanupOldTasks, closeDatabase } from './services/sqliteTaskManager.js';
+import { cleanupOldTasks, close as closeTaskStore } from './services/taskStore.js';
 import { initializeQueue, closeQueue, getQueueStats, isEnabled as isQueueEnabled } from './services/jobQueue.js';
 import { initializeGenreCatalog, stopGenreCatalogWatcher } from './services/genreCatalog.js';
+import { cleanupPreviews } from './services/previewService.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 
@@ -38,8 +38,7 @@ if (!fs.existsSync(config.DOWNLOADS_DIR)) {
     fs.mkdirSync(config.DOWNLOADS_DIR, { recursive: true });
 }
 
-// Load persisted tasks (legacy support)
-loadTasks();
+
 
 // Dependency Checks
 import { execSync } from 'child_process';
@@ -116,6 +115,15 @@ const runCleanup = () => {
     } catch (e: any) {
         console.error('[Cleanup] Error cleaning tasks:', e.message);
     }
+
+    try {
+        const deletedPreviews = cleanupPreviews();
+        if (deletedPreviews > 0) {
+            console.log(`[Cleanup] Removed ${deletedPreviews} expired previews`);
+        }
+    } catch (e: any) {
+        console.error('[Cleanup] Error cleaning previews:', e.message);
+    }
 };
 
 setInterval(runCleanup, config.CLEANUP_INTERVAL_MS);
@@ -156,7 +164,7 @@ const shutdown = async (signal: string) => {
     try {
         stopGenreCatalogWatcher();
         await closeQueue();
-        closeDatabase();
+        closeTaskStore();
         console.log('[Server] Cleanup complete, exiting.');
         process.exit(0);
     } catch (e) {

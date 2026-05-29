@@ -18,23 +18,17 @@ node --check js/ui/themeController.js
 ## Current Status
 
 - `npm run build`: passed
-- `npm test` inside sandbox: lyrics route tests fail because Supertest cannot bind a port in the sandbox
-- `npm test` outside sandbox: lyrics tests pass
-- remaining failing suite: `tests/sqliteTaskManager.test.ts`
+- `npm test`: passed (30 files / 340 tests)
 - targeted `node --check` runs: passed
 
-## Known Blocker
+## Current Notes
 
-`better-sqlite3` is currently built for the wrong Node ABI.
+- `tests/jobQueue.test.ts` may log Redis connection errors when Redis is unavailable or sandboxed. The suite expects graceful fallback behavior and still passes.
+- Use `docs/RUNTIME_VERIFICATION.md` for browser smoke coverage that unit tests cannot prove.
 
-Observed error:
-- `ERR_DLOPEN_FAILED`
-- installed module uses `NODE_MODULE_VERSION 115`
-- current Node requires `NODE_MODULE_VERSION 131`
+## Dependency Rebuild Fallback
 
-## Recommended Fix
-
-Try this first:
+If `better-sqlite3` fails with `ERR_DLOPEN_FAILED` after a Node version change, try this first:
 
 ```bash
 npm rebuild better-sqlite3
