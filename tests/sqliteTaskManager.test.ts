@@ -121,6 +121,24 @@ describe('SQLite Task Manager', () => {
         expect(updated.downloadUrl).toBe('/api/download/test');
     });
 
+    it('should persist audio analysis stats', () => {
+        const created = taskManager.createTask('test_video_audio_stats', 'mp3');
+        const audioStats = {
+            bitrate: 192000,
+            sampleRate: 44100,
+            lufs: -14.2,
+            peakDb: -1.1,
+            duration: 183.4,
+            fileSize: 4_500_000
+        };
+
+        const updated = taskManager.updateTask(created.taskId, { audioStats });
+        const retrieved = taskManager.getTask(created.taskId);
+
+        expect(updated.audioStats).toEqual(audioStats);
+        expect(retrieved.audioStats).toEqual(audioStats);
+    });
+
     it('should update progress efficiently', () => {
         const created = taskManager.createTask('test_video_6', 'mp3');
 

@@ -10,6 +10,7 @@ describe('PreviewAudioEngine request races', () => {
     let statusSpy: ReturnType<typeof vi.fn>;
     let errorSpy: ReturnType<typeof vi.fn>;
     let stateSpy: ReturnType<typeof vi.fn>;
+    let progressSpy: ReturnType<typeof vi.fn>;
     let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
     let visualizer: { play: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn> };
     let originalRequestAnimationFrame: typeof globalThis.requestAnimationFrame;
@@ -19,6 +20,7 @@ describe('PreviewAudioEngine request races', () => {
         statusSpy = vi.fn();
         errorSpy = vi.fn();
         stateSpy = vi.fn();
+        progressSpy = vi.fn();
         visualizer = {
             play: vi.fn(),
             pause: vi.fn()
@@ -33,6 +35,7 @@ describe('PreviewAudioEngine request races', () => {
         engine = new PreviewAudioEngine({
             onStatus: statusSpy,
             onError: errorSpy,
+            onProgress: progressSpy,
             onStateChange: stateSpy,
             audioVisualizer: visualizer as any
         });
@@ -149,5 +152,37 @@ describe('PreviewAudioEngine request races', () => {
         expect(visualizer.pause).toHaveBeenCalled();
         expect(lateAudio.src).toBe('');
         expect(lateAudio.loadCalls).toBe(1);
+    });
+
+    it('resets a newly loaded preview to the beginning before rendering progress', async () => {
+        const outgoingAudio = new AudioStub('https://example.com/outgoing.mp3');
+        const incomingAudio = new AudioStub('https://example.com/incoming.mp3');
+        const pendingLoad = deferred<AudioStub>();
+
+        outgoingAudio.currentTime = 12;
+        incomingAudio.currentTime = 7;
+        engine.previewAudio = outgoingAudio as any;
+
+        vi.spyOn(engine, 'buildPreviewAudio').mockReturnValueOnce(incomingAudio as any);
+        vi.spyOn(engine, 'awaitPreviewCanPlay').mockReturnValueOnce(pendingLoad.promise as any);
+
+        const request = engine.beginRequest();
+        const pending = engine.loadPreview('https://example.com/incoming.mp3', {
+            requestId: request.requestId,
+            outgoingAudio: request.outgoingAudio,
+            shouldAutoplay: false,
+            seedSource: 'incoming-track'
+        });
+
+        incomingAudio.emit('loadedmetadata');
+        pendingLoad.resolve(incomingAudio);
+
+        await expect(pending).resolves.toBe(true);
+        expect(incomingAudio.currentTime).toBe(0);
+        expect(progressSpy).toHaveBeenLastCalledWith({
+            currentTime: 0,
+            duration: 30,
+            percent: 0
+        });
     });
 });

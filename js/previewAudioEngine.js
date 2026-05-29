@@ -92,7 +92,9 @@ export class PreviewAudioEngine {
             return false;
         }
 
+        this.resetAudioPosition(incomingAudio);
         this.previewAudio = incomingAudio;
+        this.emitProgress(incomingAudio);
 
         if (shouldAutoplay && outgoingAudio) {
             incomingAudio.volume = 0;
@@ -206,6 +208,18 @@ export class PreviewAudioEngine {
         return true;
     }
 
+    resetAudioPosition(audio) {
+        if (!audio || typeof audio.currentTime !== 'number') {
+            return;
+        }
+
+        try {
+            audio.currentTime = 0;
+        } catch {
+            // Some media sources reject seeks before their timeline is ready.
+        }
+    }
+
     stopCrossfade() {
         if (this.crossfadeFrameId) {
             cancelAnimationFrame(this.crossfadeFrameId);
@@ -312,11 +326,12 @@ export class PreviewAudioEngine {
                 return;
             }
 
+            this.resetAudioPosition(audio);
             this.callbacks.onMetadata({
                 duration: audio.duration,
                 seedSource
             });
-            this.emitProgress();
+            this.emitProgress(audio);
         };
 
         const onTimeUpdate = () => {
@@ -417,9 +432,9 @@ export class PreviewAudioEngine {
         this.crossfadeFrameId = requestAnimationFrame(fade);
     }
 
-    emitProgress() {
-        const currentTime = this.previewAudio?.currentTime ?? 0;
-        const duration = this.previewAudio?.duration ?? NaN;
+    emitProgress(audio = this.previewAudio) {
+        const currentTime = audio?.currentTime ?? 0;
+        const duration = audio?.duration ?? NaN;
         const percent = Number.isFinite(duration) && duration > 0
             ? Math.max(0, Math.min(1, currentTime / duration))
             : 0;

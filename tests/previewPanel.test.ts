@@ -22,6 +22,7 @@ const formatTime = (seconds: number) => {
 describe('previewPanel', () => {
     const createElements = () => {
         const previewPlayer = document.createElement('div');
+        const previewLoading = document.createElement('div');
         const previewTransitionNote = document.createElement('span');
         const previewLoadingText = document.createElement('span');
         const previewProgressFill = document.createElement('div');
@@ -36,6 +37,7 @@ describe('previewPanel', () => {
 
         return {
             previewPlayer,
+            previewLoading,
             previewTransitionNote,
             previewLoadingText,
             previewProgressFill,
@@ -61,10 +63,17 @@ describe('previewPanel', () => {
         expect(elements.previewTransitionNote.textContent).toBe('Preparing next preview...');
 
         showPreviewError(elements, 'Preview failed');
+        expect(elements.previewPlayer.classList.contains('has-error')).toBe(true);
+        expect(elements.previewPlayer.classList.contains('is-loading')).toBe(false);
+        expect(elements.previewPlayer.getAttribute('aria-busy')).toBe('false');
+        expect(elements.previewLoading.getAttribute('role')).toBe('alert');
+        expect(elements.previewTransitionNote.textContent).toBe('Preview unavailable');
         expect(elements.previewLoadingText.textContent).toBe('⚠️ Preview failed');
         expect(elements.previewLoadingText.style.color).toBe('var(--destructive)');
 
         resetPreviewLoadingText(elements);
+        expect(elements.previewPlayer.classList.contains('has-error')).toBe(false);
+        expect(elements.previewLoading.getAttribute('role')).toBe('status');
         expect(elements.previewLoadingText.textContent).toBe('Generating preview...');
         expect(elements.previewLoadingText.style.color).toBe('');
     });
@@ -108,6 +117,16 @@ describe('previewPanel', () => {
         expect(state.previewVideoId).toBe('abc123');
         expect(elements.previewPlayer.classList.contains('is-playing')).toBe(true);
         expect(eventSpy).toHaveBeenCalledTimes(1);
+        expect(eventSpy.mock.calls[0][0].detail.hasError).toBe(false);
+
+        showPreviewError(elements, 'Preview failed');
+        emitPreviewStateChange({
+            documentRef,
+            elements,
+            state,
+            previewAudioEngine
+        });
+        expect(eventSpy.mock.calls[1][0].detail.hasError).toBe(true);
 
         renderPreviewProgress(elements, {
             currentTime: 12,

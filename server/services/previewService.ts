@@ -13,6 +13,12 @@ const PREVIEW_TIMEOUT_MS = 60 * 1000;
 const PREVIEW_TEMP_MAX_AGE_MS = PREVIEW_TIMEOUT_MS * 2;
 const STDERR_BUFFER_LIMIT = 2048;
 const SAFE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
+const PROCESS_BANNER_PATTERNS = [
+    /^ffmpeg version/i,
+    /^built with/i,
+    /^configuration:/i,
+    /^lib(?:av|sw|post)/i
+];
 
 export interface PreviewResult {
     previewId: string;
@@ -76,6 +82,32 @@ const appendStderrChunk = (currentValue: string, chunk: Buffer | string): string
     return wasTruncated ? `${currentValue}${nextChunk}…(truncated)` : `${currentValue}${nextChunk}`;
 };
 
+const summarizeProcessOutput = (output: string): string => {
+    const lines = output
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+    const diagnosticLines = lines.filter((line) => (
+        !PROCESS_BANNER_PATTERNS.some((pattern) => pattern.test(line))
+    ));
+    const summary = (diagnosticLines.length > 0 ? diagnosticLines : lines)
+        .slice(-4)
+        .join(' ');
+
+    return summary.slice(0, 600);
+};
+
+class PreviewProcessError extends Error {
+    constructor(
+        readonly processName: 'yt-dlp' | 'ffmpeg',
+        readonly exitCode: number | null,
+        stderr: string
+    ) {
+        const summary = summarizeProcessOutput(stderr);
+        super(`${processName} exited with code ${exitCode ?? 'unknown'}${summary ? `: ${summary}` : ''}`);
+    }
+}
+
 export const validatePreviewVideoId = (videoId: unknown): string | null => {
     if (typeof videoId !== 'string') {
         return null;
@@ -92,7 +124,11 @@ export const validatePreviewVideoId = (videoId: unknown): string | null => {
     return videoId;
 };
 
-const createPreview = async (videoId: string, previewPath: string): Promise<void> => {
+const createPreviewAtOffset = async (
+    videoId: string,
+    previewPath: string,
+    startOffsetSeconds: number
+): Promise<void> => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     const tempPreviewPath = getPreviewTempFilePath(videoId);
 
@@ -166,11 +202,12 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
         ffmpeg = spawn('ffmpeg', [
             '-y',
             '-i', 'pipe:0',
-            '-ss', String(PREVIEW_START_OFFSET),
+            '-ss', String(startOffsetSeconds),
             '-t', String(PREVIEW_DURATION),
             '-acodec', 'libmp3lame',
             '-ab', '128k',
             '-ar', '44100',
+            '-f', 'mp3',
             tempPreviewPath
         ]);
 
@@ -224,7 +261,7 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
                     // Ignore stdin shutdown errors during yt-dlp failure handling.
                 }
 
-                settle(new Error(`yt-dlp exited with code ${code}: ${ytdlpError.slice(0, 500)}`));
+                settle(new PreviewProcessError('yt-dlp', code, ytdlpError));
             }
         });
 
@@ -244,9 +281,33 @@ const createPreview = async (videoId: string, previewPath: string): Promise<void
                 return;
             }
 
-            settle(new Error(`FFmpeg exited with code ${code}: ${ffmpegError.slice(0, 500)}`));
+            settle(new PreviewProcessError('ffmpeg', code, ffmpegError));
         });
     });
+};
+
+const shouldRetryPreviewFromStart = (error: unknown): boolean => (
+    PREVIEW_START_OFFSET > 0
+    && error instanceof PreviewProcessError
+    && error.processName === 'ffmpeg'
+    && Number.isFinite(error.exitCode)
+);
+
+const createPreview = async (videoId: string, previewPath: string): Promise<void> => {
+    try {
+        await createPreviewAtOffset(videoId, previewPath, PREVIEW_START_OFFSET);
+    } catch (error) {
+        if (!shouldRetryPreviewFromStart(error)) {
+            throw error;
+        }
+
+        console.warn('[Preview] Retrying preview from the beginning after FFmpeg failed at offset', {
+            videoId,
+            offsetSeconds: PREVIEW_START_OFFSET,
+            error: error instanceof Error ? error.message : error
+        });
+        await createPreviewAtOffset(videoId, previewPath, 0);
+    }
 };
 
 export async function generatePreview(videoId: string): Promise<PreviewResult> {
@@ -338,12 +399,6 @@ export function cleanupPreviews(): number {
             }
 
             fs.unlinkSync(previewPath);
-            if (!isTempFile) {
-                previewCache.set(videoId, {
-                    path: previewPath,
-                    createdAt: stat.mtimeMs
-                });
-            }
             previewCache.delete(videoId);
             cleaned++;
         } catch (error) {

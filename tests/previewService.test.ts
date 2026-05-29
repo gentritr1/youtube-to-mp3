@@ -127,6 +127,18 @@ describe('previewService', () => {
         expect(spawnMock).toHaveBeenCalledTimes(2);
     });
 
+    it('passes an explicit MP3 muxer for temp preview output paths', async () => {
+        await generatePreview('muxer123456');
+
+        const ffmpegCall = spawnMock.mock.calls.find(([command]) => command === 'ffmpeg');
+        expect(ffmpegCall).toBeDefined();
+
+        const args = ffmpegCall?.[1] as string[];
+        const outputPath = args[args.length - 1];
+        expect(outputPath).toContain('_preview.mp3.tmp.');
+        expect(args.slice(-3)).toEqual(['-f', 'mp3', outputPath]);
+    });
+
     it('drops cache entries when the preview file disappears', async () => {
         await generatePreview('vanish12345');
         const previewPath = getPreviewPath('vanish12345');
@@ -191,6 +203,82 @@ describe('previewService', () => {
         expect(fs.existsSync(path.join(downloadsDir, 'previews', 'dupebuild12_preview.mp3'))).toBe(true);
         expect(ffmpegProcessCount).toBe(1);
         expect(spawnMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('retries preview generation from the beginning when the offset has no audio', async () => {
+        const offsets: string[] = [];
+        let ffmpegAttempt = 0;
+
+        spawnMock.mockImplementation((command: string, args: string[]) => {
+            const process = createMockProcess();
+
+            if (command === 'ffmpeg') {
+                ffmpegAttempt += 1;
+                offsets.push(args[args.indexOf('-ss') + 1]);
+
+                if (ffmpegAttempt === 1) {
+                    queueMicrotask(() => {
+                        process.stderr.write('ffmpeg version 8.0.1\nOutput file is empty, nothing was encoded\n');
+                        process.emit('close', 234);
+                    });
+                    return process;
+                }
+
+                const previewPath = args[args.length - 1];
+                fs.mkdirSync(path.dirname(previewPath), { recursive: true });
+                fs.writeFileSync(previewPath, 'preview-bytes');
+                queueMicrotask(() => {
+                    process.emit('close', 0);
+                });
+                return process;
+            }
+
+            if (command === 'yt-dlp') {
+                queueMicrotask(() => {
+                    process.emit('close', 0);
+                });
+                return process;
+            }
+
+            throw new Error(`Unexpected command: ${command}`);
+        });
+
+        const result = await generatePreview('shortvid123');
+
+        expect(result.previewUrl).toBe('/api/preview/shortvid123');
+        expect(offsets).toEqual(['30', '0']);
+        expect(fs.existsSync(path.join(downloadsDir, 'previews', 'shortvid123_preview.mp3'))).toBe(true);
+    });
+
+    it('omits FFmpeg banner noise from preview generation errors', async () => {
+        spawnMock.mockImplementation((command: string) => {
+            const process = createMockProcess();
+
+            if (command === 'ffmpeg') {
+                queueMicrotask(() => {
+                    process.stderr.write([
+                        'ffmpeg version 8.0.1 Copyright (c) 2000-2025 the FFmpeg developers',
+                        'built with Apple clang version 17.0.0',
+                        'configuration: --prefix=/opt/homebrew/Cellar/ffmpeg',
+                        'Output file is empty, nothing was encoded'
+                    ].join('\n'));
+                    process.emit('close', 234);
+                });
+                return process;
+            }
+
+            if (command === 'yt-dlp') {
+                queueMicrotask(() => {
+                    process.emit('close', 0);
+                });
+                return process;
+            }
+
+            throw new Error(`Unexpected command: ${command}`);
+        });
+
+        await expect(generatePreview('failvid1234')).rejects.toThrow('Output file is empty');
+        await expect(generatePreview('failvid1234')).rejects.not.toThrow('ffmpeg version');
     });
 
     it('cleans up expired previews', async () => {

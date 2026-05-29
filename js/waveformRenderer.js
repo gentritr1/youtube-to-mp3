@@ -5,7 +5,9 @@ import {
 
 const DEFAULT_ROOT = typeof document !== 'undefined' ? document.documentElement : null;
 
-const readThemeValue = (styles, name, fallback) => styles.getPropertyValue(name).trim() || fallback;
+const readThemeValue = (styles, name, fallback) => styles?.getPropertyValue(name).trim() || fallback;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const getColorContext = (documentRef) => {
     if (!documentRef) return null;
@@ -45,7 +47,17 @@ const withAlpha = (color, alpha, documentRef) => {
     return color;
 };
 
-export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_ROOT } = {}) => {
+const readSignalSample = (samples, normalizedPosition) => {
+    if (!samples || typeof samples.length !== 'number' || samples.length === 0) {
+        return null;
+    }
+
+    const index = Math.min(samples.length - 1, Math.max(0, Math.round(normalizedPosition * (samples.length - 1))));
+    const value = Number(samples[index]);
+    return Number.isFinite(value) ? clamp(value, 0, 1) : null;
+};
+
+export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_ROOT, samples = null } = {}) => {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -69,6 +81,10 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_RO
     const mutedForeground = readThemeValue(styles, '--muted-foreground', RUNTIME_THEME_TOKEN_DEFAULTS.mutedForeground);
     const glassHighlight = readThemeValue(styles, '--glass-highlight', RUNTIME_THEME_TOKEN_DEFAULTS.glassHighlight);
     const surfaceGlassSoft = readThemeValue(styles, '--surface-glass-soft', RUNTIME_THEME_TOKEN_DEFAULTS.surfaceGlassSoft);
+    const energyStart = readThemeValue(styles, '--preview-energy-start', sky);
+    const energyMid = readThemeValue(styles, '--preview-energy-mid', heroOrb);
+    const energyEnd = readThemeValue(styles, '--preview-energy-end', emerald);
+    const energyGlow = readThemeValue(styles, '--preview-energy-glow', heroOrb);
 
     ctx.clearRect(0, 0, width, height);
 
@@ -93,15 +109,27 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_RO
         return seed / 4294967296;
     };
 
-    const barWidth = 5;
-    const gap = 2;
+    const fillBar = (x, y, barWidth, barHeight, radius) => {
+        if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(x, y, barWidth, barHeight, radius);
+            ctx.fill();
+            return;
+        }
+
+        ctx.fillRect(x, y, barWidth, barHeight);
+    };
+
+    const barWidth = width > 720 ? 5 : 4;
+    const gap = 3;
     const barCount = Math.max(24, Math.floor(width / (barWidth + gap)));
     const centerY = height / 2;
-    const maxAmplitude = height * 0.46;
+    const maxAmplitude = height * 0.5;
     const waveformGradient = ctx.createLinearGradient(0, 0, width, 0);
-    waveformGradient.addColorStop(0, sky);
-    waveformGradient.addColorStop(0.42, heroOrb);
-    waveformGradient.addColorStop(1, emerald);
+    waveformGradient.addColorStop(0, energyStart);
+    waveformGradient.addColorStop(0.46, energyMid);
+    waveformGradient.addColorStop(0.72, energyMid);
+    waveformGradient.addColorStop(1, energyEnd);
 
     const shadowGradient = ctx.createLinearGradient(0, 0, width, height);
     shadowGradient.addColorStop(0, glassHighlight);
@@ -110,26 +138,39 @@ export const drawWaveform = (canvas, { seedSource = 'preview', root = DEFAULT_RO
     for (let i = 0; i < barCount; i += 1) {
         const x = i * (barWidth + gap);
         const normalized = i / Math.max(barCount - 1, 1);
-        const contour = 0.24 + Math.sin(normalized * Math.PI) * 0.56;
-        const ripple = Math.sin((normalized * 11) + (random() * 2.4)) * 0.12;
-        const jitter = random() * 0.18;
-        const amplitude = Math.max(0.12, Math.min(1, contour + ripple + jitter));
+        const signalSample = readSignalSample(samples, normalized);
+        const amplitude = signalSample === null
+            ? (() => {
+                const contour = 0.26 + Math.sin(normalized * Math.PI) * 0.38;
+                const bassPulse = Math.max(0, Math.sin((normalized * Math.PI * 5.4) + 0.45)) * 0.18;
+                const syncopation = Math.max(0, Math.sin((normalized * Math.PI * 17) + (random() * 0.65))) * 0.14;
+                const beat = (i % 17 === 4 || i % 17 === 5 || i % 23 === 11) ? 0.18 : 0;
+                const jitter = random() * 0.16;
+                return clamp(contour + bassPulse + syncopation + beat + jitter, 0.16, 1);
+            })()
+            : clamp(0.14 + (signalSample ** 0.72) * 0.86, 0.14, 1);
         const barHeight = Math.max(8, amplitude * maxAmplitude);
         const y = centerY - (barHeight / 2);
 
         ctx.fillStyle = bedGradient;
-        ctx.globalAlpha = 0.42;
-        ctx.fillRect(x, centerY - Math.max(5, (barHeight * 0.44)), barWidth, Math.max(10, barHeight * 0.88));
+        ctx.globalAlpha = 0.32;
+        fillBar(x, centerY - Math.max(5, (barHeight * 0.36)), barWidth, Math.max(10, barHeight * 0.72), 3);
         ctx.globalAlpha = 1;
 
         ctx.fillStyle = shadowGradient;
-        ctx.fillRect(x, y - 1, barWidth, barHeight + 2);
+        fillBar(x, y - 1, barWidth, barHeight + 2, 3);
 
         ctx.fillStyle = waveformGradient;
-        ctx.fillRect(x, y, barWidth, barHeight);
+        ctx.shadowColor = withAlpha(energyGlow, 0.3, documentRef);
+        ctx.shadowBlur = amplitude > 0.72 ? 12 : 5;
+        fillBar(x, y, barWidth, barHeight, 3);
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = withAlpha(foreground, amplitude > 0.72 ? 0.24 : 0.12, documentRef);
+        fillBar(x, y, barWidth, Math.max(2, barHeight * 0.12), 2);
 
         ctx.fillStyle = mutedForeground;
-        ctx.globalAlpha = 0.18;
+        ctx.globalAlpha = 0.12;
         ctx.fillRect(x, centerY - 0.5, barWidth, 1);
         ctx.globalAlpha = 1;
     }

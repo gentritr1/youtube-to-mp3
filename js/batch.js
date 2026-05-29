@@ -404,21 +404,23 @@ function previewBatchItem(itemId) {
 function handlePreviewStateChange(event) {
     if (!batchElements?.list) return;
 
-    const { videoId, source, isPlaying, isLoading } = event.detail || {};
+    const { videoId, source, isPlaying, isLoading, hasError } = event.detail || {};
     const batchItems = batchElements.list.querySelectorAll('.batch-item');
 
     batchItems.forEach((node) => {
         const item = batchState.items.find((candidate) => String(candidate.id) === node.dataset.id);
         const isActive = source === 'batch' && item?.videoId === videoId;
         node.classList.toggle('is-previewing', Boolean(isActive));
+        node.classList.toggle('is-preview-error', Boolean(isActive && hasError));
 
         const previewButton = node.querySelector('.batch-item-preview');
         if (previewButton) {
             previewButton.classList.toggle('is-active', Boolean(isActive));
+            previewButton.classList.toggle('has-error', Boolean(isActive && hasError));
             const label = previewButton.querySelector('span');
             if (label) {
                 label.textContent = isActive
-                    ? (isLoading ? 'Loading...' : (isPlaying ? 'Playing' : 'Selected'))
+                    ? (hasError ? 'Unavailable' : (isLoading ? 'Loading...' : (isPlaying ? 'Playing' : 'Selected')))
                     : 'Preview';
             }
         }

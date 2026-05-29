@@ -69,12 +69,26 @@
         radial-gradient(circle at 84% 16%, rgba(129, 140, 248, 0.14), transparent 22%),
         linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 18%),
         hsl(225 22% 8%);
-    --preview-live-bar-shadow:
-        0 0 0 1px rgba(191, 219, 254, 0.12),
-        0 0 12px rgba(96, 165, 250, 0.22);
-    --preview-playhead-ring:
-        0 0 0 6px rgba(59, 130, 246, 0.22),
-        0 0 18px rgba(96, 165, 250, 0.24);
+    --preview-energy-start: var(--sky);
+    --preview-energy-mid: var(--violet);
+    --preview-energy-end: var(--emerald);
+    --preview-energy-glow: var(--hero-orb);
+    --preview-energy-scan: rgba(96, 165, 250, 0.36);
+    --preview-energy-rest: rgba(191, 219, 254, 0.08);
+}
+
+:root[data-theme="space"] .preview-player {
+    --preview-waveform-bg:
+        radial-gradient(circle at 18% 50%, rgba(59, 130, 246, 0.24), transparent 34%),
+        radial-gradient(circle at 84% 16%, rgba(129, 140, 248, 0.14), transparent 22%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 18%),
+        hsl(225 22% 8%);
+    --preview-energy-start: var(--sky);
+    --preview-energy-mid: var(--violet);
+    --preview-energy-end: var(--emerald);
+    --preview-energy-glow: var(--hero-orb);
+    --preview-energy-scan: rgba(96, 165, 250, 0.36);
+    --preview-energy-rest: rgba(191, 219, 254, 0.08);
 }
 
 :root[data-theme="space"] .theme-scene-moon,

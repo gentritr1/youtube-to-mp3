@@ -4,6 +4,7 @@
  */
 
 import { drawWaveform as renderWaveform } from './waveformRenderer.js';
+import { loadWaveformSamples } from './waveformSignal.js';
 import { PreviewAudioEngine } from './previewAudioEngine.js';
 import {
     activatePreviewPanel,
@@ -37,11 +38,25 @@ const FeaturesModule = (() => {
         genres: [],
         activeGenre: 'global',
         previewVideoId: null,
-        previewSource: 'popular'
+        previewSource: 'popular',
+        previewSeedSource: '',
+        previewWaveformSamples: null
     };
 
     // DOM Elements (populated on init)
     let elements = {};
+    const getPreviewErrorMessage = (error) => {
+        const rawMessage = error?.message || String(error || '');
+        if (!rawMessage) {
+            return 'Preview is unavailable for this track. You can still convert it or try another video.';
+        }
+
+        const isTechnicalFailure = /ffmpeg|yt-dlp|exited with code|failed to load audio preview/i.test(rawMessage);
+        return isTechnicalFailure
+            ? 'Preview is unavailable for this track. You can still convert it or try another video.'
+            : rawMessage;
+    };
+
     const previewAudioEngine = new PreviewAudioEngine({
         onStateChange: ({ isPlaying, isLoading }) => {
             elements.previewPlayBtn?.classList.toggle('playing', Boolean(isPlaying));
@@ -62,11 +77,12 @@ const FeaturesModule = (() => {
             if (elements.previewTimeTotal) {
                 elements.previewTimeTotal.textContent = formatTime(duration);
             }
-            renderWaveform(elements.waveformCanvas, { seedSource });
+            state.previewSeedSource = seedSource || `${state.previewVideoId || 'preview'}:${elements.previewTitle?.textContent || ''}`;
+            renderCurrentWaveform();
         },
         onError: (message) => {
             setPreviewLoadingState(elements, true);
-            showPreviewError(elements, message);
+            showPreviewError(elements, getPreviewErrorMessage({ message }));
         },
         audioVisualizer: _audioVisualizer
     });
@@ -172,12 +188,6 @@ const FeaturesModule = (() => {
                     </button>
                 </div>
                 <div class="preview-waveform" id="preview-waveform">
-                    <div class="waveform-live-meter" aria-hidden="true">
-                        <span class="waveform-live-bar"></span>
-                        <span class="waveform-live-bar"></span>
-                        <span class="waveform-live-bar"></span>
-                        <span class="waveform-live-bar"></span>
-                    </div>
                     <div class="waveform-theme-charm" aria-hidden="true">
                         <span class="theme-charm theme-charm-space">Moon mix</span>
                         <span class="theme-charm theme-charm-green">Forest bounce</span>
@@ -400,6 +410,7 @@ const FeaturesModule = (() => {
         }) });
         resetPreviewProgress(elements);
         resetPreviewLoadingText(elements);
+        state.previewWaveformSamples = null;
         const { requestId, controller, outgoingAudio } = previewAudioEngine.beginRequest();
         updatePreviewStatus(elements, outgoingAudio && previewAudioEngine.isPlaying() ? 'Preparing next preview...' : 'Generating preview...');
 
@@ -438,19 +449,29 @@ const FeaturesModule = (() => {
                 && previewAudioEngine.getCurrentAudio() === outgoingAudio
             );
 
-            await previewAudioEngine.loadPreview(data.previewUrl, {
+            const loaded = await previewAudioEngine.loadPreview(data.previewUrl, {
                 requestId,
                 outgoingAudio,
                 shouldAutoplay,
                 seedSource: `${state.previewVideoId || 'preview'}:${elements.previewTitle?.textContent || ''}`
             });
+
+            if (loaded) {
+                void updateWaveformFromPreviewSignal(data.previewUrl, requestId, controller.signal);
+            }
         } catch (error) {
             if (error.name === 'AbortError') {
                 return;
             }
             if (!previewAudioEngine.isCurrentRequest(requestId)) return;
             console.error('[Preview] Error:', error);
-            showPreviewError(elements, error.message || 'Failed to generate preview');
+            previewAudioEngine.stopAll();
+            showPreviewError(elements, getPreviewErrorMessage(error));
+            emitPreviewStateChange({
+                elements,
+                state,
+                previewAudioEngine
+            });
         } finally {
             previewAudioEngine.endRequest(requestId, controller);
         }
@@ -463,6 +484,7 @@ const FeaturesModule = (() => {
         previewAudioEngine.stopAll();
         state.previewVideoId = null;
         state.previewSource = 'popular';
+        state.previewWaveformSamples = null;
         deactivatePreviewPanel(elements);
         resetPreviewProgress(elements);
 
@@ -510,9 +532,36 @@ const FeaturesModule = (() => {
         updatePreviewStatus(elements, 'Scroll to scrub');
     };
 
-    /**
-     * Draw waveform visualization (placeholder - actual would use Web Audio API)
-     */
+    const renderCurrentWaveform = () => {
+        if (!state.previewSeedSource || !elements.waveformCanvas) {
+            return;
+        }
+
+        renderWaveform(elements.waveformCanvas, {
+            seedSource: state.previewSeedSource,
+            root: elements.previewPlayer || document.documentElement,
+            samples: state.previewWaveformSamples
+        });
+    };
+
+    const updateWaveformFromPreviewSignal = async (previewUrl, requestId, signal) => {
+        try {
+            const samples = await loadWaveformSamples(previewUrl, { signal });
+            if (!samples.length || !previewAudioEngine.isCurrentRequest(requestId)) {
+                return;
+            }
+
+            state.previewWaveformSamples = samples;
+            renderCurrentWaveform();
+        } catch (error) {
+            if (error?.name === 'AbortError') {
+                return;
+            }
+
+            console.warn('[Preview] Falling back to seeded waveform:', error);
+        }
+    };
+
     /**
      * Convert from preview
      */
@@ -560,13 +609,18 @@ const FeaturesModule = (() => {
         return getRandomTracksFromGenres(state.genres, count);
     };
 
+    const redrawWaveform = () => {
+        renderCurrentWaveform();
+    };
+
     // Public API
     return {
         init,
         reload,
         showPreview,
         closePreview,
-        getRandomTracks
+        getRandomTracks,
+        redrawWaveform
     };
 })();
 

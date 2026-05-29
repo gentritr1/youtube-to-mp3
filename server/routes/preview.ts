@@ -15,6 +15,75 @@ import {
 const router = Router();
 
 const INVALID_VIDEO_ID_MESSAGE = 'Invalid YouTube video ID. Expected 11 URL-safe characters.';
+const PREVIEW_UNAVAILABLE_MESSAGE = 'Preview is unavailable for this track. You can still convert it or try another video.';
+const TECHNICAL_PREVIEW_ERROR_PATTERN = /ffmpeg|yt-dlp|exited with code|muxer|output format/i;
+
+export interface PreviewRange {
+    start: number;
+    end: number;
+}
+
+export const parsePreviewRange = (range: string, fileSize: number): PreviewRange | null => {
+    if (!Number.isFinite(fileSize) || fileSize <= 0) {
+        return null;
+    }
+
+    const rangeMatch = range.match(/^bytes=(\d*)-(\d*)$/);
+    if (!rangeMatch) {
+        return null;
+    }
+
+    const [, startValue, endValue] = rangeMatch;
+    if (!startValue && !endValue) {
+        return null;
+    }
+
+    if (!startValue && endValue) {
+        const suffixLength = parseInt(endValue, 10);
+        if (!Number.isFinite(suffixLength) || suffixLength <= 0) {
+            return null;
+        }
+
+        return {
+            start: Math.max(0, fileSize - suffixLength),
+            end: fileSize - 1
+        };
+    }
+
+    const start = parseInt(startValue, 10);
+    const requestedEnd = endValue ? parseInt(endValue, 10) : fileSize - 1;
+    if (
+        !Number.isFinite(start)
+        || !Number.isFinite(requestedEnd)
+        || start < 0
+        || requestedEnd < 0
+        || start > requestedEnd
+        || start >= fileSize
+    ) {
+        return null;
+    }
+
+    return {
+        start,
+        end: Math.min(requestedEnd, fileSize - 1)
+    };
+};
+
+const sendRangeNotSatisfiable = (res: Response, fileSize: number) => {
+    res.writeHead(416, {
+        'Content-Range': `bytes */${fileSize}`
+    });
+    return res.end();
+};
+
+const getPreviewGenerationMessage = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : '';
+    if (!message || TECHNICAL_PREVIEW_ERROR_PATTERN.test(message)) {
+        return PREVIEW_UNAVAILABLE_MESSAGE;
+    }
+
+    return message;
+};
 
 const handlePreviewStreamError = (res: Response, error: Error) => {
     console.error('[Preview] Stream error:', error);
@@ -74,7 +143,7 @@ router.post('/', async (req: Request, res: Response) => {
         console.error('[Preview] Generation error details:', error);
         return res.status(500).json({
             success: false,
-            message: error.message || 'Failed to generate preview'
+            message: getPreviewGenerationMessage(error)
         });
     }
 });
@@ -104,34 +173,12 @@ router.get('/:videoId', async (req: Request, res: Response) => {
         try {
             const stat = fs.statSync(previewPath);
             const fileSize = stat.size;
-            const rangeMatch = range.match(/bytes=(\d*)-(\d*)/);
-            if (!rangeMatch) {
-                res.writeHead(416, {
-                    'Content-Range': `bytes */${fileSize}`
-                });
-                return res.end();
+            const parsedRange = parsePreviewRange(range, fileSize);
+            if (!parsedRange) {
+                return sendRangeNotSatisfiable(res, fileSize);
             }
 
-            let start = rangeMatch[1] ? parseInt(rangeMatch[1], 10) : 0;
-            let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : fileSize - 1;
-
-            if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < 0) {
-                res.writeHead(416, {
-                    'Content-Range': `bytes */${fileSize}`
-                });
-                return res.end();
-            }
-
-            start = Math.max(0, Math.min(start, fileSize - 1));
-            end = Math.max(start, Math.min(end, fileSize - 1));
-
-            if (start > end) {
-                res.writeHead(416, {
-                    'Content-Range': `bytes */${fileSize}`
-                });
-                return res.end();
-            }
-
+            const { start, end } = parsedRange;
             const chunkSize = end - start + 1;
             const stream = fs.createReadStream(previewPath, { start, end });
 

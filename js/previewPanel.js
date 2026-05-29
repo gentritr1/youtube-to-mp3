@@ -1,6 +1,11 @@
 export const setPreviewLoadingState = (elements, isLoading) => {
-    elements?.previewPlayer?.classList.toggle('is-loading', Boolean(isLoading));
-    elements?.previewPlayer?.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+    const previewPlayer = elements?.previewPlayer;
+    previewPlayer?.classList.toggle('is-loading', Boolean(isLoading));
+    previewPlayer?.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+    if (isLoading) {
+        previewPlayer?.classList.remove('has-error');
+        elements?.previewLoading?.setAttribute('role', 'status');
+    }
 };
 
 export const updatePreviewStatus = (elements, message) => {
@@ -14,6 +19,8 @@ export const resetPreviewLoadingText = (elements) => {
         return;
     }
 
+    elements?.previewPlayer?.classList.remove('has-error');
+    elements?.previewLoading?.setAttribute('role', 'status');
     elements.previewLoadingText.textContent = 'Generating preview...';
     elements.previewLoadingText.style.color = '';
 };
@@ -23,6 +30,13 @@ export const showPreviewError = (elements, message) => {
         return;
     }
 
+    elements?.previewPlayer?.classList.add('has-error');
+    elements?.previewPlayer?.classList.remove('is-loading');
+    elements?.previewPlayer?.setAttribute('aria-busy', 'false');
+    elements?.previewLoading?.setAttribute('role', 'alert');
+    if (elements?.previewTransitionNote) {
+        elements.previewTransitionNote.textContent = 'Preview unavailable';
+    }
     elements.previewLoadingText.textContent = `⚠️ ${message}`;
     elements.previewLoadingText.style.color = 'var(--destructive)';
 };
@@ -94,13 +108,15 @@ export const updatePreviewMetadata = ({ elements, state, video, emitPreviewState
 export const emitPreviewStateChange = ({ documentRef = document, elements, state, previewAudioEngine }) => {
     const isPlaying = previewAudioEngine.isPlaying();
     const isLoading = previewAudioEngine.isLoading();
+    const hasError = elements?.previewPlayer?.classList.contains('has-error') ?? false;
     elements?.previewPlayer?.classList.toggle('is-playing', Boolean(isPlaying));
     documentRef.dispatchEvent(new CustomEvent('preview-state-change', {
         detail: {
             videoId: state.previewVideoId,
             source: state.previewSource,
             isPlaying,
-            isLoading
+            isLoading,
+            hasError
         }
     }));
 };

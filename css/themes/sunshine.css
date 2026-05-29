@@ -65,18 +65,46 @@
     --game-canvas: hsl(192 32% 22%);
     --game-canvas-border: rgba(232, 141, 94, 0.3);
     --preview-waveform-bg:
-        radial-gradient(circle at 18% 50%, rgba(249, 115, 22, 0.2), transparent 36%),
-        radial-gradient(circle at 84% 16%, rgba(56, 189, 248, 0.12), transparent 22%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 22%),
-        hsl(191 28% 27%);
+        radial-gradient(circle at 18% 50%, rgba(249, 115, 22, 0.22), transparent 34%),
+        radial-gradient(circle at 76% 18%, rgba(251, 191, 36, 0.12), transparent 24%),
+        linear-gradient(180deg, rgba(255, 246, 232, 0.13), transparent 24%),
+        hsl(28 26% 25%);
     --preview-waveform-border: rgba(232, 141, 94, 0.38);
-    --preview-live-bar-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(249, 115, 22, 0.96) 46%, rgba(56, 189, 248, 0.82));
-    --preview-live-bar-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.16),
-        0 0 12px rgba(249, 115, 22, 0.22);
-    --preview-playhead-ring:
-        0 0 0 6px rgba(251, 191, 36, 0.24),
-        0 0 18px rgba(249, 115, 22, 0.22);
+    --preview-playhead-bg: linear-gradient(180deg, rgba(255, 246, 232, 0.92), rgba(249, 115, 22, 0.96) 52%, rgba(251, 191, 36, 0.82));
+    --preview-energy-start: hsl(24 96% 61%);
+    --preview-energy-mid: hsl(38 97% 60%);
+    --preview-energy-end: hsl(11 86% 62%);
+    --preview-energy-glow: rgba(249, 115, 22, 0.9);
+    --preview-energy-scan: rgba(251, 191, 36, 0.34);
+    --preview-energy-rest: rgba(255, 233, 204, 0.12);
+}
+
+:root[data-theme="sunshine"] .preview-player {
+    --preview-waveform-bg:
+        radial-gradient(circle at 18% 48%, rgba(249, 115, 22, 0.16), transparent 32%),
+        radial-gradient(circle at 78% 18%, rgba(251, 191, 36, 0.1), transparent 24%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 237, 214, 0.18) 54%, rgba(255, 224, 190, 0.24)),
+        hsl(35 100% 92%);
+    --preview-waveform-border: rgba(232, 141, 94, 0.28);
+    --preview-waveform-shade-top: rgba(255, 255, 255, 0.26);
+    --preview-waveform-shade-bottom: rgba(249, 115, 22, 0.08);
+    --preview-progress-bg:
+        linear-gradient(90deg, rgba(249, 115, 22, 0.16), rgba(251, 191, 36, 0.14), rgba(232, 91, 67, 0.1)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+    --preview-progress-opacity: 0.78;
+    --preview-progress-shadow: inset -8px 0 16px rgba(249, 115, 22, 0.1);
+    --preview-grid-opacity: 0.28;
+    --preview-grid-playing-opacity: 0.32;
+    --preview-playhead-bg: linear-gradient(180deg, hsl(22 92% 58%), hsl(38 90% 55%));
+    --preview-playhead-shadow:
+        0 0 0 1px rgba(255, 248, 238, 0.7),
+        0 0 14px rgba(249, 115, 22, 0.22);
+    --preview-energy-start: hsl(22 82% 49%);
+    --preview-energy-mid: hsl(36 84% 48%);
+    --preview-energy-end: hsl(14 72% 50%);
+    --preview-energy-glow: rgba(249, 115, 22, 0.52);
+    --preview-energy-scan: rgba(249, 115, 22, 0.2);
+    --preview-energy-rest: rgba(163, 88, 46, 0.08);
 }
 
 :root[data-theme="sunshine"] .hero-art-preview {

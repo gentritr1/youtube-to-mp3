@@ -404,7 +404,7 @@
 }
 
 .sync-editor-feedback[data-tone="warning"] {
-    color: var(--warning);
+    color: var(--warning, var(--amber));
 }
 
 .sync-editor-feedback[data-tone="error"] {

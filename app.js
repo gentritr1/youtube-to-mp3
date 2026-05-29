@@ -83,6 +83,7 @@ try {
 
 themeController.subscribe(() => {
     snakeGame?.syncTheme();
+    FeaturesModule.redrawWaveform();
 });
 
 /**
@@ -696,7 +697,7 @@ setOnConvertRequest((url) => {
         return;
     }
 
-    elements.form.submit();
+    void handleSubmit({ preventDefault: () => {} });
 });
 
 // Wire visualizer into features.js

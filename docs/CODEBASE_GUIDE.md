@@ -15,6 +15,7 @@ Use `docs/TESTING_STATUS.md` for transient build and environment notes only.
 
 - [Product Summary](#product-summary)
 - [Project Shape](#project-shape)
+- [Architecture Style](#architecture-style)
 - [Frontend Module Ownership](#frontend-module-ownership)
 - [Styling Architecture](#styling-architecture)
 - [Theme System](#theme-system)
@@ -75,6 +76,27 @@ Primary frontend entry points:
   - subtitle loading, parsing, and karaoke timing
 - `js/ui/`
   - UI controllers and registries
+
+## Architecture Style
+
+The app is a pragmatic modular monolith.
+
+The backend is organized as thin Express routes over service modules:
+- routes validate HTTP input, choose status codes, and shape responses
+- services own orchestration, subprocesses, persistence, caching, and cleanup
+- adapters hide replaceable storage details behind facades such as `taskStore` and `batchStore`
+
+The frontend is not a framework app and is not class-heavy. It uses ES modules with small controllers and pure helpers:
+- feature controllers coordinate their own DOM and async state
+- renderer modules turn state into DOM/canvas output
+- engine modules own lifecycle-heavy behavior such as audio playback or timing math
+- explicit callbacks connect features when one workflow hands off to another
+
+There is some OOP where it pays for itself:
+- `PreviewAudioEngine` owns mutable audio lifecycle, playback state, request cancellation, and crossfade cleanup
+- studio/player adapters wrap imperative browser APIs behind narrow objects
+
+Most other code is functional/module-oriented. Prefer plain exported functions and scoped module state unless the feature has a real lifecycle that benefits from an instance.
 
 ## Frontend Module Ownership
 
@@ -140,10 +162,55 @@ Owns:
 ### `js/features.js`
 
 Owns:
-- discovery shelf
-- genre tabs
-- preview player
-- preview waveform/progress UI
+- discovery/preview orchestration
+- preview API request lifecycle
+- converting a previewed item through the callback injected by `app.js`
+- DOM template creation for the discovery preview panel
+
+Does not own:
+- genre/carousel rendering (`popularBrowser.js`)
+- preview audio lifecycle (`previewAudioEngine.js`)
+- preview panel state rendering (`previewPanel.js`)
+- waveform canvas drawing (`waveformRenderer.js`)
+- waveform audio-signal extraction (`waveformSignal.js`)
+
+### `js/popularBrowser.js`
+
+Owns:
+- loading popular genre data
+- rendering genre tabs and carousel cards
+- random-track selection for related surfaces
+
+### `js/previewAudioEngine.js`
+
+Owns:
+- `Audio` element creation and disposal
+- request cancellation and stale-preview guards
+- play/pause/seek/progress behavior
+- crossfade between previews
+- visualizer synchronization
+
+### `js/previewPanel.js`
+
+Owns:
+- preview metadata state
+- loading and error state
+- preview progress/playhead rendering
+- preview-state event emission
+
+### `js/waveformRenderer.js`
+
+Owns:
+- drawing the preview energy line onto canvas
+- reading theme tokens for canvas colors
+- rendering either signal-derived samples or a deterministic seeded fallback
+
+### `js/waveformSignal.js`
+
+Owns:
+- fetching generated preview audio for visualization
+- decoding audio with Web Audio
+- turning RMS/peak energy into normalized waveform samples
 
 ### `js/batch.js`
 
@@ -190,6 +257,7 @@ Owns:
 - `space`
 - `green`
 - `frutiger-aero`
+- `sunshine`
 
 ### Theme rules
 
@@ -263,6 +331,16 @@ The shelf owns:
 - preview progress and playback controls
 - one-click convert handoff
 
+Preview implementation details:
+- `features.js` calls `/api/preview` and coordinates request cancellation.
+- `previewAudioEngine.js` owns playback state, crossfade, progress loop, and stale audio cleanup.
+- `previewPanel.js` renders metadata, loading/error state, and playhead progress.
+- `waveformRenderer.js` draws the energy line using theme tokens.
+- `waveformSignal.js` decodes the generated preview MP3 and supplies real audio-energy samples; the renderer falls back to seeded bars if decoding is unavailable.
+- `service-worker-assets.js` must include any new browser module imported by the preview flow.
+
+Do not route preview playback through `app.js`. The only handoff from discovery to conversion should remain the explicit convert callback wired by `app.js`.
+
 ### Mini-Games and Stats
 
 Snake, Guess the Track, and nerd stats are now aligned to the theme token system and should remain sibling feature surfaces, not one-off visual islands.
@@ -316,16 +394,27 @@ Use registries for things that can grow:
 - animation variants
 - future card presets or visual modes
 
-### 6. Keep files under 500 lines
+### 6. Update generated browser assets when adding modules
 
-If a module exceeds roughly 500 lines, look for stable seams to split before adding more work to it. The goal is not arbitrary splitting for its own sake — it is extracting responsibilities that are already distinct (e.g. player adapter, export formatter, assistant client).
+If a new browser module is imported from the app shell, run:
 
-### 7. Verify all themes and states
+```bash
+node scripts/sync-service-worker-assets.mjs
+```
+
+This keeps the service worker manifest aligned with reachable frontend assets and prevents stale PWA caches from missing new modules.
+
+### 7. Keep files under 500 lines
+
+If a module exceeds roughly 500 lines, look for stable boundaries to split before adding more work to it. The goal is not arbitrary splitting for its own sake; extract responsibilities that are already distinct, such as player adapter, export formatter, or assistant client.
+
+### 8. Verify all themes and states
 
 At minimum verify:
 - `space`
 - `green`
 - `frutiger-aero`
+- `sunshine`
 
 And verify:
 - idle
@@ -361,8 +450,8 @@ Use this plan when the goal is to keep the architecture simple, additive, and ma
 
 **Maintenance (valuable but lower leverage):**
 
-- `js/ui/timeSyncStudio.js` is now an orchestration shell at 1,127 lines; treat it as acceptable until new responsibilities accumulate, then split again by stable seam instead of adding back inline logic
-- `js/features.js` is now a 590-line controller shell for DOM creation, preview requests, and convert handoff; split it further only when one of those responsibilities grows materially
+- `js/ui/timeSyncStudio.js` is now an orchestration shell at roughly 1,130 lines; treat it as acceptable until new responsibilities accumulate, then split again by stable boundary instead of adding back inline logic
+- `js/features.js` is now a roughly 640-line controller shell for DOM creation, preview requests, signal-waveform coordination, and convert handoff; split it further only when one of those responsibilities grows materially
 - `app.js` still owns some sidecar panel state and mini-game wiring in addition to the main conversion flow
 - the visual token migration track is complete; keep new visual states on semantic tokens during review instead of introducing another visual island
 
@@ -452,9 +541,9 @@ Status:
 
 This phase has reached its intended stopping point. Both parent files are now orchestration shells with stable helper modules behind them.
 
-**`js/ui/timeSyncStudio.js` (1,127 lines)**
+**`js/ui/timeSyncStudio.js` (roughly 1,130 lines)**
 
-Stable seams extracted:
+Stable boundaries extracted:
 - `js/ui/youtubePlayerAdapter.js` owns IFrame loading, lifecycle, and playback loop glue
 - `js/ui/assistantClient.js` owns assistant request/response flow
 - `js/ui/syncExporter.js` owns export serialization and download trigger
@@ -471,17 +560,19 @@ Remaining in the parent module:
 
 This is the accepted resting state for now. If the studio grows again, split the next stable seam before adding more inline state or rendering logic.
 
-**`js/features.js` (590 lines)**
+**`js/features.js` (roughly 640 lines)**
 
-Stable seams extracted:
+Stable boundaries extracted:
 - `js/previewAudioEngine.js` now owns crossfade, playback loop, request cancellation, and audio lifecycle
 - `js/waveformRenderer.js` now owns waveform drawing
+- `js/waveformSignal.js` now owns audio decoding and waveform sample extraction
 - `js/popularBrowser.js` now owns genre loading, genre-tab rendering, carousel rendering, and random-track selection
 - `js/previewPanel.js` now owns preview panel metadata, progress, loading state, and state-change emission
 
 Remaining in the parent module:
 - DOM creation
 - preview request orchestration
+- waveform fallback/signal handoff
 - convert handoff
 
 Also: remove synthetic event dispatches (`form.dispatchEvent(new Event('submit'))`) and replace with an explicit callback or imported function. Cross-module DOM mutations are the exact coupling the architecture warns against.
@@ -489,11 +580,11 @@ Also: remove synthetic event dispatches (`form.dispatchEvent(new Event('submit')
 Definition of done:
 - extracted sub-modules have clear single-purpose APIs
 - the parent module imports from them rather than containing them inline
-- follow-up splits are driven by stable seams, not arbitrary line counts
+- follow-up splits are driven by stable boundaries, not arbitrary line counts
 
 Current result:
-- `js/ui/timeSyncStudio.js` is 1,127 lines after extracting `youtubePlayerAdapter.js`, `assistantClient.js`, `syncExporter.js`, `pointWorkspaceRenderer.js`, `pointTimingEngine.js`, `reviewPlayerPanel.js`, `studioWorkflowState.js`, and `studioEventBindings.js`
-- `js/features.js` is 590 lines after extracting `previewAudioEngine.js`, `waveformRenderer.js`, `popularBrowser.js`, and `previewPanel.js`
+- `js/ui/timeSyncStudio.js` is roughly 1,130 lines after extracting `youtubePlayerAdapter.js`, `assistantClient.js`, `syncExporter.js`, `pointWorkspaceRenderer.js`, `pointTimingEngine.js`, `reviewPlayerPanel.js`, `studioWorkflowState.js`, and `studioEventBindings.js`
+- `js/features.js` is roughly 640 lines after extracting `previewAudioEngine.js`, `waveformRenderer.js`, `waveformSignal.js`, `popularBrowser.js`, and `previewPanel.js`
 - further decomposition is optional until those parent shells start growing again
 
 ### Phase 5. Extract preview service from route
@@ -574,7 +665,7 @@ During review:
 
 - define module ownership first
 - use ES module `import`/`export` — no new `window.*` globals
-- keep files under ~500 lines; split by stable seams if exceeded
+- keep files under ~500 lines; split by stable boundaries if exceeded
 - keep visual tokens in `css/base.css` or `css/themes/*.css`
 - keep component styles in component CSS files
 - avoid adding presentation logic to `app.js`

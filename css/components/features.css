@@ -458,15 +458,26 @@
         linear-gradient(180deg, color-mix(in srgb, white 9%, transparent), transparent 20%),
         color-mix(in srgb, var(--game-canvas) 98%, var(--background));
     --preview-waveform-border: color-mix(in srgb, var(--hero-border) 72%, transparent);
-    --preview-live-bar-bg: linear-gradient(180deg, color-mix(in srgb, white 24%, transparent), color-mix(in srgb, var(--hero-orb) 88%, white));
-    --preview-live-bar-shadow: 0 0 10px color-mix(in srgb, var(--hero-orb) 22%, transparent);
-    --preview-playhead-bg: linear-gradient(180deg, color-mix(in srgb, white 10%, var(--sky)), color-mix(in srgb, var(--hero-orb) 92%, var(--emerald)));
-    --preview-playhead-ring:
-        0 0 0 6px color-mix(in srgb, var(--hero-orb-soft) 46%, transparent),
-        0 0 18px color-mix(in srgb, var(--hero-orb) 28%, transparent);
+    --preview-playhead-bg: linear-gradient(180deg, color-mix(in srgb, white 12%, var(--preview-energy-start)), color-mix(in srgb, var(--preview-energy-mid) 74%, var(--preview-energy-end)));
+    --preview-playhead-shadow:
+        0 0 14px color-mix(in srgb, var(--preview-energy-glow) 42%, transparent),
+        0 0 28px color-mix(in srgb, var(--preview-energy-start) 24%, transparent);
     --preview-waveform-shade-top: color-mix(in srgb, var(--background) 42%, transparent);
     --preview-waveform-shade-bottom: color-mix(in srgb, var(--secondary) 34%, transparent);
     --preview-progress-track-overlay: color-mix(in srgb, var(--secondary) 18%, transparent);
+    --preview-progress-bg:
+        linear-gradient(90deg, color-mix(in srgb, var(--preview-energy-start) 28%, transparent), color-mix(in srgb, var(--preview-energy-mid) 24%, transparent), color-mix(in srgb, var(--preview-energy-end) 22%, transparent)),
+        linear-gradient(180deg, color-mix(in srgb, white 12%, transparent), transparent);
+    --preview-progress-opacity: 0.94;
+    --preview-progress-shadow: inset -10px 0 18px color-mix(in srgb, var(--preview-energy-glow) 18%, transparent);
+    --preview-grid-opacity: 0.5;
+    --preview-grid-playing-opacity: 0.56;
+    --preview-energy-start: var(--sky);
+    --preview-energy-mid: var(--hero-orb);
+    --preview-energy-end: var(--emerald);
+    --preview-energy-glow: var(--hero-orb);
+    --preview-energy-scan: color-mix(in srgb, var(--hero-orb) 34%, transparent);
+    --preview-energy-rest: color-mix(in srgb, var(--foreground) 6%, transparent);
 
     position: relative;
     overflow: hidden;
@@ -484,16 +495,6 @@
         0 28px 56px color-mix(in srgb, var(--glass-shadow) 32%, transparent),
         inset 0 1px 0 color-mix(in srgb, white 18%, transparent),
         0 0 0 1px color-mix(in srgb, var(--hero-orb) 8%, transparent);
-}
-
-.preview-player::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 4px;
-    background: linear-gradient(180deg, var(--sky), var(--emerald));
-    opacity: 0.95;
-    border-radius: inherit;
 }
 
 .preview-player::after {
@@ -685,7 +686,7 @@
     inset: 0;
     background:
         linear-gradient(180deg, var(--preview-waveform-shade-top), transparent 38%),
-        radial-gradient(circle at 0% 50%, color-mix(in srgb, var(--hero-orb) 24%, transparent), transparent 42%);
+        radial-gradient(circle at 0% 50%, color-mix(in srgb, var(--preview-energy-start) 24%, transparent), transparent 42%);
     pointer-events: none;
 }
 
@@ -696,7 +697,7 @@
     height: 44%;
     background:
         linear-gradient(180deg, transparent, var(--preview-waveform-shade-bottom)),
-        linear-gradient(90deg, color-mix(in srgb, var(--hero-orb) 8%, transparent), transparent 28%, color-mix(in srgb, var(--sky) 8%, transparent));
+        linear-gradient(90deg, color-mix(in srgb, var(--preview-energy-start) 9%, transparent), transparent 28%, color-mix(in srgb, var(--preview-energy-end) 9%, transparent));
     pointer-events: none;
 }
 
@@ -704,42 +705,6 @@
     width: 100%;
     height: 100%;
     display: block;
-}
-
-.waveform-live-meter {
-    position: absolute;
-    left: 1rem;
-    top: 0.9rem;
-    display: inline-flex;
-    align-items: flex-end;
-    gap: 0.22rem;
-    z-index: 2;
-    filter: saturate(1.12);
-}
-
-.waveform-live-bar {
-    width: 4px;
-    border-radius: 999px;
-    background: var(--preview-live-bar-bg);
-    box-shadow: var(--preview-live-bar-shadow);
-    transform-origin: center bottom;
-    opacity: 0.58;
-}
-
-.waveform-live-bar:nth-child(1) {
-    height: 12px;
-}
-
-.waveform-live-bar:nth-child(2) {
-    height: 18px;
-}
-
-.waveform-live-bar:nth-child(3) {
-    height: 26px;
-}
-
-.waveform-live-bar:nth-child(4) {
-    height: 15px;
 }
 
 .waveform-theme-charm {
@@ -780,7 +745,23 @@
         linear-gradient(90deg, color-mix(in srgb, var(--hero-border) 14%, transparent) 1px, transparent 1px),
         linear-gradient(180deg, color-mix(in srgb, var(--hero-border) 10%, transparent) 1px, transparent 1px);
     background-size: 24px 100%, 100% 22px;
-    opacity: 0.5;
+    opacity: var(--preview-grid-opacity);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.preview-player.is-playing .waveform-grid {
+    opacity: var(--preview-grid-playing-opacity);
+}
+
+.waveform-grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 18% 50%, var(--preview-energy-rest), transparent 22%),
+        linear-gradient(90deg, transparent, var(--preview-energy-rest), transparent);
+    opacity: 0.42;
     pointer-events: none;
 }
 
@@ -789,16 +770,30 @@
     left: 0;
     top: 0;
     bottom: 0;
-    background:
-        linear-gradient(90deg, color-mix(in srgb, var(--hero-orb) 28%, transparent), color-mix(in srgb, var(--emerald) 24%, transparent)),
-        linear-gradient(180deg, color-mix(in srgb, white 12%, transparent), transparent);
+    background: var(--preview-progress-bg);
     pointer-events: none;
     width: 100%;
     transform: scaleX(0);
     transform-origin: left center;
-    box-shadow: inset -10px 0 18px color-mix(in srgb, var(--hero-orb) 16%, transparent);
-    opacity: 0.94;
+    box-shadow: var(--preview-progress-shadow);
+    opacity: var(--preview-progress-opacity);
     z-index: 1;
+    overflow: hidden;
+}
+
+.waveform-progress::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 8%, var(--preview-energy-scan) 48%, transparent 88%);
+    transform: translateX(-120%);
+    filter: blur(1px);
+    opacity: 0;
+}
+
+.preview-player.is-playing .waveform-progress::after {
+    opacity: 0.42;
+    animation: waveform-progress-scan 2.8s ease-in-out infinite;
 }
 
 .waveform-playhead {
@@ -808,24 +803,8 @@
     width: 4px;
     background: var(--preview-playhead-bg);
     left: 0%;
-    box-shadow:
-        0 0 14px color-mix(in srgb, var(--hero-orb) 42%, transparent),
-        0 0 28px color-mix(in srgb, var(--sky) 24%, transparent);
+    box-shadow: var(--preview-playhead-shadow);
     z-index: 2;
-}
-
-.waveform-playhead::before {
-    content: '';
-    position: absolute;
-    top: 11px;
-    left: 50%;
-    width: 13px;
-    height: 13px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, color-mix(in srgb, white 18%, var(--hero-orb)), color-mix(in srgb, var(--sky) 82%, var(--emerald)));
-    border: 1px solid color-mix(in srgb, white 20%, transparent);
-    transform: translateX(-50%);
-    box-shadow: var(--preview-playhead-ring);
 }
 
 .waveform-scrub-hint {
@@ -1009,25 +988,8 @@
         inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
 }
 
-.preview-player.is-playing .waveform-live-bar {
-    opacity: 1;
-    animation: preview-meter-bounce 0.9s ease-in-out infinite;
-}
-
-.preview-player.is-playing .waveform-live-bar:nth-child(2) {
-    animation-delay: 0.08s;
-}
-
-.preview-player.is-playing .waveform-live-bar:nth-child(3) {
-    animation-delay: 0.16s;
-}
-
-.preview-player.is-playing .waveform-live-bar:nth-child(4) {
-    animation-delay: 0.24s;
-}
-
-.preview-player.is-playing .waveform-playhead::before {
-    animation: preview-playhead-pulse 1.2s ease-in-out infinite;
+.preview-player.is-playing .waveform-canvas {
+    animation: waveform-breathe 3.4s ease-in-out infinite;
 }
 
 .preview-lyrics-btn svg,
@@ -1063,6 +1025,11 @@
     visibility: visible;
 }
 
+.preview-player.has-error .preview-loading {
+    opacity: 1;
+    visibility: visible;
+}
+
 .preview-content {
     position: relative;
     z-index: 1;
@@ -1080,6 +1047,12 @@
     filter: saturate(0.92) blur(1.5px);
 }
 
+.preview-player.has-error .preview-content {
+    opacity: 0.54;
+    transform: translateY(2px) scale(0.995);
+    filter: saturate(0.72) blur(1.5px);
+}
+
 .preview-loading-spinner {
     width: 18px;
     height: 18px;
@@ -1089,31 +1062,38 @@
     animation: spin-preview 0.7s linear infinite;
 }
 
+.preview-player.has-error .preview-loading-spinner {
+    display: none;
+}
+
+.preview-loading-text {
+    max-width: min(30rem, 100%);
+    text-align: center;
+    line-height: 1.45;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
 @keyframes spin-preview {
     to {
         transform: rotate(360deg);
     }
 }
 
-@keyframes preview-meter-bounce {
-    0%, 100% {
-        transform: scaleY(0.45);
-    }
-
-    50% {
-        transform: scaleY(1.08);
+@keyframes waveform-progress-scan {
+    to {
+        transform: translateX(95%);
     }
 }
 
-@keyframes preview-playhead-pulse {
-    0%, 100% {
-        box-shadow: var(--preview-playhead-ring);
+@keyframes waveform-breathe {
+    0%,
+    100% {
+        filter: saturate(1) brightness(1) contrast(1);
     }
 
     50% {
-        box-shadow:
-            0 0 0 10px color-mix(in srgb, var(--hero-orb-soft) 34%, transparent),
-            0 0 24px color-mix(in srgb, var(--hero-orb) 32%, transparent);
+        filter: saturate(1.12) brightness(1.05) contrast(1.02);
     }
 }
 
@@ -1219,8 +1199,8 @@
     .preview-player.active,
     .popular-pulse-dot,
     .popular-title-icon,
-    .waveform-live-bar,
-    .waveform-playhead::before {
+    .waveform-progress::after,
+    .waveform-canvas {
         animation: none !important;
     }
 
@@ -1230,7 +1210,4 @@
         animation-delay: 0s !important;
     }
 
-    .preview-player.is-playing .waveform-live-bar {
-        transform: none !important;
-    }
 }

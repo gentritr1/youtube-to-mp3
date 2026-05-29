@@ -18,7 +18,7 @@ node --check js/ui/themeController.js
 ## Current Status
 
 - `npm run build`: passed
-- `npm test`: passed (27 files / 329 tests)
+- `npm test`: passed (30 files / 340 tests)
 - targeted `node --check` runs: passed
 
 ## Current Notes

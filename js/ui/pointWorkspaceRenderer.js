@@ -76,7 +76,10 @@ export class PointWorkspaceRenderer {
 
     renderStageMeta({ stage, points }) {
         const counts = points.reduce((acc, point) => {
-            acc[point.status] += 1;
+            const status = point?.status;
+            if (status && status in acc) {
+                acc[status] += 1;
+            }
             return acc;
         }, { pending: 0, synced: 0, needs_review: 0 });
         const confirmed = counts.synced;
