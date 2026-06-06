@@ -23,6 +23,8 @@ node --check js/ui/themeController.js
 
 ## Current Notes
 
+- Design branch `codex/design-system-upgrade`: `npx impeccable skills install .` was requested but could not run in the Codex shell because `npm` and `npx` are not on `PATH`. No local `impeccable` skill files were found, so the design pass followed the repo's existing token/theme architecture plus the agent review checklist.
+- Design branch verification completed in this shell: `git diff --check`, `node scripts/sync-service-worker-assets.mjs`, and a CSS scan confirming no `transition: all` remains. `npm run build` and `npm test` still need to be rerun in an environment with `npm` available.
 - `tests/jobQueue.test.ts` may log Redis connection errors when Redis is unavailable or sandboxed. The suite expects graceful fallback behavior and still passes.
 - Use `docs/RUNTIME_VERIFICATION.md` for browser smoke coverage that unit tests cannot prove.
 
