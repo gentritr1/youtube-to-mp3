@@ -36,6 +36,10 @@ describe('Server Configuration', () => {
         it('should have TASK_STORE defined', () => {
             expect(['sqlite', 'memory']).toContain(config.TASK_STORE);
         });
+
+        it('should expose allowed CORS origins as a list', () => {
+            expect(Array.isArray(config.ALLOWED_ORIGINS)).toBe(true);
+        });
     });
 
     describe('Redis Config', () => {

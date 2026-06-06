@@ -121,6 +121,15 @@ describe('SQLite Task Manager', () => {
         expect(updated.downloadUrl).toBe('/api/download/test');
     });
 
+    it('should mark processing tasks interrupted', () => {
+        const created = taskManager.createTask('test_video_interrupted', 'mp3');
+
+        expect(taskManager.markProcessingTasksInterrupted()).toBeGreaterThan(0);
+        const updated = taskManager.getTask(created.taskId);
+        expect(updated.state).toBe('error');
+        expect(updated.error).toBe('Conversion was interrupted by a server restart');
+    });
+
     it('should persist audio analysis stats', () => {
         const created = taskManager.createTask('test_video_audio_stats', 'mp3');
         const audioStats = {

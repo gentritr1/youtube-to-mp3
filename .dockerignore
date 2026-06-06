@@ -1,0 +1,14 @@
+node_modules
+dist
+downloads
+tasks.db
+tasks.db-wal
+tasks.db-shm
+tasks.json
+cookies.txt
+.env
+.env.*
+.git
+.DS_Store
+*.log
+npm-debug.log*

@@ -5,17 +5,18 @@
 
 import { Router, Request, Response } from 'express';
 import { getVideoInfo } from '../services/ytdlp.js';
+import { buildYouTubeWatchUrl, validateYouTubeVideoId } from '../utils/youtube.js';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
-    const videoId = req.query.videoId as string;
+    const videoId = validateYouTubeVideoId(req.query.videoId);
 
     if (!videoId) {
-        return res.status(400).json({ message: 'Video ID required' });
+        return res.status(400).json({ message: 'Invalid YouTube video ID' });
     }
 
-    const url = `https://www.youtube.com/watch?v=${videoId}`;
+    const url = buildYouTubeWatchUrl(videoId);
 
     try {
         const info = await getVideoInfo(url);

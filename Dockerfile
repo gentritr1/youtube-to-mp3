@@ -25,5 +25,6 @@ RUN mkdir -p /app/downloads && chmod 777 /app/downloads
 ENV PORT=3000
 EXPOSE 3000
 
-# Update yt-dlp and start server
-CMD pip3 install --upgrade --break-system-packages --root-user-action=ignore yt-dlp || true; node dist/index.js
+# Start server. Update yt-dlp during image builds, not at container startup, so
+# runtime behavior does not change because of network/PyPI state.
+CMD ["node", "dist/index.js"]

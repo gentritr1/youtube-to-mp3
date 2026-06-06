@@ -10,6 +10,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const parsedPort = Number.parseInt(process.env.PORT ?? '', 10);
 const normalizedTaskStore = (process.env.TASK_STORE ?? 'sqlite').trim().toLowerCase();
 const allowedTaskStores = new Set(['sqlite', 'memory']);
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
 
 if (!allowedTaskStores.has(normalizedTaskStore)) {
     throw new Error(`Unsupported TASK_STORE value "${process.env.TASK_STORE}". Expected one of: sqlite, memory.`);
@@ -34,6 +38,7 @@ export const config = {
         ? process.env.WATCH_GENRES === 'true'
         : process.env.NODE_ENV !== 'production',
     TASK_STORE: normalizedTaskStore,
+    ALLOWED_ORIGINS: allowedOrigins,
 
     // Timeouts
     CLEANUP_INTERVAL_MS: 60 * 60 * 1000, // 1 hour

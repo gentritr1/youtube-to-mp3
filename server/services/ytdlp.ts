@@ -14,6 +14,10 @@ import { getTask, updateTask } from './taskStore.js';
 import { VideoInfo } from '../types.js';
 import { analyzeAudio } from './audioAnalysis.js';
 
+const writeCookiesFile = (cookiesPath: string, cookiesText: string): void => {
+    fs.writeFileSync(cookiesPath, cookiesText, { mode: 0o600 });
+    fs.chmodSync(cookiesPath, 0o600);
+};
 
 /**
  * Helper to get common yt-dlp arguments
@@ -21,7 +25,6 @@ import { analyzeAudio } from './audioAnalysis.js';
 const getCommonArgs = (): string[] => {
     const args = [
         '--no-warnings',
-        '--no-check-certificates',
         '--force-ipv4',
         '--referer', 'https://www.youtube.com/'
     ];
@@ -46,7 +49,7 @@ const getCommonArgs = (): string[] => {
                 console.warn('[System] WARNING: YT_COOKIES environment variable does not look like a Netscape format cookies.txt file!');
             }
 
-            fs.writeFileSync(cookiesPath, cookiesText);
+            writeCookiesFile(cookiesPath, cookiesText);
             // console.log('Updated /tmp/yt_cookies.txt (Size: ' + cookiesText.length + ' bytes)');
             args.push('--cookies', cookiesPath);
         } catch (e) {
@@ -74,19 +77,19 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
             const args = [
                 '--dump-json',
                 '--no-warnings',
-                '--no-check-certificates',
                 '--force-ipv4',
                 '--referer', 'https://www.youtube.com/',
                 // Use default or robust fallback clients
                 '--extractor-args', 'youtube:player_client=ios,android,web',
                 '--geo-bypass',
                 '--socket-timeout', '30',
+                '--no-playlist',
             ];
 
             if (useCookies && process.env.YT_COOKIES) {
                 const cookiesPath = '/tmp/yt_cookies.txt';
                 try {
-                    fs.writeFileSync(cookiesPath, process.env.YT_COOKIES.trim());
+                    writeCookiesFile(cookiesPath, process.env.YT_COOKIES.trim());
                     args.push('--cookies', cookiesPath);
                 } catch (e) { }
             }
@@ -97,13 +100,31 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
             const ytdlp = spawn('yt-dlp', args);
             let stdout = '';
             let stderr = '';
+            let settled = false;
+
+            const settle = (error?: Error, info?: VideoInfo) => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve(info!);
+            };
 
             ytdlp.stdout.on('data', (data) => stdout += data.toString());
             ytdlp.stderr.on('data', (data) => stderr += data.toString());
+            ytdlp.on('error', (error) => {
+                settle(new Error(`yt-dlp failed to start: ${error.message}`));
+            });
 
             ytdlp.on('close', (code) => {
                 if (code !== 0) {
-                    reject(new Error(stderr || 'Failed to get video info'));
+                    settle(new Error(stderr || 'Failed to get video info'));
                     return;
                 }
                 try {
@@ -128,7 +149,7 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
                     extractSubs(info.subtitles);
                     extractSubs(info.automatic_captions);
 
-                    resolve({
+                    settle(undefined, {
                         id: info.id,
                         title: info.title,
                         thumbnail: info.thumbnail,
@@ -137,7 +158,7 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
                         subtitles: subtitles.length > 0 ? subtitles : undefined
                     });
                 } catch (e) {
-                    reject(new Error('Failed to parse video info'));
+                    settle(new Error('Failed to parse video info'));
                 }
             });
         });
@@ -165,8 +186,9 @@ export async function convertVideo(taskId: string, url: string, format: string):
     if (!task) return;
 
     const safeTitle = sanitizeFilename(task.title || '');
-    const actualFilename = `${safeTitle}.${format}`;
-    const outputTemplate = path.join(config.DOWNLOADS_DIR, `${safeTitle}.%(ext)s`);
+    const outputBaseName = `${safeTitle}-${taskId}`;
+    const actualFilename = `${outputBaseName}.${format}`;
+    const outputTemplate = path.join(config.DOWNLOADS_DIR, `${outputBaseName}.%(ext)s`);
 
     // Store the filename in the task for later use
     updateTask(taskId, { filename: actualFilename });
@@ -175,7 +197,6 @@ export async function convertVideo(taskId: string, url: string, format: string):
     // Only use basic arguments initially
     const baseArgs = [
         '--no-warnings',
-        '--no-check-certificates',
         '--force-ipv4',
         '--referer', 'https://www.youtube.com/',
         // Robust fallback clients to avoid empty formats on certain videos
@@ -214,7 +235,7 @@ export async function convertVideo(taskId: string, url: string, format: string):
                 const cookiesPath = '/tmp/yt_cookies.txt';
                 if (process.env.YT_COOKIES) {
                     try {
-                        fs.writeFileSync(cookiesPath, process.env.YT_COOKIES.trim());
+                        writeCookiesFile(cookiesPath, process.env.YT_COOKIES.trim());
                         currentArgs.push('--cookies', cookiesPath);
                     } catch (e) { }
                 }
@@ -225,6 +246,21 @@ export async function convertVideo(taskId: string, url: string, format: string):
 
             const proc = spawn('yt-dlp', currentArgs);
             let procError = '';
+            let settled = false;
+
+            const settle = (error?: Error) => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve();
+            };
 
             proc.stdout.on('data', (data) => {
                 const output = data.toString();
@@ -241,9 +277,13 @@ export async function convertVideo(taskId: string, url: string, format: string):
                 procError += data.toString();
             });
 
+            proc.on('error', (error) => {
+                settle(new Error(`yt-dlp failed to start: ${error.message}`));
+            });
+
             proc.on('close', (code) => {
-                if (code !== 0) reject(new Error(procError));
-                else resolve();
+                if (code !== 0) settle(new Error(procError));
+                else settle();
             });
         });
     };

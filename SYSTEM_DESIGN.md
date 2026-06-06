@@ -53,8 +53,8 @@ Frontend pattern:
 - Cross-feature integration uses explicit callbacks or imports, not `window.*` globals or synthetic DOM events.
 
 ### Deployment Considerations
-- **Dockerfile Updates**: Whenever a new feature is added, especially one involving new system dependencies or build steps, ONLY the Dockerfile must be updated to reflect these changes.
-- **Dependencies**: Ensure all new npm packages or system libraries (e.g., via `apt-get` or `apk`) are included in the container build.
+- **Dependency Updates**: Whenever a feature adds npm packages, system libraries, environment variables, or build steps, update the matching package files, Dockerfile, configuration docs, and deployment notes together.
+- **Container Build**: Ensure all new system libraries (for example via `apk`) are included in the container build.
 
 ---
 
@@ -132,7 +132,6 @@ youtube-to-mp3/
 ├── 📄 index.html              # Main HTML (single page)
 ├── 📄 app.js                  # Frontend logic (12KB)
 ├── 📄 style.css               # Legacy styles (minimal)
-├── 📄 game.css                # Snake game styles
 │
 ├── 📁 css/                    # Modular CSS architecture
 │   ├── base.css               # CSS variables, resets
@@ -141,6 +140,7 @@ youtube-to-mp3/
 │   │   ├── form.css           # Input, buttons
 │   │   ├── features.css       # Discovery and preview panel
 │   │   ├── batch.css          # Batch queue/results
+│   │   ├── game.css           # Snake game styles
 │   │   ├── karaoke-panel.css  # Lyrics sidecar
 │   │   └── results.css        # Conversion result/download UI
 │   ├── layout/

@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
+import { validateYouTubeVideoId } from '../utils/youtube.js';
 
 const previewCache = new Map<string, { path: string; createdAt: number }>();
 const previewBuilds = new Map<string, Promise<void>>();
@@ -12,7 +13,6 @@ const PREVIEW_MAX_AGE_MS = 30 * 60 * 1000;
 const PREVIEW_TIMEOUT_MS = 60 * 1000;
 const PREVIEW_TEMP_MAX_AGE_MS = PREVIEW_TIMEOUT_MS * 2;
 const STDERR_BUFFER_LIMIT = 2048;
-const SAFE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 const PROCESS_BANNER_PATTERNS = [
     /^ffmpeg version/i,
     /^built with/i,
@@ -109,19 +109,7 @@ class PreviewProcessError extends Error {
 }
 
 export const validatePreviewVideoId = (videoId: unknown): string | null => {
-    if (typeof videoId !== 'string') {
-        return null;
-    }
-
-    if (videoId.includes('..') || videoId.includes('/') || videoId.includes('\\')) {
-        return null;
-    }
-
-    if (!SAFE_VIDEO_ID_PATTERN.test(videoId)) {
-        return null;
-    }
-
-    return videoId;
+    return validateYouTubeVideoId(videoId);
 };
 
 const createPreviewAtOffset = async (
