@@ -23,6 +23,10 @@ const app = express();
 // Trust proxy for rate limiting behind reverse proxy (Render, etc.)
 if (config.IS_PROD) {
     app.set('trust proxy', 1);
+
+    if (config.ALLOWED_ORIGINS.length === 0) {
+        console.warn('[Config] Production CORS allowlist is empty; browser requests with an Origin header will be blocked.');
+    }
 }
 
 // Middleware

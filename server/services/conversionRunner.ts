@@ -27,12 +27,17 @@ export const startConversion = (
     format: string,
     title?: string
 ): void => {
-    runConversion(taskId, videoId, format, title).catch((error: Error) => {
-        console.error(`[Conversion] Failed for task ${taskId} (${videoId}):`, error.message);
+    runConversion(taskId, videoId, format, title).catch((reason: unknown) => {
+        const message = reason instanceof Error
+            ? reason.message
+            : String(reason || 'Conversion failed');
+
+        console.error(`[Conversion] Failed for task ${taskId} (${videoId}):`, message);
         updateTask(taskId, {
             state: 'error',
+            status: 'Failed',
             progress: 0,
-            error: error.message || 'Conversion failed'
+            error: message
         });
     });
 };
