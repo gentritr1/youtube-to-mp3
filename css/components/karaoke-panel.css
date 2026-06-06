@@ -385,9 +385,10 @@
     display: flex;
     align-items: stretch;
     gap: 0.45rem;
-    min-height: 6rem;
+    min-height: 6.35rem;
     overflow: hidden;
-    padding: 0;
+    padding: 0.18rem;
+    margin: -0.18rem;
 }
 
 .point-rail-empty {
@@ -737,9 +738,11 @@
 
     .point-rail-window {
         gap: 0.3rem;
-        min-height: 5.25rem;
+        min-height: 5.65rem;
         overflow-x: auto;
-        padding-bottom: 0.1rem;
+        padding: 0.2rem 0.2rem 0.35rem;
+        margin: -0.2rem;
+        scroll-padding-inline: 0.2rem;
     }
 
     .point-hit {
