@@ -11,7 +11,6 @@ import { batchDownloads, setApiBaseUrl, setPreviewCallback } from './js/batch.js
 import { SnakeGame } from './js/game/index.js';
 import { GuessTrackGame, setTrackProvider } from './js/guess-track.js';
 import { AudioVisualizer } from './js/visualizer.js';
-import './js/hero-runner.js'; // self-initializing side-effect module
 
 // Configuration
 const API_URL = '';

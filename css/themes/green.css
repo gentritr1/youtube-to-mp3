@@ -51,17 +51,6 @@
     --preview-energy-rest: rgba(187, 247, 208, 0.08);
 }
 
-:root[data-theme="green"] .theme-scene-tree,
-:root[data-theme="green"] .theme-mini-tree {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-}
-
-:root[data-theme="green"] .theme-scene-tree::after,
-:root[data-theme="green"] .theme-mini-tree::after {
-    background: linear-gradient(180deg, rgba(187, 247, 208, 0.2), rgba(34, 197, 94, 0.94) 42%, rgba(17, 94, 49, 0.98));
-}
-
 :root[data-theme="green"] .theme-charm-green {
     display: inline-flex;
 }

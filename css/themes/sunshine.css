@@ -107,40 +107,8 @@
     --preview-energy-rest: rgba(163, 88, 46, 0.08);
 }
 
-:root[data-theme="sunshine"] .hero-art-preview {
-    background:
-        radial-gradient(circle at top right, rgba(251, 191, 36, 0.22), transparent 40%),
-        radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.12), transparent 34%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 30%),
-        rgba(255, 246, 236, 0.88);
-    border-color: rgba(232, 141, 94, 0.34);
-    box-shadow:
-        0 22px 38px rgba(163, 88, 46, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.46);
-}
-
-:root[data-theme="sunshine"] .hero-art-preview-screen {
-    background:
-        radial-gradient(circle at 28% 44%, rgba(251, 146, 60, 0.28), transparent 32%),
-        radial-gradient(circle at 74% 22%, rgba(56, 189, 248, 0.18), transparent 24%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 30%),
-        hsl(190 28% 25%);
-    border-color: rgba(232, 141, 94, 0.34);
-}
-
 :root[data-theme="sunshine"] .hero-art-preview-label {
     color: hsl(22 46% 35%);
-}
-
-:root[data-theme="sunshine"] .hero-art-preview-copy strong {
-    color: hsl(19 42% 20%);
-}
-
-:root[data-theme="sunshine"] .hero-art-play {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 88%),
-        rgba(249, 115, 22, 0.22);
-    box-shadow: 0 10px 18px rgba(249, 115, 22, 0.16);
 }
 
 :root[data-theme="sunshine"] .batch-mode-btn.active {
@@ -205,17 +173,4 @@
 
 :root[data-theme="sunshine"] .theme-charm-sunshine {
     display: inline-flex;
-}
-
-
-:root[data-theme="sunshine"] .theme-scene-sun,
-:root[data-theme="sunshine"] .theme-scene-cloud,
-:root[data-theme="sunshine"] .theme-mini-sun {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-}
-
-:root[data-theme="sunshine"] .theme-scene-sun,
-:root[data-theme="sunshine"] .theme-mini-sun {
-    filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.2));
 }

@@ -411,11 +411,11 @@ The hero is now a first-class layout area rather than a narrow centered card.
 It includes:
 - theme switcher
 - branded hero copy
-- right-side visual runway/art panel
+- right-side conversion preview panel
 - modular converter section
 - karaoke/arcade sidecar
 
-Hero motion is decorative only and now includes reduced-motion fallbacks.
+Hero decoration should stay static or very calm so it does not compete with conversion.
 
 ### Converter Flow
 
@@ -592,7 +592,6 @@ Rule in force:
 Completed migration targets:
 - `js/features.js` now ships as an ES module with named exports
 - `js/batch.js` now ships as an ES module with named exports
-- `js/hero-runner.js` is imported as a side-effect ES module by `app.js`
 - the active Snake runtime comes from `js/game/*` through ES module imports
 
 Remaining legacy target:

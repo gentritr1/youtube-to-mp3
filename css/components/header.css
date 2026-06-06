@@ -2,33 +2,6 @@
     --hero-shell-shadow: 0 28px 64px color-mix(in srgb, black 24%, transparent);
     --hero-chip-surface: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay-soft));
     --hero-chip-surface-strong: color-mix(in srgb, var(--hero-orb) 12%, var(--surface-overlay));
-    --hero-file-card-surface: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay));
-    --hero-play-surface: color-mix(in srgb, var(--hero-orb) 18%, var(--surface-overlay-strong));
-    --hero-scene-moon-bg:
-        radial-gradient(circle at 35% 35%,
-            color-mix(in srgb, white 95%, var(--foreground)),
-            color-mix(in srgb, white 72%, var(--sky)) 58%,
-            color-mix(in srgb, var(--sky) 25%, transparent));
-    --hero-scene-sun-bg:
-        radial-gradient(circle at 35% 35%,
-            color-mix(in srgb, white 98%, var(--hero-headlight)),
-            color-mix(in srgb, var(--hero-headlight) 92%, var(--amber)) 45%,
-            color-mix(in srgb, var(--amber) 90%, var(--hero-orb)) 72%,
-            color-mix(in srgb, var(--amber) 28%, transparent));
-    --hero-tree-trunk: color-mix(in srgb, var(--amber-soft) 82%, transparent);
-    --hero-tree-foliage:
-        linear-gradient(180deg,
-            color-mix(in srgb, white 12%, var(--emerald)),
-            color-mix(in srgb, var(--hero-orb) 84%, var(--emerald-soft)));
-    --hero-runner-shadow: color-mix(in srgb, var(--game-canvas) 42%, transparent);
-    --hero-wheel-bg:
-        radial-gradient(circle at center,
-            color-mix(in srgb, var(--secondary) 82%, black),
-            color-mix(in srgb, var(--background) 86%, black) 55%,
-            color-mix(in srgb, var(--secondary) 72%, black));
-    --hero-wheel-shadow:
-        inset 0 0 0 3px color-mix(in srgb, white 8%, transparent),
-        0 2px 5px color-mix(in srgb, var(--background) 28%, transparent);
     width: 100%;
     display: grid;
     gap: 1.15rem;
@@ -56,16 +29,6 @@
     pointer-events: none;
     opacity: 0.55;
     filter: blur(4px);
-}
-
-@keyframes hero-pulse {
-    0% {
-        box-shadow: 0 0 0 0 color-mix(in srgb, var(--hero-orb) 42%, transparent);
-    }
-
-    100% {
-        box-shadow: 0 0 0 10px transparent;
-    }
 }
 
 .hero-header-top {
@@ -224,857 +187,154 @@
     z-index: 1;
 }
 
-.hero-art-chips {
+.hero-conversion-header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
     flex-wrap: wrap;
-    gap: 0.45rem;
-    align-items: flex-start;
 }
 
-.hero-art-chip {
+.hero-conversion-status {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.45rem 0.78rem;
-    border-radius: 999px;
-    background: var(--hero-chip-surface-strong);
-    border: 1px solid color-mix(in srgb, var(--hero-border) 76%, transparent);
-    color: var(--foreground);
-    font-size: 0.74rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 68%, transparent);
+    background: color-mix(in srgb, var(--surface-overlay-strong) 86%, transparent);
+    color: var(--muted-foreground);
+    font-size: 0.68rem;
     font-weight: 700;
-    white-space: nowrap;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.hero-conversion-url {
+    display: flex;
+    align-items: center;
+    gap: var(--control-gap);
+    min-height: var(--control-height-lg);
+    padding: 0 var(--control-padding-x);
+    border-radius: var(--radius-control);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 76%, transparent);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 60%),
+        color-mix(in srgb, var(--secondary) 74%, transparent);
+    box-shadow:
+        0 1px 0 var(--glass-highlight) inset,
+        var(--shadow-input-inset);
+    color: var(--foreground);
+    min-width: 0;
+}
+
+.hero-conversion-url-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay));
+    color: color-mix(in srgb, var(--foreground) 82%, var(--hero-orb));
     flex: 0 0 auto;
 }
 
-.hero-runway {
-    position: relative;
-    min-height: 168px;
-    border-radius: 1.25rem;
-    padding: 1.25rem 1rem 1rem;
-    background:
-        radial-gradient(circle at center, color-mix(in srgb, var(--hero-orb-soft) 70%, transparent), transparent 58%),
-        linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 36%),
-        color-mix(in srgb, var(--card) 54%, transparent);
-    border: 1px solid color-mix(in srgb, var(--hero-border) 72%, transparent);
+.hero-conversion-url-text {
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.hero-runway::after {
-    content: '';
-    position: absolute;
-    left: 1rem;
-    right: 1rem;
-    bottom: 1.05rem;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--hero-orb) 65%, transparent), transparent);
-    opacity: 0.6;
+.hero-conversion-flow {
+    display: grid;
+    grid-template-columns: auto minmax(3rem, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) 0;
 }
 
-.hero-file-stream {
-    position: absolute;
-    top: 0.8rem;
-    left: 1rem;
-    right: 1rem;
-    height: 48px;
-    pointer-events: none;
-}
-
-.hero-file-card {
-    position: absolute;
+.hero-flow-node {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 54px;
-    padding: 0.42rem 0.6rem;
-    border-radius: 0.95rem;
-    background:
-        linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 45%),
-        var(--hero-file-card-surface);
-    border: 1px solid color-mix(in srgb, var(--hero-border) 78%, transparent);
-    color: var(--foreground);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    box-shadow:
-        0 1px 0 color-mix(in srgb, white 18%, transparent) inset,
-        0 10px 20px color-mix(in srgb, var(--glass-shadow) 24%, transparent);
-    opacity: 0.78;
-}
-
-.hero-file-card::before {
-    content: '';
-    position: absolute;
-    top: 0.32rem;
-    right: 0.35rem;
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    background: color-mix(in srgb, white 28%, transparent);
-}
-
-.hero-file-card-mp3 {
-    left: 4%;
-    animation-delay: 0.18s;
-}
-
-.hero-file-card-mp4 {
-    left: 20%;
-    animation-delay: 1.18s;
-}
-
-.hero-file-card-wave {
-    left: 36%;
-    animation-delay: 2.2s;
-}
-
-.hero-runway-brand {
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    flex-wrap: nowrap;
-    gap: 0.02em;
-    font-size: clamp(1.8rem, 4vw, 3rem);
-    font-weight: 800;
-    letter-spacing: -0.05em;
-    color: var(--foreground);
-    width: fit-content;
-    max-width: 100%;
-    margin-top: 1.2rem;
-    z-index: 1;
-}
-
-.run-letter {
-    display: inline-block;
-    transform-origin: bottom center;
-    text-shadow: 0 10px 22px color-mix(in srgb, var(--hero-orb) 10%, transparent);
-}
-
-.run-letter.spacer {
-    width: 0.32em;
-    animation: none;
-}
-
-.hero-runner {
-    position: absolute;
-    left: 1rem;
-    bottom: 0.92rem;
-    width: 96px;
-    height: 48px;
-    z-index: 2;
-    will-change: transform, opacity;
-    opacity: 0;
-}
-
-.hero-theme-scene {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.theme-scene-moon,
-.theme-scene-star,
-.theme-scene-sun,
-.theme-scene-cloud,
-.theme-scene-tree,
-.theme-scene-wave,
-.theme-mini-moon,
-.theme-mini-stars,
-.theme-mini-sun,
-.theme-mini-tree,
-.theme-mini-wave {
-    position: absolute;
-    opacity: 0;
-    transform: translateY(6px) scale(0.92);
-    transition:
-        opacity var(--transition-smooth),
-        transform var(--transition-smooth),
-        filter var(--transition-smooth);
-}
-
-.theme-scene-moon,
-.theme-scene-sun,
-.theme-mini-moon,
-.theme-mini-sun {
-    border-radius: 999px;
-}
-
-.theme-scene-moon {
-    top: 1rem;
-    right: 3.3rem;
-    width: 18px;
-    height: 18px;
-    background: var(--hero-scene-moon-bg);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--hero-orb) 16%, transparent);
-}
-
-.theme-scene-moon::after,
-.theme-mini-moon::after {
-    content: '';
-    position: absolute;
-    inset: 2px 0 0 5px;
-    border-radius: inherit;
-    background: color-mix(in srgb, var(--game-canvas) 74%, transparent);
-}
-
-.theme-scene-star {
-    color: color-mix(in srgb, white 86%, var(--sky));
-    text-shadow: 0 0 12px color-mix(in srgb, var(--sky) 36%, transparent);
-}
-
-.theme-scene-star::before {
-    content: '✦';
-}
-
-.theme-scene-star-a {
-    top: 1.2rem;
-    right: 1.5rem;
-    font-size: 0.85rem;
-}
-
-.theme-scene-star-b {
-    top: 2.2rem;
-    right: 4.8rem;
-    font-size: 0.65rem;
-}
-
-.theme-scene-sun {
-    top: 0.9rem;
-    right: 2.4rem;
-    width: 22px;
-    height: 22px;
-    background: var(--hero-scene-sun-bg);
-    box-shadow:
-        0 0 0 6px color-mix(in srgb, var(--hero-glow) 34%, transparent),
-        0 0 18px color-mix(in srgb, var(--hero-orb) 34%, transparent);
-}
-
-.theme-scene-cloud {
-    top: 1.2rem;
-    right: 4.2rem;
-    width: 42px;
-    height: 14px;
-    border-radius: 999px;
-    background: linear-gradient(180deg, color-mix(in srgb, white 86%, transparent), color-mix(in srgb, white 54%, var(--surface-glass-soft)));
-    box-shadow:
-        13px -4px 0 1px color-mix(in srgb, white 74%, transparent),
-        24px 1px 0 -2px color-mix(in srgb, white 64%, transparent);
-    filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--glass-shadow) 10%, transparent));
-}
-
-.theme-scene-tree {
-    bottom: 0.86rem;
-    width: 22px;
-    height: 38px;
-}
-
-.theme-scene-tree::before,
-.theme-scene-tree::after,
-.theme-mini-tree::before,
-.theme-mini-tree::after {
-    content: '';
-    position: absolute;
-}
-
-.theme-scene-tree::before {
-    left: 8px;
-    bottom: 0;
-    width: 4px;
-    height: 13px;
-    border-radius: 999px;
-    background: var(--hero-tree-trunk);
-}
-
-.theme-scene-tree::after {
-    inset: 0;
-    clip-path: polygon(50% 0, 100% 62%, 72% 62%, 100% 100%, 0 100%, 28% 62%, 0 62%);
-    border-radius: 10px;
-    background: var(--hero-tree-foliage);
-    box-shadow: 0 10px 18px color-mix(in srgb, var(--hero-orb) 18%, transparent);
-}
-
-.theme-scene-tree-a {
-    left: 11rem;
-}
-
-.theme-scene-tree-b {
-    left: 13.1rem;
-    transform: translateY(6px) scale(0.78);
-}
-
-.theme-scene-wave {
-    left: 10.6rem;
-    right: 1.6rem;
-    bottom: 0.92rem;
-    height: 18px;
-    border-radius: 999px 999px 0 0;
-    background:
-        radial-gradient(circle at 10% 110%, color-mix(in srgb, white 42%, transparent) 0 14%, transparent 15%),
-        linear-gradient(180deg, color-mix(in srgb, white 22%, transparent), transparent 42%),
-        linear-gradient(135deg, color-mix(in srgb, var(--sky) 84%, white), color-mix(in srgb, var(--emerald) 74%, transparent));
-    clip-path: polygon(0 70%, 10% 44%, 20% 68%, 31% 36%, 43% 72%, 56% 42%, 69% 70%, 80% 48%, 90% 68%, 100% 38%, 100% 100%, 0 100%);
-    filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--sky) 16%, transparent));
-}
-
-.hero-runner::before {
-    content: '';
-    position: absolute;
-    left: 10px;
-    right: 4px;
-    bottom: 1px;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--hero-runner-shadow);
-    filter: blur(5px);
-    opacity: 0.5;
-}
-
-.runner-trail {
-    position: absolute;
-    right: 68px;
-    top: 19px;
-    width: 120px;
-    height: 2px;
-    background: linear-gradient(90deg,
-        transparent 0%,
-        color-mix(in srgb, var(--hero-orb) 22%, transparent) 15%,
-        color-mix(in srgb, var(--hero-orb) 50%, transparent) 40%,
-        transparent 90%);
-    border-radius: 999px;
-    opacity: 0;
-    filter: blur(0.5px);
-    box-shadow:
-        0 -4px 0 color-mix(in srgb, var(--hero-orb) 18%, transparent),
-        0 4px 0 color-mix(in srgb, var(--hero-orb) 14%, transparent),
-        0 -8px 0 color-mix(in srgb, var(--hero-orb) 8%, transparent),
-        0 8px 0 color-mix(in srgb, var(--hero-orb) 6%, transparent);
-    will-change: opacity, width;
-}
-
-.runner-body {
-    position: absolute;
-    left: 10px;
-    bottom: 8px;
-    width: 70px;
-    height: 15px;
-    border-radius: 5px 14px 8px 6px;
-    background:
-        linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 45%),
-        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 82%, white), color-mix(in srgb, var(--emerald) 74%, var(--hero-orb)));
-    border: 1px solid color-mix(in srgb, var(--hero-border) 88%, transparent);
-    box-shadow:
-        0 6px 16px color-mix(in srgb, var(--hero-orb) 20%, transparent),
-        inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
-}
-
-.runner-cargo {
-    position: absolute;
-    left: 24px;
-    bottom: 33px;
-    width: 30px;
-    height: 3px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, transparent, color-mix(in srgb, white 18%, transparent), transparent);
-    border: none;
-    box-shadow: none;
-}
-
-.runner-cargo::before,
-.runner-cargo::after {
-    content: none;
-}
-
-.runner-window {
-    position: absolute;
-    left: 28px;
-    bottom: 25px;
-    width: 24px;
-    height: 8px;
-    border-radius: 4px 5px 1px 1px;
-    background:
-        linear-gradient(170deg,
-            color-mix(in srgb, white 32%, transparent) 0%,
-            color-mix(in srgb, var(--sky) 28%, white) 40%,
-            color-mix(in srgb, var(--sky) 38%, transparent) 100%);
-    border: 1px solid color-mix(in srgb, var(--hero-border) 50%, transparent);
-    box-shadow:
-        inset 0 1px 0 color-mix(in srgb, white 22%, transparent);
-    opacity: 0.72;
-    overflow: hidden;
-}
-
-.runner-window::before {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 2px;
-    width: 5px;
-    height: 3px;
-    border-radius: 2px 1px 1px 1px;
-    background: color-mix(in srgb, white 28%, transparent);
-    filter: blur(0.5px);
-}
-
-.runner-window::after {
-    content: '';
-    position: absolute;
-    top: 1px;
-    bottom: 1px;
-    left: 11px;
-    width: 1px;
-    background: color-mix(in srgb, var(--hero-border) 36%, transparent);
-}
-
-.runner-body::before {
-    content: '';
-    position: absolute;
-    left: 14px;
-    bottom: 11px;
-    width: 36px;
-    height: 16px;
-    border-radius: 12px 10px 2px 2px;
-    background:
-        linear-gradient(180deg, color-mix(in srgb, white 16%, transparent), transparent 55%),
-        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 72%, white), color-mix(in srgb, var(--sky) 76%, var(--hero-orb)));
-    border: 1px solid color-mix(in srgb, var(--hero-border) 86%, transparent);
-}
-
-.runner-body::after {
-    content: '';
-    position: absolute;
-    right: -5px;
-    bottom: 2px;
-    width: 18px;
-    height: 10px;
-    border-radius: 3px 12px 12px 3px;
-    background:
-        linear-gradient(180deg, color-mix(in srgb, white 14%, transparent), transparent 55%),
-        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 82%, white), color-mix(in srgb, var(--emerald) 66%, var(--hero-orb)));
-    border: 1px solid color-mix(in srgb, var(--hero-border) 80%, transparent);
-}
-
-.runner-wheel {
-    position: absolute;
-    bottom: 0;
-    width: 16px;
-    height: 16px;
-    border-radius: 999px;
-    background: var(--hero-wheel-bg);
-    border: 2px solid color-mix(in srgb, white 20%, transparent);
-    box-shadow: var(--hero-wheel-shadow);
-    will-change: transform;
-}
-
-.runner-wheel-left {
-    left: 20px;
-}
-
-.runner-wheel-right {
-    left: 62px;
-}
-
-.runner-headlight {
-    position: absolute;
-    left: 78px;
-    bottom: 14px;
-    width: 42px;
-    height: 14px;
-    background: linear-gradient(90deg, color-mix(in srgb, white 95%, var(--hero-headlight)) 0 14%, color-mix(in srgb, white 62%, var(--hero-headlight)) 28%, color-mix(in srgb, white 14%, transparent) 68%, transparent 100%);
-    filter: blur(2px);
-    clip-path: polygon(0 28%, 100% 4%, 100% 96%, 0 72%);
-    transform-origin: left center;
-    will-change: opacity;
-}
-
-.hero-art-preview {
-    display: grid;
-    grid-template-columns: 92px 1fr;
-    gap: 0.8rem;
-    align-items: center;
-    padding: 0.85rem 0.9rem;
-    border-radius: 1.1rem;
-    border: 1px solid color-mix(in srgb, var(--hero-border) 72%, transparent);
-    background: color-mix(in srgb, var(--card) 58%, transparent);
-}
-
-.hero-art-preview-screen {
-    position: relative;
-    height: 72px;
-    border-radius: 0.95rem;
-    border: 1px solid color-mix(in srgb, var(--hero-border) 72%, transparent);
-    background:
-        radial-gradient(circle at center, color-mix(in srgb, var(--hero-orb-soft) 78%, transparent), transparent 60%),
-        color-mix(in srgb, var(--game-canvas) 82%, transparent);
-    overflow: hidden;
-}
-
-.hero-theme-mini-scene {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-.theme-mini-moon,
-.theme-mini-sun,
-.theme-mini-tree,
-.theme-mini-wave,
-.theme-mini-stars {
-    z-index: 0;
-}
-
-.theme-mini-moon,
-.theme-mini-sun {
-    top: 8px;
-    left: 10px;
-    width: 12px;
-    height: 12px;
-}
-
-.theme-mini-moon {
-    background: var(--hero-scene-moon-bg);
-}
-
-.theme-mini-stars {
-    top: 8px;
-    left: 28px;
-    color: color-mix(in srgb, white 84%, var(--sky));
-    font-size: 0.56rem;
-    text-shadow: 0 0 10px color-mix(in srgb, var(--sky) 28%, transparent);
-}
-
-.theme-mini-sun {
-    background: var(--hero-scene-sun-bg);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--hero-glow) 28%, transparent);
-}
-
-.theme-mini-tree {
-    left: 10px;
-    bottom: 10px;
-    width: 12px;
-    height: 22px;
-}
-
-.theme-mini-tree::before {
-    left: 5px;
-    bottom: 0;
-    width: 2px;
-    height: 7px;
-    border-radius: 999px;
-    background: var(--hero-tree-trunk);
-}
-
-.theme-mini-tree::after {
-    inset: 0;
-    clip-path: polygon(50% 0, 100% 62%, 72% 62%, 100% 100%, 0 100%, 28% 62%, 0 62%);
-    border-radius: 8px;
-    background: var(--hero-tree-foliage);
-}
-
-.theme-mini-wave {
-    left: 7px;
-    right: 28px;
-    bottom: 10px;
-    height: 10px;
-    border-radius: 999px 999px 0 0;
-    background:
-        linear-gradient(180deg, color-mix(in srgb, white 22%, transparent), transparent 42%),
-        linear-gradient(135deg, color-mix(in srgb, var(--sky) 84%, white), color-mix(in srgb, var(--emerald) 74%, transparent));
-    clip-path: polygon(0 72%, 18% 44%, 36% 70%, 53% 40%, 68% 72%, 84% 46%, 100% 68%, 100% 100%, 0 100%);
-}
-
-.hero-art-wave {
-    position: absolute;
-    bottom: 12px;
-    width: 10px;
-    border-radius: 999px;
-    background: linear-gradient(180deg, color-mix(in srgb, white 12%, var(--hero-orb)), var(--hero-orb));
-    opacity: 0.78;
-}
-
-.hero-art-wave-1 {
-    left: 18px;
-    height: 28px;
-}
-
-.hero-art-wave-2 {
-    left: 34px;
-    height: 42px;
-    animation-delay: 0.14s;
-}
-
-.hero-art-wave-3 {
-    left: 50px;
-    height: 20px;
-    animation-delay: 0.26s;
-}
-
-.hero-art-play {
-    position: absolute;
-    top: 14px;
-    right: 12px;
-    width: 24px;
-    height: 24px;
-    border-radius: 999px;
-    background: var(--hero-play-surface);
-}
-
-.hero-art-play::before {
-    content: '';
-    position: absolute;
-    left: 9px;
-    top: 6px;
-    border-left: 8px solid var(--foreground);
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-}
-
-.hero-art-preview-copy {
-    display: grid;
-    gap: 0.25rem;
-}
-
-.hero-art-preview-label {
+    min-height: var(--control-height-sm);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 70%, transparent);
+    background: color-mix(in srgb, var(--hero-chip-surface-strong) 88%, transparent);
     color: var(--muted-foreground);
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
     letter-spacing: 0.08em;
 }
 
-.hero-art-preview-copy strong {
-    font-size: 0.98rem;
-    line-height: 1.3;
+.hero-flow-node-strong {
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--hero-orb) 16%, var(--surface-overlay-strong));
+    border-color: color-mix(in srgb, var(--hero-orb) 38%, transparent);
 }
 
-.hero-floating-icons {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-}
-
-.hero-air-streak {
-    position: absolute;
+.hero-flow-line {
     height: 2px;
-    border-radius: 999px;
-    background: linear-gradient(90deg,
-        transparent,
-        color-mix(in srgb, var(--hero-orb) 52%, white) 30%,
-        color-mix(in srgb, var(--hero-orb) 28%, transparent) 70%,
-        transparent);
-    opacity: 0.16;
+    min-width: 2rem;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--hero-border) 58%, transparent), color-mix(in srgb, var(--hero-orb) 58%, transparent));
 }
 
-.hero-air-streak-1 {
-    top: 22%;
-    right: 6%;
-    width: 32px;
-    animation-delay: 0s;
+.hero-output-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 72%, transparent);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 48%),
+        color-mix(in srgb, var(--card) 62%, transparent);
+    box-shadow:
+        0 1px 0 var(--glass-highlight) inset,
+        0 18px 34px color-mix(in srgb, var(--glass-shadow) 22%, transparent);
 }
 
-.hero-air-streak-2 {
-    top: 34%;
-    right: 14%;
-    width: 22px;
-    opacity: 0.12;
+.hero-output-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: var(--radius-lg);
+    background: var(--button-primary);
+    color: var(--button-primary-foreground);
+    box-shadow: 0 14px 26px color-mix(in srgb, var(--hero-orb) 20%, transparent);
 }
 
-.hero-air-streak-3 {
-    top: 46%;
-    right: 8%;
-    width: 38px;
-    opacity: 0.14;
+.hero-output-copy {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
 }
 
-.hero-air-streak-4 {
-    top: 56%;
-    right: 4%;
-    width: 18px;
-    opacity: 0.1;
+.hero-output-copy strong {
+    color: var(--foreground);
+    font-size: 1rem;
+    line-height: 1.25;
 }
 
-.hero-air-streak-5 {
-    top: 64%;
-    right: 11%;
-    width: 26px;
-    opacity: 0.12;
-}
-
-.hero-air-streak-6 {
-    top: 40%;
-    right: 2%;
-    width: 14px;
-    opacity: 0.1;
-}
-
-@keyframes hero-letter-hop {
-    0%, 16%, 100% {
-        transform: translateY(0) scale(1);
-    }
-
-    19% {
-        transform: translateY(0) scaleY(0.9) scaleX(1.04);
-    }
-
-    28% {
-        transform: translateY(-16px) scale(1);
-    }
-
-    40% {
-        transform: translateY(0) scaleY(0.95) scaleX(1.02);
-    }
-}
-
-@keyframes hero-file-drop {
-    0%, 10% {
-        transform: translate(0, 0) scale(0.92);
-        opacity: 0;
-    }
-
-    16% {
-        opacity: 1;
-    }
-
-    58% {
-        transform: translate(122px, 84px) scale(1);
-        opacity: 1;
-    }
-
-    74% {
-        transform: translate(148px, 104px) scale(0.74);
-        opacity: 0;
-    }
-
-    100% {
-        transform: translate(148px, 104px) scale(0.74);
-        opacity: 0;
-    }
-}
-
-/* hero-runner-drive and hero-wheel-spin keyframes removed.
-   Motion is now driven by js/hero-runner.js for physics-based movement. */
-
-@keyframes hero-wave-bounce {
-    from {
-        transform: scaleY(0.45);
-        opacity: 0.72;
-    }
-
-    to {
-        transform: scaleY(1);
-        opacity: 1;
-    }
-}
-
-@keyframes hero-float {
-    0%, 100% {
-        transform: translateY(0);
-        opacity: 0.7;
-    }
-
-    50% {
-        transform: translateY(-10px);
-        opacity: 1;
-    }
-}
-
-@keyframes hero-speed-streak {
-    0% {
-        transform: translateX(30px) scaleX(0.3);
-        opacity: 0;
-    }
-
-    8% {
-        opacity: 0.85;
-        transform: translateX(10px) scaleX(0.8);
-    }
-
-    100% {
-        transform: translateX(-160px) scaleX(2.2);
-        opacity: 0;
-    }
-}
-
-@keyframes hero-twinkle {
-    0%, 100% {
-        transform: translateY(0) scale(0.92);
-        opacity: 0.54;
-    }
-
-    50% {
-        transform: translateY(-2px) scale(1.08);
-        opacity: 1;
-    }
-}
-
-@keyframes hero-sun-sway {
-    0%, 100% {
-        transform: translateY(0) scale(0.98);
-    }
-
-    50% {
-        transform: translateY(-3px) scale(1.04);
-    }
-}
-
-@keyframes hero-cloud-drift {
-    0%, 100% {
-        transform: translateX(0) translateY(0);
-    }
-
-    50% {
-        transform: translateX(5px) translateY(-1px);
-    }
-}
-
-@keyframes hero-wave-roll {
-    0%, 100% {
-        transform: translateY(0) scaleX(1);
-    }
-
-    50% {
-        transform: translateY(-2px) scaleX(1.02);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .hero-eyebrow::before,
-    .hero-file-card,
-    .run-letter,
-    .runner-wheel,
-    .hero-art-wave,
-    .hero-air-streak,
-    .theme-scene-star,
-    .theme-scene-sun,
-    .theme-scene-cloud,
-    .theme-scene-wave,
-    .theme-mini-stars {
-        animation: none !important;
-    }
-
-    .hero-file-card,
-    .run-letter,
-    .runner-wheel,
-    .hero-art-wave,
-    .hero-air-streak,
-    .theme-scene-moon,
-    .theme-scene-star,
-    .theme-scene-sun,
-    .theme-scene-cloud,
-    .theme-scene-tree,
-    .theme-scene-wave,
-    .theme-mini-moon,
-    .theme-mini-stars,
-    .theme-mini-sun,
-    .theme-mini-tree,
-    .theme-mini-wave {
-        transform: none !important;
-        transition: none !important;
-    }
-
-    .hero-eyebrow::before {
-        box-shadow: none !important;
-    }
+.hero-output-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-height-sm);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay));
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 36%, transparent);
+    color: var(--foreground);
+    font-size: 0.72rem;
+    font-weight: 800;
 }
 
 @media (max-width: 720px) {
@@ -1087,16 +347,20 @@
         grid-template-columns: 1fr;
     }
 
-    .hero-runway-brand {
-        font-size: 2rem;
+    .hero-conversion-flow,
+    .hero-output-card {
+        grid-template-columns: 1fr;
+        align-items: stretch;
     }
 
-    .hero-file-stream {
-        transform: scale(0.92);
-        transform-origin: top left;
+    .hero-flow-line {
+        min-height: 2rem;
+        width: 2px;
+        justify-self: center;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--hero-border) 58%, transparent), color-mix(in srgb, var(--hero-orb) 58%, transparent));
     }
 
-    .hero-art-preview {
-        grid-template-columns: 78px 1fr;
+    .hero-output-badge {
+        width: fit-content;
     }
 }

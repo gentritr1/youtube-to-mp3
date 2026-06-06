@@ -34,7 +34,7 @@ Open `http://localhost:3000` after `npm start`.
 
 - Keyboard focus: tab through converter input, paste, format, convert, theme options, download links, batch controls, discovery preview controls, sidecar tabs, and floating game controls; verify the focus ring is visible in all four themes.
 - Reduced motion: enable `prefers-reduced-motion: reduce` and verify decorative animation, shimmer, hover lift, lyric/card motion, and game-control motion are calmed while loading, progress, panel switches, and content reveal states still complete.
-- Hero reduced motion: verify the hero runner and theme scene render as static decoration with no JavaScript sway interval or looping decorative scene motion.
+- Hero reduced motion: verify the hero conversion preview renders as static decoration with no looping decorative scene motion.
 - Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar tab wrapping, batch action rows, and download buttons.
 - Converter states: verify idle, pasted URL, active format, loading, progress, success/download, disabled, and error states.
 - Conversion success: verify the download button is visible immediately, or within roughly 500ms, after a successful conversion and is not blocked by a staged decorative reveal.

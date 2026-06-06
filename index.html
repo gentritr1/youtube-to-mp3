@@ -78,79 +78,45 @@
                         </div>
                     </div>
 
-                    <aside class="hero-art" aria-label="Brand illustration">
+                    <aside class="hero-art" aria-label="Conversion preview">
                         <div class="hero-art-card">
-                            <div class="hero-art-chips">
-                                <span class="hero-art-chip">🎵 MP3</span>
-                                <span class="hero-art-chip">🎬 MP4</span>
-                                <span class="hero-art-chip">✨ Themes</span>
+                            <div class="hero-conversion-header">
+                                <span class="hero-art-preview-label">Conversion preview</span>
+                                <span class="hero-conversion-status">Ready after convert</span>
                             </div>
-                            <div class="hero-runway" aria-hidden="true">
-                                <div class="hero-file-stream">
-                                    <span class="hero-file-card hero-file-card-mp3">MP3</span>
-                                    <span class="hero-file-card hero-file-card-mp4">MP4</span>
-                                    <span class="hero-file-card hero-file-card-wave">WAV</span>
-                                </div>
-                                <div class="hero-theme-scene">
-                                    <span class="theme-scene-moon"></span>
-                                    <span class="theme-scene-star theme-scene-star-a"></span>
-                                    <span class="theme-scene-star theme-scene-star-b"></span>
-                                    <span class="theme-scene-sun"></span>
-                                    <span class="theme-scene-cloud"></span>
-                                    <span class="theme-scene-tree theme-scene-tree-a"></span>
-                                    <span class="theme-scene-tree theme-scene-tree-b"></span>
-                                    <span class="theme-scene-wave"></span>
-                                </div>
-                                <div class="hero-runway-brand">
-                                    <span class="run-letter" style="--jump-index: 0">Y</span>
-                                    <span class="run-letter" style="--jump-index: 1">T</span>
-                                    <span class="run-letter spacer"></span>
-                                    <span class="run-letter" style="--jump-index: 2">C</span>
-                                    <span class="run-letter" style="--jump-index: 3">o</span>
-                                    <span class="run-letter" style="--jump-index: 4">n</span>
-                                    <span class="run-letter" style="--jump-index: 5">v</span>
-                                    <span class="run-letter" style="--jump-index: 6">e</span>
-                                    <span class="run-letter" style="--jump-index: 7">r</span>
-                                    <span class="run-letter" style="--jump-index: 8">t</span>
-                                    <span class="run-letter" style="--jump-index: 9">e</span>
-                                    <span class="run-letter" style="--jump-index: 10">r</span>
-                                </div>
-                                <div class="hero-runner">
-                                    <span class="runner-trail"></span>
-                                    <span class="runner-cargo"></span>
-                                    <span class="runner-body"></span>
-                                    <span class="runner-window"></span>
-                                    <span class="runner-wheel runner-wheel-left"></span>
-                                    <span class="runner-wheel runner-wheel-right"></span>
-                                    <span class="runner-headlight"></span>
-                                </div>
+
+                            <div class="hero-conversion-url">
+                                <span class="hero-conversion-url-icon" aria-hidden="true">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11.5 4.43"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.33-1.33"></path>
+                                    </svg>
+                                </span>
+                                <span class="hero-conversion-url-text">youtube.com/watch?v=...</span>
                             </div>
-                            <div class="hero-art-preview">
-                                <div class="hero-art-preview-screen">
-                                    <div class="hero-theme-mini-scene">
-                                        <span class="theme-mini-moon"></span>
-                                        <span class="theme-mini-stars">✦</span>
-                                        <span class="theme-mini-sun"></span>
-                                        <span class="theme-mini-tree"></span>
-                                        <span class="theme-mini-wave"></span>
-                                    </div>
-                                    <div class="hero-art-wave hero-art-wave-1"></div>
-                                    <div class="hero-art-wave hero-art-wave-2"></div>
-                                    <div class="hero-art-wave hero-art-wave-3"></div>
-                                    <div class="hero-art-play"></div>
-                                </div>
-                                <div class="hero-art-preview-copy">
-                                    <span class="hero-art-preview-label">Preview</span>
-                                    <strong>MP3 and MP4 downloads</strong>
-                                </div>
+
+                            <div class="hero-conversion-flow" aria-hidden="true">
+                                <span class="hero-flow-node">URL</span>
+                                <span class="hero-flow-line"></span>
+                                <span class="hero-flow-node hero-flow-node-strong">MP3</span>
+                                <span class="hero-flow-node hero-flow-node-strong">MP4</span>
                             </div>
-                            <div class="hero-floating-icons" aria-hidden="true">
-                                <span class="hero-air-streak hero-air-streak-1"></span>
-                                <span class="hero-air-streak hero-air-streak-2"></span>
-                                <span class="hero-air-streak hero-air-streak-3"></span>
-                                <span class="hero-air-streak hero-air-streak-4"></span>
-                                <span class="hero-air-streak hero-air-streak-5"></span>
-                                <span class="hero-air-streak hero-air-streak-6"></span>
+
+                            <div class="hero-output-card">
+                                <span class="hero-output-icon" aria-hidden="true">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </span>
+                                <div class="hero-output-copy">
+                                    <span class="hero-art-preview-label">Output</span>
+                                    <strong>Pick a format and download</strong>
+                                </div>
+                                <span class="hero-output-badge">Download</span>
                             </div>
                         </div>
                     </aside>
