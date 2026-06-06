@@ -170,8 +170,8 @@
     display: flex;
     gap: 0.45rem;
     overflow-x: auto;
-    padding-bottom: 0.875rem;
-    margin-bottom: 0.5rem;
+    padding: 0.35rem 0.35rem 0.95rem;
+    margin: -0.35rem -0.35rem 0.35rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -230,7 +230,9 @@
     display: flex;
     gap: 0.9rem;
     overflow-x: auto;
-    padding: 0.25rem 0 0.5rem;
+    padding: 0.55rem 0.35rem 0.8rem;
+    margin: -0.3rem -0.35rem -0.3rem;
+    scroll-padding-inline: 0.35rem;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--border) 92%, transparent) transparent;
     scroll-snap-type: x mandatory;
