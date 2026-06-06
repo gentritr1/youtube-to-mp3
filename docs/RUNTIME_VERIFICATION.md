@@ -30,6 +30,17 @@ Open `http://localhost:3000` after `npm start`.
 - Motion: verify normal motion and `prefers-reduced-motion: reduce`.
 - States: verify idle, loading, success, error, empty, active, inactive, popup, and panel states.
 
+## Design System Visual QA
+
+- Keyboard focus: tab through converter input, paste, format, convert, theme options, download links, batch controls, discovery preview controls, sidecar tabs, and floating game controls; verify the focus ring is visible in all four themes.
+- Reduced motion: enable `prefers-reduced-motion: reduce` and verify decorative animation, shimmer, hover lift, lyric/card motion, and game-control motion are calmed while loading, progress, panel switches, and content reveal states still complete.
+- Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar tab wrapping, batch action rows, and download buttons.
+- Converter states: verify idle, pasted URL, active format, loading, progress, success/download, disabled, and error states.
+- Batch controls: verify batch mode toggle, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
+- Discovery preview controls: verify play/pause, close, preview loading/error, progress/waveform, and one-click convert controls.
+- Sidecar tabs: verify karaoke/arcade tab focus, active state, hover state, and reduced-motion behavior.
+- Floating game controls: verify Snake and Guess the Track launch/floating controls remain visible, focusable, and themed.
+
 ## Release Gate
 
 - No new `window.*` integration globals.

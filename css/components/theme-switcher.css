@@ -1,6 +1,6 @@
 .theme-switcher-shell {
     display: grid;
-    gap: 0.55rem;
+    gap: var(--space-2);
     min-width: min(100%, 23rem);
 }
 
@@ -17,16 +17,17 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 0.45rem;
+    gap: var(--space-2);
 }
 
 .theme-option {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
+    gap: var(--control-gap);
     min-width: 7rem;
-    padding: 0.55rem 0.75rem;
-    border-radius: 999px;
+    min-height: var(--control-height-sm);
+    padding: 0.45rem var(--space-3);
+    border-radius: var(--radius-pill);
     border: 1px solid color-mix(in srgb, var(--hero-border) 85%, transparent);
     background: color-mix(in srgb, var(--hero-surface-strong) 84%, transparent);
     color: var(--foreground);
@@ -39,9 +40,14 @@
 }
 
 .theme-option:hover {
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
     border-color: color-mix(in srgb, var(--hero-orb) 62%, transparent);
     box-shadow: 0 14px 24px color-mix(in srgb, var(--hero-orb) 18%, transparent);
+}
+
+.theme-option:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
 }
 
 .theme-option.active {

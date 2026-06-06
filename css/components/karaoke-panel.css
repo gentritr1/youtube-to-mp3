@@ -1,7 +1,7 @@
 .karaoke-card {
     display: grid;
-    gap: 1.25rem;
-    padding: 1.5rem;
+    gap: var(--space-5);
+    padding: var(--space-6);
     border-radius: 1.75rem;
     min-height: 100%;
     border: 1px solid color-mix(in srgb, var(--hero-border) 60%, transparent);
@@ -52,19 +52,20 @@
 
 .karaoke-panel-tabs {
     display: inline-flex;
-    padding: 0.25rem;
-    border-radius: 999px;
+    padding: var(--space-1);
+    border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--foreground) 3%, transparent);
     border: 1px solid var(--surface-outline-soft);
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 
 .karaoke-tab {
     border: none;
     background: transparent;
     color: var(--muted-foreground);
-    padding: 0.5rem 0.8rem;
-    border-radius: 999px;
+    min-height: var(--control-height-sm);
+    padding: 0.45rem var(--space-3);
+    border-radius: var(--radius-pill);
     font: inherit;
     font-size: 0.78rem;
     font-weight: 700;
@@ -75,7 +76,14 @@
 
 .karaoke-tab:hover {
     color: var(--foreground);
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
+}
+
+.karaoke-tab:focus-visible,
+.studio-teaser-link:focus-visible,
+.arcade-launch-btn:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
 }
 
 .karaoke-tab.active {
@@ -299,7 +307,7 @@
 }
 
 .assistant-action-btn:hover {
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
 }
 
 .assistant-hint {
@@ -311,9 +319,9 @@
 
 .studio-teaser-card {
     display: grid;
-    gap: 0.85rem;
-    padding: 1rem;
-    border-radius: 1.1rem;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
     border: 1px solid color-mix(in srgb, var(--hero-orb) 28%, var(--surface-outline));
     background:
         linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 14%, transparent), color-mix(in srgb, var(--foreground) 3%, transparent)),
@@ -332,9 +340,9 @@
     align-items: center;
     justify-content: center;
     width: fit-content;
-    min-height: 3rem;
-    padding: 0.75rem 1rem;
-    border-radius: 999px;
+    min-height: var(--control-height);
+    padding: var(--control-padding-y) var(--control-padding-x);
+    border-radius: var(--radius-pill);
     border: 1px solid color-mix(in srgb, var(--hero-orb) 44%, transparent);
     background: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay-strong));
     color: var(--foreground);
@@ -349,7 +357,7 @@
 }
 
 .studio-teaser-link:hover {
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
 }
 
 .point-rail {
@@ -368,6 +376,8 @@
 }
 
 .point-rail:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--hero-orb) 44%, transparent);
 }
 
@@ -412,7 +422,8 @@
 .point-hit:focus-visible {
     opacity: 1;
     transform: scale(1.03);
-    outline: none;
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
     border-color: color-mix(in srgb, var(--hero-orb) 32%, transparent);
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--surface-overlay-soft));
 }
@@ -643,16 +654,17 @@
 .arcade-launch-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var(--control-gap);
 }
 
 .arcade-launch-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    padding: 0.65rem 0.9rem;
-    border-radius: 999px;
+    gap: var(--control-gap);
+    min-height: var(--control-height-sm);
+    padding: 0.45rem var(--space-3);
+    border-radius: var(--radius-pill);
     border: 1px solid var(--surface-outline);
     background: var(--surface-overlay-strong);
     color: var(--foreground);
@@ -668,7 +680,7 @@
 
 .arcade-launch-btn:hover,
 .arcade-launch-btn.active {
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
     background: color-mix(in srgb, var(--hero-orb) 16%, var(--surface-overlay));
     border-color: color-mix(in srgb, var(--hero-orb) 46%, transparent);
 }
@@ -677,21 +689,28 @@
     .sync-progress-fill,
     .point-hit,
     .point-card,
-    .assistant-action-btn {
+    .assistant-action-btn,
+    .karaoke-tab,
+    .studio-teaser-link,
+    .arcade-launch-btn {
         transition-duration: 1ms;
     }
 
     .point-hit:hover,
     .point-hit:focus-visible,
     .assistant-action-btn:hover,
-    .point-card.is-selected {
+    .point-card.is-selected,
+    .karaoke-tab:hover,
+    .studio-teaser-link:hover,
+    .arcade-launch-btn:hover,
+    .arcade-launch-btn.active {
         transform: none;
     }
 }
 
 @media (max-width: 720px) {
     .karaoke-card {
-        padding: 1rem;
+        padding: var(--space-4);
     }
 
     .karaoke-status {
