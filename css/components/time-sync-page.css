@@ -181,6 +181,12 @@
     outline: none;
 }
 
+.studio-input:focus-visible,
+.studio-lyrics-input:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+}
+
 .studio-input {
     min-height: 3rem;
     padding: 0 0.95rem;
@@ -230,7 +236,7 @@
 .studio-primary-btn:hover,
 .studio-secondary-btn:hover,
 .studio-teaser-link:hover {
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
 }
 
 .studio-action-row {

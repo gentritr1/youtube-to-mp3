@@ -194,7 +194,12 @@
     font-size: 0.84rem;
     font-weight: 600;
     white-space: nowrap;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        transform var(--transition-fast);
     display: flex;
     align-items: center;
     gap: 0.42rem;
@@ -205,7 +210,7 @@
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--accent));
     color: var(--foreground);
     border-color: color-mix(in srgb, var(--hero-orb) 42%, transparent);
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
 }
 
 .genre-tab.active {
@@ -258,7 +263,10 @@
     border-radius: 1.15rem;
     overflow: hidden;
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition:
+        border-color var(--transition-base),
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
     border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
     position: relative;
     animation: popular-card-in 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -430,7 +438,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .video-action-btn:hover {
@@ -653,7 +665,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .preview-close:hover {
@@ -859,7 +875,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    transition:
+        box-shadow var(--transition-fast),
+        transform var(--transition-fast);
     flex-shrink: 0;
 }
 
@@ -951,7 +969,11 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        box-shadow var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
     white-space: nowrap;
     letter-spacing: 0.01em;
 }
@@ -986,6 +1008,17 @@
     box-shadow:
         0 18px 34px color-mix(in srgb, var(--hero-orb) 24%, transparent),
         inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
+}
+
+.genre-tab:focus-visible,
+.video-card:focus-visible,
+.video-action-btn:focus-visible,
+.preview-close:focus-visible,
+.preview-play-btn:focus-visible,
+.preview-lyrics-btn:focus-visible,
+.preview-convert-btn:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
 }
 
 .preview-player.is-playing .waveform-canvas {

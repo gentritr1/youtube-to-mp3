@@ -112,7 +112,11 @@
     border-radius: 5px;
     color: var(--muted-foreground);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .game-minimize-btn:hover {
@@ -181,7 +185,12 @@
     font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
     backdrop-filter: blur(4px);
 }
 
@@ -189,7 +198,7 @@
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--game-surface-soft));
     color: var(--foreground);
     border-color: var(--game-border-strong);
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
 }
 
 .mini-game-btn.active {
@@ -197,7 +206,7 @@
     color: var(--foreground);
     border-color: var(--game-border-strong);
     box-shadow: 0 12px 22px color-mix(in srgb, var(--hero-orb) 16%, transparent);
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
 }
 
 .mini-game-btn:active {
@@ -380,6 +389,11 @@
     outline: none;
 }
 
+.game-container canvas:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+}
+
 .game-container canvas.playing {
     box-shadow:
         0 2px 20px color-mix(in srgb, black 40%, transparent),
@@ -498,7 +512,11 @@
     border: none;
     color: white;
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition:
+        background var(--transition-base),
+        box-shadow var(--transition-base),
+        color var(--transition-base),
+        transform var(--transition-base);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -508,7 +526,7 @@
 
 .restart-btn:hover {
     background: color-mix(in srgb, var(--emerald) 88%, white);
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
     box-shadow:
         0 4px 16px color-mix(in srgb, var(--emerald) 35%, transparent);
 }
@@ -669,7 +687,7 @@
 /* ---- Hover effects (pointer devices only) ---- */
 @media (hover: hover) and (pointer: fine) {
     .restart-btn:hover {
-        transform: translateY(-1px);
+        transform: translateY(var(--hover-lift));
     }
 
     #high-scores-list li:hover {

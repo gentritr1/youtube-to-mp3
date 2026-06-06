@@ -19,6 +19,7 @@ Use `docs/TESTING_STATUS.md` for transient build and environment notes only.
 - [Post-Review Lessons](#post-review-lessons)
 - [Frontend Module Ownership](#frontend-module-ownership)
 - [Styling Architecture](#styling-architecture)
+- [Design System Usage](#design-system-usage)
 - [Theme System](#theme-system)
 - [Current UI System](#current-ui-system)
 - [Workflow For New Features](#workflow-for-new-features)
@@ -353,6 +354,15 @@ Owns:
 - `css/components/guess-track.css`
 - `css/components/nerd-stats.css`
 - `css/components/lyrics.css`
+
+## Design System Usage
+
+- For UI, styling, layout, animation, interaction, theme, accessibility, or visual polish work, use the `impeccable` design skill as the primary design reference when it is available. If it is not installed, attempt `npx impeccable skills install .`; if that cannot run, document the blocker and use this guide as the local source of truth.
+- Use non-color tokens from `css/base.css` for shared spacing, control heights, control gaps, radii, focus rings, hover lift, and motion timing/easing. Avoid one-off control sizes unless a component has a clear layout reason.
+- Use semantic color tokens for surfaces, borders, buttons, and state feedback. Preserve theme-specific values in `css/themes/*.css` instead of hardcoding palette colors inside components.
+- Interactive controls should rely on the shared `:focus-visible` baseline for buttons, links, form fields, and tabindex targets. Add component-specific focus styling only when the baseline is insufficient.
+- Do not use `transition: all`; list the exact properties that should animate so state changes stay predictable.
+- Respect `prefers-reduced-motion: reduce` by calming decorative animation and hover motion without hiding content or preventing layout/state changes from completing.
 
 ## Theme System
 

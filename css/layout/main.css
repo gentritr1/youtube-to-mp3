@@ -5,12 +5,12 @@
     width: 100%;
     max-width: 1280px;
     margin: 0 auto;
-    padding: 1.5rem 1rem 2.25rem;
+    padding: var(--space-6) var(--space-4) 2.25rem;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 1.35rem;
+    gap: var(--space-5);
 }
 
 .header {
@@ -39,7 +39,7 @@
 
 @media (max-width: 720px) {
     .container {
-        padding: 1rem 0.85rem 2rem;
-        gap: 1rem;
+        padding: var(--space-4) var(--space-3) var(--space-8);
+        gap: var(--space-4);
     }
 }

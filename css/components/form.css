@@ -4,14 +4,14 @@
 .form {
     display: flex;
     flex-direction: column;
-    gap: 1.1rem;
+    gap: var(--space-4);
 }
 
 .converter-card-header {
     display: grid;
-    gap: 0.95rem;
-    margin-bottom: 1.15rem;
-    padding-bottom: 1rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
     border-bottom: 1px solid color-mix(in srgb, var(--hero-border) 68%, transparent);
 }
 
@@ -52,7 +52,7 @@
 .converter-card-steps {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.45rem;
+    gap: var(--space-2);
 }
 
 .converter-step {
@@ -72,7 +72,7 @@
     display: flex;
     align-items: end;
     justify-content: space-between;
-    gap: 0.8rem;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -82,16 +82,16 @@
 
 .input-group {
     display: flex;
-    gap: 0.65rem;
+    gap: var(--control-gap);
 }
 
 .input {
     flex: 1;
-    height: 3.2rem;
-    padding: 0 1rem;
+    height: var(--control-height-lg);
+    padding: 0 var(--control-padding-x);
     background: color-mix(in srgb, var(--secondary) 85%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 78%, transparent);
-    border-radius: 1rem;
+    border-radius: var(--radius-control);
     color: var(--foreground);
     font-size: 0.95rem;
     font-family: inherit;
@@ -115,18 +115,28 @@
         var(--shadow-input-inset-focus);
 }
 
+.input:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+}
+
 .paste-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 3.2rem;
-    height: 3.2rem;
+    width: var(--control-icon-size);
+    height: var(--control-icon-size);
     background: color-mix(in srgb, var(--secondary) 84%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 78%, transparent);
-    border-radius: 1rem;
+    border-radius: var(--radius-control);
     color: var(--muted-foreground);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        transform var(--transition-fast);
     box-shadow:
         0 1px 0 var(--glass-highlight) inset,
         0 10px 24px color-mix(in srgb, var(--glass-shadow) 65%, transparent);
@@ -148,24 +158,29 @@
 .format-toggle {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    gap: var(--control-gap);
 }
 
 .format-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    height: 3rem;
+    gap: var(--control-gap);
+    height: var(--control-height);
     background: color-mix(in srgb, var(--secondary) 82%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 72%, transparent);
-    border-radius: 1rem;
+    border-radius: var(--radius-control);
     color: var(--muted-foreground);
     font-size: 0.92rem;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        transform var(--transition-fast);
     box-shadow:
         0 1px 0 var(--glass-highlight) inset,
         0 12px 24px color-mix(in srgb, var(--glass-shadow) 55%, transparent);
@@ -206,14 +221,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    height: 3.3rem;
+    gap: var(--control-gap);
+    height: var(--control-height-lg);
     min-width: 13rem;
     background:
         linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
         linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 88%, white));
     border: none;
-    border-radius: 1.1rem;
+    border-radius: var(--radius-control);
     color: var(--primary-foreground);
     font-size: 0.96rem;
     font-weight: 700;
@@ -227,7 +242,7 @@
 
 .convert-btn:hover {
     opacity: 0.96;
-    transform: translateY(-1px);
+    transform: translateY(var(--hover-lift));
 }
 
 .convert-btn::after {
@@ -253,10 +268,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: var(--space-4);
     margin-top: 0.15rem;
-    padding: 0.85rem 0.95rem;
-    border-radius: 1.15rem;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-xl);
     border: 1px solid color-mix(in srgb, var(--hero-border) 68%, transparent);
     background:
         linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent 36%),
@@ -300,7 +315,7 @@
     .convert-action-row {
         flex-direction: column;
         align-items: stretch;
-        padding: 0.85rem;
+        padding: var(--space-3);
     }
 
     .convert-btn {

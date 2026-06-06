@@ -1,13 +1,13 @@
 .hero-shell {
     width: 100%;
     display: grid;
-    gap: 1.25rem;
+    gap: var(--space-5);
 }
 
 .hero-stage {
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
-    gap: 1rem;
+    gap: var(--space-4);
     align-items: stretch;
     width: 100%;
 }
