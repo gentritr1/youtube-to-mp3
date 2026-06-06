@@ -127,33 +127,28 @@ export const renderPopularVideoCarousel = ({
                 <img src="${escapeAttr(video.thumbnail)}" alt="${escapeAttr(video.title)}" loading="lazy">
                 <span class="video-card-duration">${escapeHtml(video.duration)}</span>
                 ${video.tag ? `<span class="video-card-tag">${escapeHtml(video.tag)}</span>` : ''}
-                <div class="video-card-overlay">
-                    <div class="video-card-play">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    </div>
-                </div>
-                <div class="video-card-actions">
-                    <button class="video-action-btn${isLivePopularVideo(video) ? ' disabled' : ''}" data-action="preview" title="${isLivePopularVideo(video) ? 'Preview unavailable for live streams' : 'Preview'}" ${isLivePopularVideo(video) ? 'disabled' : ''}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
-                        </svg>
-                    </button>
-                    <button class="video-action-btn" data-action="convert" title="Convert">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                    </button>
-                </div>
             </div>
             <div class="video-card-info">
                 <span class="video-card-rank">${String(index + 1).padStart(2, '0')}</span>
                 <h3 class="video-card-title">${escapeHtml(video.title)}</h3>
                 <p class="video-card-artist">${escapeHtml(video.artist)}</p>
+                <div class="video-card-actions">
+                    <button type="button" class="video-action-btn${isLivePopularVideo(video) ? ' disabled' : ''}" data-action="preview" aria-label="${isLivePopularVideo(video) ? 'Preview unavailable for live streams' : `Preview ${escapeAttr(video.title)}`}" title="${isLivePopularVideo(video) ? 'Preview unavailable for live streams' : 'Preview'}" ${isLivePopularVideo(video) ? 'disabled' : ''}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                        </svg>
+                        <span>Preview</span>
+                    </button>
+                    <button type="button" class="video-action-btn" data-action="convert" aria-label="Convert ${escapeAttr(video.title)}" title="Convert">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Convert</span>
+                    </button>
+                </div>
             </div>
         </article>
     `).join('');
@@ -173,15 +168,6 @@ export const renderPopularVideoCarousel = ({
 
         card.querySelector('[data-action="convert"]')?.addEventListener('click', (event) => {
             event.stopPropagation();
-            onConvertVideo(video);
-        });
-
-        card.addEventListener('click', () => {
-            if (!videoIsLive) {
-                onShowPreview(video);
-                return;
-            }
-
             onConvertVideo(video);
         });
     });

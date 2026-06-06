@@ -363,6 +363,8 @@ Owns:
 - Interactive controls should rely on the shared `:focus-visible` baseline for buttons, links, form fields, and tabindex targets. Add component-specific focus styling only when the baseline is insufficient.
 - Do not use `transition: all`; list the exact properties that should animate so state changes stay predictable.
 - Respect `prefers-reduced-motion: reduce` by calming decorative animation and hover motion without hiding content or preventing layout/state changes from completing.
+- Keep the converter task dominant in the first viewport: URL input, format choice, and Convert should read as the primary workflow before discovery, lyrics, theme, or game affordances.
+- Decorative motion and secondary tools should not compete with conversion. Prefer static decoration or one subtle animation, and keep games, discovery, and studio links visibly secondary until the user chooses them.
 
 ## Theme System
 

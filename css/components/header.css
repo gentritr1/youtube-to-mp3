@@ -112,7 +112,6 @@
     border-radius: 999px;
     background: var(--hero-orb);
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--hero-orb) 42%, transparent);
-    animation: hero-pulse 1.8s ease-out infinite;
 }
 
 .logo {
@@ -187,47 +186,6 @@
     line-height: 1.65;
     color: var(--muted-foreground);
     max-width: 48rem;
-}
-
-.hero-metrics {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
-    position: relative;
-    z-index: 1;
-}
-
-.hero-metric {
-    padding: 0.9rem 1rem;
-    border-radius: 1.1rem;
-    border: 1px solid color-mix(in srgb, var(--hero-border) 88%, transparent);
-    background: color-mix(in srgb, var(--hero-surface-strong) 86%, transparent);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    display: grid;
-    gap: 0.2rem;
-}
-
-.hero-metric-icon {
-    font-size: 1rem;
-}
-
-.hero-metric-label {
-    display: block;
-    color: var(--muted-foreground);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.hero-metric-value {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--foreground);
-    letter-spacing: -0.03em;
 }
 
 .hero-art {
@@ -340,7 +298,7 @@
     box-shadow:
         0 1px 0 color-mix(in srgb, white 18%, transparent) inset,
         0 10px 20px color-mix(in srgb, var(--glass-shadow) 24%, transparent);
-    animation: hero-file-drop 5.6s linear infinite;
+    opacity: 0.78;
 }
 
 .hero-file-card::before {
@@ -388,8 +346,6 @@
 .run-letter {
     display: inline-block;
     transform-origin: bottom center;
-    animation: hero-letter-hop 5.6s cubic-bezier(0.34, 1.4, 0.64, 1) infinite;
-    animation-delay: calc(var(--jump-index, 0) * 0.14s);
     text-shadow: 0 10px 22px color-mix(in srgb, var(--hero-orb) 10%, transparent);
 }
 
@@ -464,7 +420,6 @@
 .theme-scene-star {
     color: color-mix(in srgb, white 86%, var(--sky));
     text-shadow: 0 0 12px color-mix(in srgb, var(--sky) 36%, transparent);
-    animation: hero-twinkle 2.8s ease-in-out infinite;
 }
 
 .theme-scene-star::before {
@@ -481,7 +436,6 @@
     top: 2.2rem;
     right: 4.8rem;
     font-size: 0.65rem;
-    animation-delay: 0.8s;
 }
 
 .theme-scene-sun {
@@ -493,7 +447,6 @@
     box-shadow:
         0 0 0 6px color-mix(in srgb, var(--hero-glow) 34%, transparent),
         0 0 18px color-mix(in srgb, var(--hero-orb) 34%, transparent);
-    animation: hero-sun-sway 5.6s ease-in-out infinite;
 }
 
 .theme-scene-cloud {
@@ -507,7 +460,6 @@
         13px -4px 0 1px color-mix(in srgb, white 74%, transparent),
         24px 1px 0 -2px color-mix(in srgb, white 64%, transparent);
     filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--glass-shadow) 10%, transparent));
-    animation: hero-cloud-drift 7s ease-in-out infinite;
 }
 
 .theme-scene-tree {
@@ -562,7 +514,6 @@
         linear-gradient(135deg, color-mix(in srgb, var(--sky) 84%, white), color-mix(in srgb, var(--emerald) 74%, transparent));
     clip-path: polygon(0 70%, 10% 44%, 20% 68%, 31% 36%, 43% 72%, 56% 42%, 69% 70%, 80% 48%, 90% 68%, 100% 38%, 100% 100%, 0 100%);
     filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--sky) 16%, transparent));
-    animation: hero-wave-roll 3.8s ease-in-out infinite;
 }
 
 .hero-runner::before {
@@ -789,7 +740,6 @@
     color: color-mix(in srgb, white 84%, var(--sky));
     font-size: 0.56rem;
     text-shadow: 0 0 10px color-mix(in srgb, var(--sky) 28%, transparent);
-    animation: hero-twinkle 2.4s ease-in-out infinite;
 }
 
 .theme-mini-sun {
@@ -838,7 +788,7 @@
     width: 10px;
     border-radius: 999px;
     background: linear-gradient(180deg, color-mix(in srgb, white 12%, var(--hero-orb)), var(--hero-orb));
-    animation: hero-wave-bounce 1.2s ease-in-out infinite alternate;
+    opacity: 0.78;
 }
 
 .hero-art-wave-1 {
@@ -912,8 +862,7 @@
         color-mix(in srgb, var(--hero-orb) 52%, white) 30%,
         color-mix(in srgb, var(--hero-orb) 28%, transparent) 70%,
         transparent);
-    animation: hero-speed-streak 3.2s ease-out infinite;
-    will-change: transform, opacity;
+    opacity: 0.16;
 }
 
 .hero-air-streak-1 {
@@ -927,39 +876,35 @@
     top: 34%;
     right: 14%;
     width: 22px;
-    animation-delay: 0.5s;
-    opacity: 0.7;
+    opacity: 0.12;
 }
 
 .hero-air-streak-3 {
     top: 46%;
     right: 8%;
     width: 38px;
-    animation-delay: 1.1s;
+    opacity: 0.14;
 }
 
 .hero-air-streak-4 {
     top: 56%;
     right: 4%;
     width: 18px;
-    animation-delay: 1.7s;
-    opacity: 0.6;
+    opacity: 0.1;
 }
 
 .hero-air-streak-5 {
     top: 64%;
     right: 11%;
     width: 26px;
-    animation-delay: 2.3s;
-    opacity: 0.8;
+    opacity: 0.12;
 }
 
 .hero-air-streak-6 {
     top: 40%;
     right: 2%;
     width: 14px;
-    animation-delay: 2.8s;
-    opacity: 0.5;
+    opacity: 0.1;
 }
 
 @keyframes hero-letter-hop {
@@ -1096,7 +1041,6 @@
     .hero-eyebrow::before,
     .hero-file-card,
     .run-letter,
-    .hero-runner,
     .runner-wheel,
     .hero-art-wave,
     .hero-air-streak,
@@ -1110,7 +1054,6 @@
 
     .hero-file-card,
     .run-letter,
-    .hero-runner,
     .runner-wheel,
     .hero-art-wave,
     .hero-air-streak,
@@ -1141,10 +1084,6 @@
     }
 
     .hero-main {
-        grid-template-columns: 1fr;
-    }
-
-    .hero-metrics {
         grid-template-columns: 1fr;
     }
 

@@ -1,6 +1,5 @@
 /* ========================================
    Popular Music & Audio Preview
-   Elevated discovery shelf with motion
    ======================================== */
 
 .popular-videos-container {
@@ -80,7 +79,6 @@
 
 .popular-title-icon {
     font-size: 1.25rem;
-    animation: popular-icon-float 2.8s ease-in-out infinite;
 }
 
 .popular-subtitle {
@@ -110,7 +108,6 @@
     border-radius: 999px;
     background: var(--emerald);
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--emerald) 45%, transparent);
-    animation: popular-pulse 1.8s ease-out infinite;
 }
 
 .popular-active-genre {
@@ -262,7 +259,6 @@
         color-mix(in srgb, var(--card) 96%, transparent);
     border-radius: 1.15rem;
     overflow: hidden;
-    cursor: pointer;
     transition:
         border-color var(--transition-base),
         box-shadow var(--transition-base),
@@ -328,49 +324,6 @@
     text-transform: uppercase;
 }
 
-.video-card-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, color-mix(in srgb, black 10%, transparent), var(--surface-scrim));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--transition-fast);
-}
-
-.video-card:hover .video-card-overlay,
-.video-card:focus-within .video-card-overlay {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.video-card-play {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: var(--foreground);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: scale(0.85);
-    transition: transform var(--transition-fast);
-    box-shadow: var(--shadow-float);
-}
-
-.video-card:hover .video-card-play,
-.video-card:focus-within .video-card-play {
-    transform: scale(1);
-}
-
-.video-card-play svg {
-    width: 18px;
-    height: 18px;
-    color: color-mix(in srgb, var(--background) 88%, black);
-    margin-left: 2px;
-}
-
 .video-card-info {
     padding: 0.8rem 0.85rem 0.9rem;
 }
@@ -410,26 +363,16 @@
 }
 
 .video-card-actions {
-    position: absolute;
-    top: 0.4rem;
-    right: 0.4rem;
-    display: flex;
-    gap: 0.2rem;
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-
-.video-card:hover .video-card-actions,
-.video-card:focus-within .video-card-actions {
-    opacity: 1;
-    transform: translateY(0);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--control-gap);
+    margin-top: 0.7rem;
 }
 
 .video-action-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
+    min-height: var(--control-height-sm);
+    padding: 0.45rem 0.55rem;
+    border-radius: var(--radius);
     background: var(--surface-glass-strong);
     backdrop-filter: blur(4px);
     border: 1px solid var(--surface-border);
@@ -438,6 +381,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 0.3rem;
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 0;
+    white-space: nowrap;
     transition:
         background var(--transition-fast),
         border-color var(--transition-fast),
@@ -448,7 +397,7 @@
 .video-action-btn:hover {
     background: var(--button-secondary);
     color: var(--button-secondary-foreground);
-    transform: scale(1.1);
+    transform: translateY(var(--hover-lift));
 }
 
 .video-action-btn.disabled,
@@ -459,8 +408,9 @@
 }
 
 .video-action-btn svg {
-    width: 13px;
-    height: 13px;
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
 }
 
 .preview-player {
@@ -670,6 +620,15 @@
         border-color var(--transition-fast),
         color var(--transition-fast),
         transform var(--transition-fast);
+}
+
+.preview-waveform:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow:
+        0 0 0 var(--focus-ring-spread) var(--focus-ring-shadow),
+        inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
+        0 18px 34px color-mix(in srgb, var(--glass-shadow) 18%, transparent);
 }
 
 .preview-close:hover {
@@ -1011,8 +970,8 @@
 }
 
 .genre-tab:focus-visible,
-.video-card:focus-visible,
 .video-action-btn:focus-visible,
+.preview-waveform:focus-visible,
 .preview-close:focus-visible,
 .preview-play-btn:focus-visible,
 .preview-lyrics-btn:focus-visible,
@@ -1195,6 +1154,10 @@
 
     .video-card-title {
         font-size: 0.82rem;
+    }
+
+    .video-card-actions {
+        grid-template-columns: 1fr;
     }
 
     .genre-tabs {

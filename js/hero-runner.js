@@ -20,29 +20,29 @@ const vary  = (base, pct) => base * (1 + (Math.random() - 0.5) * 2 * pct);
   /* ── tunables ─────────────────────────────────────────── */
 
 const CFG = {
-    accelForce:      65,       // px / s²  — gentle push-off
-    cruiseSpeed:     62,       // px / s   — lazy drift, like carried by wind
-    decelForce:      55,       // px / s²  — soft braking
-    cruiseSpeedVar:  0.10,     // ±10 % random variation per cycle
-    idleDelayMin:    0.6,      // seconds before the car starts
-    idleDelayMax:    1.4,
+    accelForce:      42,       // px / s²
+    cruiseSpeed:     38,       // px / s
+    decelForce:      36,       // px / s²
+    cruiseSpeedVar:  0.06,     // ±6 % random variation per cycle
+    idleDelayMin:    1.8,      // seconds before the car starts
+    idleDelayMax:    3.6,
     exitFadeDur:     0.8,      // seconds for the opacity fade-out
-    resetPause:      0.6,      // seconds the car stays invisible at start
+    resetPause:      1.4,      // seconds the car stays invisible at start
     trackPadStart:   0,        // starting X offset (px)
     decelZone:       0.58,     // start braking earlier for gradual slow-down
     exitZone:        0.85,     // begin opacity fade here
 
     // Micro-motion
-    suspFreq:        8,        // suspension oscillation Hz (gentler)
-    suspAmp:         0.18,     // suspension amplitude scale (subtler)
-    pitchAccel:     -0.8,      // degrees — very slight nose-up during acceleration
+    suspFreq:        5,        // suspension oscillation Hz
+    suspAmp:         0.06,     // suspension amplitude scale
+    pitchAccel:     -0.35,     // degrees
     pitchCruise:     0,
-    pitchDecel:      0.6,      // slight nose-down during braking
+    pitchDecel:      0.25,
     pitchLerp:       0.03,     // slower pitch transitions
-    trailMinW:       20,       // trail width at low speed (px)
-    trailMaxW:       80,
-    headlightFreq:   6,        // flicker Hz (calmer)
-    headlightAmp:    0.10,     // flicker amplitude (subtler)
+    trailMinW:       12,       // trail width at low speed (px)
+    trailMaxW:       36,
+    headlightFreq:   4,
+    headlightAmp:    0.03,
   };
 
   /* ── state ────────────────────────────────────────────── */
@@ -91,7 +91,6 @@ class HeroRunnerAnimator {
       this.lastFrame    = 0;
       this.rafId        = null;
       this._loopActive  = false;
-      this._reducedMotionInterval = null;
 
       // Visibility
       this.isVisible    = true;
@@ -137,12 +136,11 @@ class HeroRunnerAnimator {
           this.isVisible = entry.isIntersecting;
           if (!entry.isIntersecting) {
             this._stopRAFLoop();
-            this._stopSwayInterval();
             return;
           }
 
           if (this.reducedMotion) {
-            this._startSwayInterval();
+            this._applyReducedMotion();
           } else if (!this._loopActive) {
             this._startRAFLoop();
           }
@@ -157,7 +155,6 @@ class HeroRunnerAnimator {
 
     destroy() {
       this._stopRAFLoop();
-      this._stopSwayInterval();
       if (this.observer) this.observer.disconnect();
       if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
       if (this._motionChangeHandler && this._reducedMotionQuery) {
@@ -203,29 +200,6 @@ class HeroRunnerAnimator {
       this.rafId = null;
     }
 
-    _startSwayInterval() {
-      if (this._reducedMotionInterval || !this.runner) return;
-
-      let forward = true;
-      const sway = () => {
-        if (!this.reducedMotion || !this.runner) {
-          return;
-        }
-
-        const target = forward ? this.trackWidth * 0.4 : 0;
-        this.runner.style.transform = `translateX(${target}px)`;
-        forward = !forward;
-      };
-
-      sway();
-      this._reducedMotionInterval = setInterval(sway, 4200);
-    }
-
-    _stopSwayInterval() {
-      if (this._reducedMotionInterval) clearInterval(this._reducedMotionInterval);
-      this._reducedMotionInterval = null;
-    }
-
     _frameLerp(baseFactor, dt) {
       const frameScale = clamp(dt * 60, 0, 4);
       return 1 - Math.pow(1 - baseFactor, frameScale);
@@ -237,11 +211,9 @@ class HeroRunnerAnimator {
       if (this.reducedMotion) {
         this._stopRAFLoop();
         this._applyReducedMotion();
-        this._startSwayInterval();
         return;
       }
 
-      this._stopSwayInterval();
       this.runner.style.transition = '';
       this.runner.style.opacity = '';
       this._resetCycle();
@@ -298,15 +270,14 @@ class HeroRunnerAnimator {
         this.wheelRot += (this.velocity * dt / 50) * 360;
 
         // Trail opacity & width follow speed
-        this.trailOp = remap(speedFrac, 0.1, 1, 0, 0.9);
+        this.trailOp = remap(speedFrac, 0.1, 1, 0, 0.45);
       }
     }
 
     _tickIdle(dt) {
       // Fade car in gently while idling
       this.opacity = lerp(this.opacity, 0.95, this._frameLerp(0.06, dt));
-      // Tiny idle oscillation (engine rumble)
-      this.suspY = Math.sin(this.elapsed * 6) * 0.25;
+      this.suspY = 0;
 
       if (this.stateTime >= this.idleDelay) {
         this._setState(STATES.ACCEL);
@@ -422,8 +393,21 @@ class HeroRunnerAnimator {
 
     _applyReducedMotion() {
       if (!this.runner) return;
-      this.runner.style.transition = 'transform 4s ease-in-out';
+      const staticX = clamp(this.trackWidth * 0.34, 0, Math.max(this.trackWidth - 96, 0));
+      this.runner.style.transition = 'none';
+      this.runner.style.transform = `translateX(${staticX}px) translateY(0) rotate(0deg)`;
       this.runner.style.opacity = '0.85';
+
+      for (const wheel of this.wheels) {
+        wheel.style.transform = 'rotate(0deg)';
+      }
+      if (this.trail) {
+        this.trail.style.opacity = '0';
+        this.trail.style.width = `${CFG.trailMinW}px`;
+      }
+      if (this.headlight) {
+        this.headlight.style.opacity = '0.65';
+      }
     }
 }
 

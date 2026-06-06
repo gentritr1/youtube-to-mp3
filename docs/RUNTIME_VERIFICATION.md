@@ -34,10 +34,14 @@ Open `http://localhost:3000` after `npm start`.
 
 - Keyboard focus: tab through converter input, paste, format, convert, theme options, download links, batch controls, discovery preview controls, sidecar tabs, and floating game controls; verify the focus ring is visible in all four themes.
 - Reduced motion: enable `prefers-reduced-motion: reduce` and verify decorative animation, shimmer, hover lift, lyric/card motion, and game-control motion are calmed while loading, progress, panel switches, and content reveal states still complete.
+- Hero reduced motion: verify the hero runner and theme scene render as static decoration with no JavaScript sway interval or looping decorative scene motion.
 - Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar tab wrapping, batch action rows, and download buttons.
 - Converter states: verify idle, pasted URL, active format, loading, progress, success/download, disabled, and error states.
+- Conversion success: verify the download button is visible immediately, or within roughly 500ms, after a successful conversion and is not blocked by a staged decorative reveal.
+- Format toggle semantics: inspect MP3/MP4 buttons and verify the selected button exposes `aria-pressed="true"` while the other exposes `aria-pressed="false"`.
 - Batch controls: verify batch mode toggle, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
 - Discovery preview controls: verify play/pause, close, preview loading/error, progress/waveform, and one-click convert controls.
+- Waveform scrubbing: tab to the preview waveform slider, verify a visible focus ring, then use ArrowLeft/ArrowRight, ArrowUp/ArrowDown, Home, End, PageUp, and PageDown to scrub while `aria-valuenow` and the visible playhead update.
 - Sidecar tabs: verify karaoke/arcade tab focus, active state, hover state, and reduced-motion behavior.
 - Floating game controls: verify Snake and Guess the Track launch/floating controls remain visible, focusable, and themed.
 

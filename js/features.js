@@ -140,7 +140,7 @@ const FeaturesModule = (() => {
         popularSection.innerHTML = `
             <div class="popular-header">
                 <div class="popular-header-copy">
-                    <span class="popular-eyebrow">Fresh discovery</span>
+                    <span class="popular-eyebrow">Suggestions</span>
                     <h2 class="popular-title">
                         <span class="popular-title-icon">🔥</span>
                         Popular Music
@@ -149,7 +149,7 @@ const FeaturesModule = (() => {
                 </div>
                 <div class="popular-header-pulse" aria-hidden="true">
                     <span class="popular-pulse-dot"></span>
-                    Updated picks
+                    Popular Music
                 </div>
             </div>
             <div class="popular-active-genre" id="popular-active-genre"></div>
@@ -172,7 +172,7 @@ const FeaturesModule = (() => {
                         <img class="preview-thumb" id="preview-thumb" src="" alt="">
                         <div class="preview-meta">
                             <div class="preview-meta-topline">
-                                <span class="preview-source-badge" id="preview-source-badge">Popular Preview</span>
+                                <span class="preview-source-badge" id="preview-source-badge">Preview</span>
                                 <span class="preview-transition-note" id="preview-transition-note">Ready to preview</span>
                             </div>
                             <span class="preview-title" id="preview-title">Loading...</span>
@@ -187,18 +187,18 @@ const FeaturesModule = (() => {
                         </svg>
                     </button>
                 </div>
-                <div class="preview-waveform" id="preview-waveform">
+                <div class="preview-waveform" id="preview-waveform" tabindex="0" role="slider" aria-label="Preview scrubber" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00 of 0:30">
                     <div class="waveform-theme-charm" aria-hidden="true">
-                        <span class="theme-charm theme-charm-space">Moon mix</span>
-                        <span class="theme-charm theme-charm-green">Forest bounce</span>
-                        <span class="theme-charm theme-charm-frutiger">Aero splash</span>
-                        <span class="theme-charm theme-charm-sunshine">Sunset ride</span>
+                        <span class="theme-charm theme-charm-space">Preview</span>
+                        <span class="theme-charm theme-charm-green">Preview</span>
+                        <span class="theme-charm theme-charm-frutiger">Preview</span>
+                        <span class="theme-charm theme-charm-sunshine">Preview</span>
                     </div>
                     <canvas class="waveform-canvas" id="waveform-canvas"></canvas>
                     <div class="waveform-grid" aria-hidden="true"></div>
                     <div class="waveform-progress" id="waveform-progress"></div>
                     <div class="waveform-playhead" id="waveform-playhead"></div>
-                    <div class="waveform-scrub-hint">Click or scroll the energy line</div>
+                    <div class="waveform-scrub-hint">Click to scrub</div>
                 </div>
                 <div class="preview-controls">
                     <button class="preview-play-btn" id="preview-play-btn" aria-label="Play/Pause">
@@ -224,7 +224,7 @@ const FeaturesModule = (() => {
                                 <circle cx="6" cy="18" r="3"></circle>
                                 <circle cx="18" cy="16" r="3"></circle>
                             </svg>
-                            Lyrics Lounge
+                            Lyrics
                         </button>
                         <button class="preview-convert-btn" id="preview-convert-btn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -295,6 +295,7 @@ const FeaturesModule = (() => {
         elements.previewProgressBar?.addEventListener('click', seekPreview);
         elements.waveform?.addEventListener('click', seekPreview);
         elements.waveform?.addEventListener('wheel', seekPreviewByWheel, { passive: false });
+        elements.waveform?.addEventListener('keydown', seekPreviewByKeyboard);
         elements.previewLyricsBtn?.addEventListener('click', focusLyricsPanel);
         elements.previewConvertBtn?.addEventListener('click', convertFromPreview);
     };
@@ -303,7 +304,8 @@ const FeaturesModule = (() => {
         const karaokeCard = document.getElementById('karaoke-card');
         if (!karaokeCard) return;
 
-        karaokeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        karaokeCard.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
         karaokeCard.classList.add('is-targeted');
         window.setTimeout(() => {
             karaokeCard.classList.remove('is-targeted');
@@ -529,7 +531,46 @@ const FeaturesModule = (() => {
         const stepSeconds = Math.max(0.6, Math.min(duration * 0.045, 2.4));
         const direction = delta > 0 ? 1 : -1;
         previewAudioEngine.seekByDelta(direction * stepSeconds);
-        updatePreviewStatus(elements, 'Scroll to scrub');
+        updatePreviewStatus(elements, 'Preview position updated');
+    };
+
+    const seekPreviewByKeyboard = (e) => {
+        const currentAudio = previewAudioEngine.getCurrentAudio();
+        const duration = currentAudio?.duration;
+        if (!Number.isFinite(duration) || duration <= 0) return;
+
+        const currentTime = Number.isFinite(currentAudio.currentTime) ? currentAudio.currentTime : 0;
+        let nextTime = currentTime;
+
+        switch (e.key) {
+            case 'ArrowLeft':
+            case 'ArrowDown':
+                nextTime = currentTime - Math.max(1, duration * 0.05);
+                break;
+            case 'ArrowRight':
+            case 'ArrowUp':
+                nextTime = currentTime + Math.max(1, duration * 0.05);
+                break;
+            case 'PageDown':
+                nextTime = currentTime - Math.max(3, duration * 0.15);
+                break;
+            case 'PageUp':
+                nextTime = currentTime + Math.max(3, duration * 0.15);
+                break;
+            case 'Home':
+                nextTime = 0;
+                break;
+            case 'End':
+                nextTime = duration;
+                break;
+            default:
+                return;
+        }
+
+        e.preventDefault();
+        const percent = Math.max(0, Math.min(1, nextTime / duration));
+        previewAudioEngine.seekToPercent(percent);
+        updatePreviewStatus(elements, 'Preview position updated');
     };
 
     const renderCurrentWaveform = () => {

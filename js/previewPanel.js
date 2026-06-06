@@ -41,10 +41,33 @@ export const showPreviewError = (elements, message) => {
     elements.previewLoadingText.style.color = 'var(--destructive)';
 };
 
+const syncWaveformSlider = (elements, percent, currentTime, duration, formatTime = (value) => {
+    const safeValue = Number.isFinite(value) ? value : 0;
+    const mins = Math.floor(safeValue / 60);
+    const secs = Math.floor(safeValue % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+}) => {
+    const waveform = elements?.waveform;
+    if (!waveform) {
+        return;
+    }
+
+    const clampedPercent = Math.max(0, Math.min(1, Number.isFinite(percent) ? percent : 0));
+    waveform.setAttribute('aria-valuenow', String(Math.round(clampedPercent * 100)));
+
+    if (Number.isFinite(currentTime) && Number.isFinite(duration) && duration > 0) {
+        waveform.setAttribute('aria-valuetext', `${formatTime(currentTime)} of ${formatTime(duration)}`);
+        return;
+    }
+
+    waveform.setAttribute('aria-valuetext', '0:00 of 0:30');
+};
+
 export const resetPreviewProgress = (elements) => {
     elements?.previewProgressFill?.style.setProperty('transform', 'scaleX(0)');
     elements?.waveformProgress?.style.setProperty('transform', 'scaleX(0)');
     elements?.waveformPlayhead?.style.setProperty('left', '0%');
+    syncWaveformSlider(elements, 0, 0, 30);
     if (elements?.previewTimeCurrent) {
         elements.previewTimeCurrent.textContent = '0:00';
     }
@@ -67,10 +90,13 @@ export const renderPreviewProgress = (elements, { currentTime, duration, percent
         if (elements?.previewTimeCurrent) {
             elements.previewTimeCurrent.textContent = '0:00';
         }
+        syncWaveformSlider(elements, 0, 0, duration, formatTime);
         return;
     }
 
-    const clampedPercent = Math.max(0, Math.min(1, percent));
+    const clampedPercent = Number.isFinite(percent)
+        ? Math.max(0, Math.min(1, percent))
+        : 0;
 
     if (elements?.previewProgressFill) {
         elements.previewProgressFill.style.transform = `scaleX(${clampedPercent})`;
@@ -84,6 +110,7 @@ export const renderPreviewProgress = (elements, { currentTime, duration, percent
     if (elements?.previewTimeCurrent) {
         elements.previewTimeCurrent.textContent = formatTime(currentTime);
     }
+    syncWaveformSlider(elements, clampedPercent, currentTime, duration, formatTime);
 };
 
 export const updatePreviewMetadata = ({ elements, state, video, emitPreviewStateChange }) => {
@@ -99,7 +126,7 @@ export const updatePreviewMetadata = ({ elements, state, video, emitPreviewState
 
     state.previewSource = video.previewSource === 'batch' ? 'batch' : 'popular';
     if (elements?.previewSourceBadge) {
-        elements.previewSourceBadge.textContent = state.previewSource === 'batch' ? 'Batch Queue' : 'Popular Preview';
+        elements.previewSourceBadge.textContent = state.previewSource === 'batch' ? 'Batch Preview' : 'Preview';
     }
     state.previewVideoId = video.videoId;
     emitPreviewStateChange();

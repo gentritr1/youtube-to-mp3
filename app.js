@@ -161,7 +161,7 @@ const updateProgress = (percent, text) => {
 };
 
 /**
- * Nerd Stats formatting helpers
+ * Audio details formatting helpers
  */
 const formatBitrate = (bps) => {
     if (!Number.isFinite(bps)) return 'N/A';
@@ -340,7 +340,9 @@ const handleFormatChange = (event) => {
 
     state.format = format;
     elements.formatBtns.forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.format === format);
+        const isActive = btn.dataset.format === format;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
 };
 
@@ -420,7 +422,6 @@ const handleSubmit = async (event) => {
     elements.progressSection.classList.remove('hidden');
     animationController.start('conversionProgress', elements.conversionAnimation);
     updateProgress(0, 'Fetching video info...');
-    showGame();
 
     try {
         const videoInfo = await fetchVideoInfo(videoId);
@@ -456,43 +457,27 @@ const handleSubmit = async (event) => {
 };
 
 /**
- * Orchestrated download section animation
+ * Show completion state without delaying the download action
  */
 const showDownloadAnimation = () => {
-    return new Promise((resolve) => {
-        const section = elements.downloadSection;
+    const section = elements.downloadSection;
 
-        section.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
-        section.classList.remove('hidden');
+    section.classList.remove('animating', 'complete', 'show-icon', 'show-content', 'show-button');
+    section.classList.remove('hidden');
 
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                section.classList.add('animating');
-
-                setTimeout(() => {
-                    section.classList.remove('animating');
-                    section.classList.add('complete', 'show-icon');
-                }, 2500);
-
-                setTimeout(() => {
-                    section.classList.add('show-content');
-                }, 2900);
-
-                setTimeout(() => {
-                    section.classList.add('show-button');
-                    resolve();
-                }, 3200);
-
-                if (nerdStatsTimeout) {
-                    clearTimeout(nerdStatsTimeout);
-                }
-                nerdStatsTimeout = setTimeout(() => {
-                    elements.nerdStats.classList.remove('hidden');
-                    nerdStatsTimeout = null;
-                }, 3500);
-            });
-        });
+    requestAnimationFrame(() => {
+        section.classList.add('complete', 'show-icon', 'show-content', 'show-button');
     });
+
+    if (nerdStatsTimeout) {
+        clearTimeout(nerdStatsTimeout);
+    }
+    nerdStatsTimeout = setTimeout(() => {
+        elements.nerdStats.classList.remove('hidden');
+        nerdStatsTimeout = null;
+    }, 500);
+
+    return Promise.resolve();
 };
 
 /**
@@ -569,10 +554,10 @@ const setSidecarMode = (mode) => {
             elements.karaokeStatusBadge.dataset.tone = 'ready';
         }
         if (elements.karaokeStatusTitle) {
-            elements.karaokeStatusTitle.textContent = 'Mini games are still here while your file is processing.';
+            elements.karaokeStatusTitle.textContent = 'Mini games are available here.';
         }
         if (elements.karaokeStatusDetail) {
-            elements.karaokeStatusDetail.textContent = 'Launch Snake or Guess the Track from this tab without leaving the converter flow.';
+            elements.karaokeStatusDetail.textContent = 'Launch Snake or Guess the Track only when you want a game.';
         }
         return;
     }
@@ -582,10 +567,10 @@ const setSidecarMode = (mode) => {
         elements.karaokeStatusBadge.dataset.tone = 'ready';
     }
     if (elements.karaokeStatusTitle) {
-        elements.karaokeStatusTitle.textContent = 'Open Time Sync Studio in its own screen.';
+        elements.karaokeStatusTitle.textContent = 'Open Time Sync Studio separately.';
     }
     if (elements.karaokeStatusDetail) {
-        elements.karaokeStatusDetail.textContent = 'The converter stays focused on downloads here. If you want point-by-point lyric syncing, open the dedicated studio page instead.';
+        elements.karaokeStatusDetail.textContent = 'Use the converter here, or open the studio for detailed lyric timing.';
     }
 };
 

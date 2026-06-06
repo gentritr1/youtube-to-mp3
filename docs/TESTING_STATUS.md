@@ -18,12 +18,16 @@ node --check js/ui/themeController.js
 ## Current Status
 
 - `./node_modules/.bin/tsc --noEmit`: passed
-- targeted `node --check` runs: passed for `app.js`, `js/features.js`, and `js/batch.js`
+- targeted `node --check` runs: passed for `app.js`, `js/features.js`, `js/batch.js`, `js/popularBrowser.js`, `js/hero-runner.js`, and `js/previewPanel.js`
+- UI clarity checks on `codex/ui-clarity-pass`: `rg "transition:\\s*all" css js` found no matches; `git diff --check` passed
+- `node scripts/sync-service-worker-assets.mjs`: passed
 - `./node_modules/.bin/vitest run`: blocked before collection by Rollup native optional dependency loading, `ERR_DLOPEN_FAILED` for `@rollup/rollup-darwin-arm64`
 - `npm`: unavailable on this shell PATH, so `npm test`, `npm run build`, `npm audit`, and lockfile-safe package changes were not run here
+- Local browser smoke for the UI clarity pass: passed on a temporary static server at `http://127.0.0.1:4173` after sandbox approval. Verified desktop first viewport hierarchy, mobile layout at `390x844`, theme button `aria-pressed` updates across all four themes, and MP3/MP4 `aria-pressed` updates. API-backed suggestions were unavailable under static serving, so full backend conversion/discovery smoke still belongs to `npm start` coverage.
 
 ## Current Notes
 
+- UI clarity branch `codex/ui-clarity-pass`: `impeccable` is not installed in the active skill list. The requested project command `npx impeccable skills install .` was attempted by the main agent and failed with `zsh:1: command not found: npx`; this shell also reports `npm --version` as `zsh:1: command not found: npm`. This pass used `docs/CODEBASE_GUIDE.md` as the local design-system contract.
 - Design branch `codex/design-system-upgrade`: `npx impeccable skills install .` was requested but could not run in the Codex shell because `npm` and `npx` are not on `PATH`. No local `impeccable` skill files were found, so the design pass followed the repo's existing token/theme architecture plus the agent review checklist.
 - Design branch verification completed in this shell: `git diff --check`, `node scripts/sync-service-worker-assets.mjs`, and a CSS scan confirming no `transition: all` remains. `npm run build` and `npm test` still need to be rerun in an environment with `npm` available.
 - The current Vitest blocker is environment/dependency loading, not a collected test failure.
