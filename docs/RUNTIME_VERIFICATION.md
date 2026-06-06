@@ -16,7 +16,7 @@ Open `http://localhost:3000` after `npm start`.
 
 - Converter: paste a valid YouTube URL, fetch metadata, start an MP3 conversion, verify progress, completion animation, nerd stats fallback, and download link.
 - Conversion errors: submit an invalid URL and verify the user-facing error clears without leaving loading state stuck.
-- Batch mode: enable batch mode, add two URLs, preview one queued item, remove one item, convert the batch, and verify aggregate progress/results.
+- Batch mode: enable batch mode, verify the right-side batch context appears, add two URLs, preview one queued item, remove one item, convert the batch, and verify aggregate progress/results keep the context count and copy current.
 - Discovery preview: switch genres, play a popular preview, start another preview while the first is loading, close the panel, and verify stale audio does not resume.
 - Lyrics/studio: load a captioned video, verify lyric timing events update the studio, run autosync, nudge a point, undo, and export JSON.
 - Review player: replace the selected YouTube media source while the previous player is loading and verify only the latest player remains active.
@@ -26,6 +26,7 @@ Open `http://localhost:3000` after `npm start`.
 ## Theme And Layout Pass
 
 - Themes: verify `space`, `green`, `frutiger-aero`, and `sunshine`.
+- Sunshine theme: verify active converter buttons, batch actions, popular genre tabs, and track tags use warm amber/peach/teal accents rather than harsh red fills.
 - Viewports: verify one mobile width, one tablet width, and desktop.
 - Motion: verify normal motion and `prefers-reduced-motion: reduce`.
 - States: verify idle, loading, success, error, empty, active, inactive, popup, and panel states.
@@ -35,11 +36,11 @@ Open `http://localhost:3000` after `npm start`.
 - Keyboard focus: tab through converter input, paste, format, convert, theme options, download links, batch controls, discovery preview controls, sidecar tabs, and floating game controls; verify the focus ring is visible in all four themes.
 - Reduced motion: enable `prefers-reduced-motion: reduce` and verify decorative animation, shimmer, hover lift, lyric/card motion, and game-control motion are calmed while loading, progress, panel switches, and content reveal states still complete.
 - Hero reduced motion: verify the hero conversion preview renders as static decoration with no looping decorative scene motion.
-- Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar tab wrapping, batch action rows, and download buttons.
+- Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar tab wrapping, batch context wrapping, batch action rows, and download buttons.
 - Converter states: verify idle, pasted URL, active format, loading, progress, success/download, disabled, and error states.
 - Conversion success: verify the download button is visible immediately, or within roughly 500ms, after a successful conversion and is not blocked by a staged decorative reveal.
 - Format toggle semantics: inspect MP3/MP4 buttons and verify the selected button exposes `aria-pressed="true"` while the other exposes `aria-pressed="false"`.
-- Batch controls: verify batch mode toggle, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
+- Batch controls: verify batch mode toggle, right-side context jump button, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
 - Discovery preview controls: verify play/pause, close, preview loading/error, progress/waveform, and one-click convert controls.
 - Waveform scrubbing: tab to the preview waveform slider, verify a visible focus ring, then use ArrowLeft/ArrowRight, ArrowUp/ArrowDown, Home, End, PageUp, and PageDown to scrub while `aria-valuenow` and the visible playhead update.
 - Sidecar tabs: verify karaoke/arcade tab focus, active state, hover state, and reduced-motion behavior.

@@ -182,6 +182,42 @@ function createBatchUI() {
     `;
     batchProgress.after(batchResults);
 
+    const sidecar = document.getElementById('karaoke-card');
+    const sidecarHeader = sidecar?.querySelector('.karaoke-panel-header');
+    if (sidecar && sidecarHeader) {
+        const sidecarEyebrow = sidecar.querySelector('.karaoke-eyebrow');
+        const sidecarTitle = sidecar.querySelector('.karaoke-panel-title');
+        if (sidecarEyebrow && !sidecarEyebrow.dataset.defaultText) {
+            sidecarEyebrow.dataset.defaultText = sidecarEyebrow.textContent || '';
+        }
+        if (sidecarTitle && !sidecarTitle.dataset.defaultText) {
+            sidecarTitle.dataset.defaultText = sidecarTitle.textContent || '';
+        }
+
+        const batchContext = document.createElement('div');
+        batchContext.id = 'batch-context-card';
+        batchContext.className = 'batch-context-card hidden';
+        batchContext.setAttribute('aria-live', 'polite');
+        batchContext.innerHTML = `
+            <div class="batch-context-copy">
+                <span class="batch-context-kicker">Batch mode</span>
+                <strong class="batch-context-title">Build a queue on the left.</strong>
+                <span id="batch-context-detail" class="batch-context-detail">Paste a video link and add it to this batch.</span>
+            </div>
+            <div class="batch-context-meter" aria-hidden="true">
+                <span id="batch-context-count" class="batch-context-count">0</span>
+                <span class="batch-context-total">/${batchState.maxItems}</span>
+            </div>
+            <ul class="batch-context-steps" aria-label="Batch workflow">
+                <li>Paste links</li>
+                <li>Add to queue</li>
+                <li>Convert together</li>
+            </ul>
+            <button type="button" id="batch-context-jump" class="batch-context-jump">Review queue</button>
+        `;
+        sidecarHeader.after(batchContext);
+    }
+
     // Store references
     batchElements = {
         toggle: document.getElementById('batch-mode-btn'),
@@ -197,7 +233,15 @@ function createBatchUI() {
         progressList: document.getElementById('batch-progress-list'),
         resultsSection: document.getElementById('batch-results-section'),
         downloadsList: document.getElementById('batch-downloads-list'),
-        newBatchBtn: document.getElementById('new-batch-btn')
+        newBatchBtn: document.getElementById('new-batch-btn'),
+        sidecarHost: sidecar?.parentElement || null,
+        sidecar,
+        sidecarEyebrow: sidecar?.querySelector('.karaoke-eyebrow') || null,
+        sidecarTitle: sidecar?.querySelector('.karaoke-panel-title') || null,
+        contextCard: document.getElementById('batch-context-card'),
+        contextDetail: document.getElementById('batch-context-detail'),
+        contextCount: document.getElementById('batch-context-count'),
+        contextJump: document.getElementById('batch-context-jump')
     };
 }
 
@@ -218,6 +262,27 @@ function attachBatchEventListeners() {
 
     // New batch button
     batchElements.newBatchBtn.addEventListener('click', resetBatch);
+
+    batchElements.contextJump?.addEventListener('click', () => {
+        const showingResults = batchElements.resultsSection && !batchElements.resultsSection.classList.contains('hidden');
+        const showingProgress = batchElements.progressSection && !batchElements.progressSection.classList.contains('hidden');
+        const scrollTarget = showingResults
+            ? batchElements.resultsSection
+            : showingProgress
+                ? batchElements.progressSection
+                : batchElements.container;
+        const focusTarget = showingResults
+            ? batchElements.newBatchBtn
+            : batchState.items.length > 0 && !showingProgress
+                ? batchElements.convertBtn
+                : document.getElementById('url-input');
+        const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+        scrollTarget?.scrollIntoView({
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            block: 'center'
+        });
+        focusTarget?.focus({ preventScroll: true });
+    });
 }
 
 function handleBatchResultRemove(itemId) {
@@ -277,6 +342,7 @@ function toggleBatchMode() {
 
     // Show/hide count badge
     batchElements.count.classList.toggle('hidden', !batchState.enabled || batchState.items.length === 0);
+    updateBatchContext();
 
     // Update button text in main form
     const convertBtn = document.getElementById('convert-btn');
@@ -476,6 +542,64 @@ function clearBatch() {
     }, items.length * 50 + 300);
 }
 
+function getBatchContextDetail(count) {
+    if (batchState.isProcessing) {
+        return 'Conversion is running. Keep this page open while progress updates.';
+    }
+
+    if (batchElements?.resultsSection && !batchElements.resultsSection.classList.contains('hidden')) {
+        return count === 1 ? 'One download is ready in the results list.' : `${count} downloads are ready in the results list.`;
+    }
+
+    if (count === 0) {
+        return 'Paste a video link and add it to this batch.';
+    }
+
+    if (count >= batchState.maxItems) {
+        return 'The queue is full. Convert it or remove a video to add another.';
+    }
+
+    return `${count} queued. Add up to ${batchState.maxItems - count} more or convert the batch.`;
+}
+
+function updateBatchContext() {
+    if (!batchElements?.contextCard) return;
+
+    const count = batchState.items.length;
+    batchElements.sidecarHost?.classList.toggle('is-batch-mode', batchState.enabled);
+    batchElements.sidecar?.classList.toggle('is-batch-mode', batchState.enabled);
+    batchElements.contextCard.classList.toggle('hidden', !batchState.enabled);
+    batchElements.contextCard.classList.toggle('is-processing', batchState.isProcessing);
+    batchElements.contextCard.classList.toggle(
+        'has-results',
+        Boolean(batchElements.resultsSection && !batchElements.resultsSection.classList.contains('hidden'))
+    );
+
+    if (batchElements.sidecarEyebrow) {
+        batchElements.sidecarEyebrow.textContent = batchState.enabled
+            ? 'Batch assistant'
+            : batchElements.sidecarEyebrow.dataset.defaultText || 'Standalone tool';
+    }
+
+    if (batchElements.sidecarTitle) {
+        batchElements.sidecarTitle.textContent = batchState.enabled
+            ? 'Queue videos before converting.'
+            : batchElements.sidecarTitle.dataset.defaultText || 'Need detailed lyric timing?';
+    }
+
+    if (batchElements.contextCount) {
+        batchElements.contextCount.textContent = String(count);
+    }
+
+    if (batchElements.contextDetail) {
+        batchElements.contextDetail.textContent = getBatchContextDetail(count);
+    }
+
+    if (batchElements.contextJump) {
+        batchElements.contextJump.textContent = count > 0 ? 'Review queue' : 'Add a video';
+    }
+}
+
 /**
  * Update batch UI state
  */
@@ -496,6 +620,8 @@ function updateBatchUI() {
         batchElements.count.classList.add('pulse');
         setTimeout(() => batchElements.count.classList.remove('pulse'), 300);
     }
+
+    updateBatchContext();
 }
 
 /**
@@ -509,6 +635,7 @@ async function startBatchConversion() {
     // Hide batch list, show progress
     batchElements.container.classList.add('hidden');
     batchElements.progressSection.classList.remove('hidden');
+    updateBatchContext();
 
     // Prepare items for API
     const items = batchState.items.map(item => ({
@@ -649,6 +776,7 @@ function showBatchResults(progress) {
     // Hide progress, show results with animation
     batchElements.progressSection.classList.add('hidden');
     batchElements.resultsSection.classList.remove('hidden');
+    updateBatchContext();
 
     // Build download list
     batchElements.downloadsList.innerHTML = progress.items.map((item, index) => {
@@ -771,6 +899,7 @@ function resetBatchProgress() {
     batchState.currentBatchId = null; // Stop polling
     batchElements.progressSection.classList.add('hidden');
     batchElements.container.classList.remove('hidden');
+    updateBatchContext();
 }
 
 /**

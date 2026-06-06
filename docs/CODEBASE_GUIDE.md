@@ -380,7 +380,8 @@ Owns:
 1. Components should consume semantic variables, not hardcoded palette values.
 2. Theme-specific visual differences should be expressed through `css/themes/*.css` first.
 3. JavaScript should not assign presentation colors unless the value is genuinely data-driven.
-4. New UI states should prefer semantic tokens over ad hoc selectors.
+4. Data-driven accents, such as popular-genre colors, should be passed as local custom properties only; component CSS must derive softened surfaces, borders, and labels from them rather than applying raw inline backgrounds.
+5. New UI states should prefer semantic tokens over ad hoc selectors.
 
 ### Common semantic tokens
 
@@ -427,6 +428,8 @@ The converter flow is split into:
 - batch flow when enabled
 
 Themed converter visuals should be driven by shared tokens and animation registries, not embedded inline in `app.js`.
+
+When batch mode is enabled, the sidecar should switch to batch context instead of continuing to promote unrelated studio/arcade content. Keep the queue count, next action, and progress/result state visible without creating a separate visual system.
 
 ### Karaoke Flow
 

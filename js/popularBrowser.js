@@ -59,10 +59,12 @@ export const renderPopularGenreTabs = ({
     }
 
     genreTabs.innerHTML = (Array.isArray(genres) ? genres : []).map((genre) => `
-        <button 
+        <button
+            type="button"
             class="genre-tab ${genre.id === activeGenre ? 'active' : ''}" 
             data-genre="${escapeAttr(genre.id)}"
-            style="${genre.id === activeGenre ? `background: ${escapeAttr(genre.color)};` : ''}"
+            style="--genre-accent: ${escapeAttr(genre.color)};"
+            aria-pressed="${genre.id === activeGenre ? 'true' : 'false'}"
         >
             <span class="genre-tab-icon">${escapeHtml(genre.icon)}</span>
             <span>${escapeHtml(genre.name)}</span>
@@ -81,11 +83,14 @@ export const updatePopularGenreTabStyles = ({
     genres,
     genreId
 } = {}) => {
-    const genre = (Array.isArray(genres) ? genres : []).find((entry) => entry.id === genreId);
     genreTabs?.querySelectorAll('.genre-tab').forEach((tab) => {
         const isActive = tab.dataset.genre === genreId;
+        const tabGenre = (Array.isArray(genres) ? genres : []).find((entry) => entry.id === tab.dataset.genre);
         tab.classList.toggle('active', isActive);
-        tab.style.background = isActive && genre ? genre.color : '';
+        tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        if (tabGenre?.color) {
+            tab.style.setProperty('--genre-accent', tabGenre.color);
+        }
     });
 };
 
