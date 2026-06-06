@@ -55,6 +55,10 @@
     --batch-accent-soft: rgba(245, 194, 122, 0.26);
     --batch-accent-secondary: rgba(71, 178, 184, 0.24);
     --batch-active-foreground: hsl(24 42% 16%);
+    --batch-kicker-foreground: hsl(37 58% 34%);
+    --batch-muted-foreground: hsl(24 24% 36%);
+    --batch-step-foreground: hsl(24 34% 26%);
+    --batch-action-foreground: hsl(24 42% 16%);
     --lyrics-overlay: radial-gradient(circle at center, rgba(251, 146, 60, 0.22) 0%, transparent 72%);
     --lyrics-text-muted: rgba(96, 55, 33, 0.16);
     --lyrics-text-past: rgba(96, 55, 33, 0.1);

@@ -446,6 +446,8 @@ Themed converter visuals should be driven by shared tokens and animation registr
 
 When batch mode is enabled, the sidecar should switch to batch context instead of continuing to promote unrelated studio/arcade content. Keep the queue count, next action, and progress/result state visible without creating a separate visual system.
 
+Batch active states use dedicated text tokens because each theme places the active batch controls on different surface brightness. Use `--batch-active-foreground`, `--batch-kicker-foreground`, `--batch-muted-foreground`, `--batch-step-foreground`, and `--batch-action-foreground` instead of borrowing `--primary-foreground` or `--muted-foreground` directly for batch-specific filled/tinted controls. Verify Green and Frutiger Aero especially, because one is dark with saturated green fills and the other is light with pale blue fills.
+
 ### Karaoke Flow
 
 Karaoke is now visible in-panel instead of only rendering behind the page.

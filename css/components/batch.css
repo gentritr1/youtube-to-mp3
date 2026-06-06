@@ -157,7 +157,7 @@
 }
 
 .batch-context-kicker {
-    color: color-mix(in srgb, var(--batch-accent) 76%, var(--foreground));
+    color: var(--batch-kicker-foreground);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -171,7 +171,7 @@
 }
 
 .batch-context-detail {
-    color: var(--muted-foreground);
+    color: var(--batch-muted-foreground);
     font-size: 0.78rem;
     line-height: 1.55;
 }
@@ -207,7 +207,7 @@
     border-radius: var(--radius-pill);
     border: 1px solid color-mix(in srgb, var(--batch-accent) 24%, var(--hero-border));
     background: color-mix(in srgb, var(--batch-accent) 9%, var(--surface-overlay));
-    color: var(--muted-foreground);
+    color: var(--batch-step-foreground);
     font-size: 0.72rem;
     font-weight: 800;
     text-align: center;
@@ -222,7 +222,7 @@
 }
 
 .batch-context-total {
-    color: var(--muted-foreground);
+    color: var(--batch-muted-foreground);
     font-size: 0.78rem;
     font-weight: 800;
 }
@@ -237,7 +237,7 @@
     border-radius: var(--radius-pill);
     border: 1px solid color-mix(in srgb, var(--batch-accent) 42%, transparent);
     background: color-mix(in srgb, var(--batch-accent) 14%, var(--surface-overlay-strong));
-    color: var(--foreground);
+    color: var(--batch-action-foreground);
     font: inherit;
     font-size: 0.78rem;
     font-weight: 800;

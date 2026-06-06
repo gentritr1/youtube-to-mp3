@@ -40,7 +40,7 @@ Open `http://localhost:3000` after `npm start`.
 - Converter states: verify idle, pasted URL, active format, loading, progress, success/download, disabled, and error states.
 - Conversion success: verify the download button is visible immediately, or within roughly 500ms, after a successful conversion and is not blocked by a staged decorative reveal.
 - Format toggle semantics: inspect MP3/MP4 buttons and verify the selected button exposes `aria-pressed="true"` while the other exposes `aria-pressed="false"`.
-- Batch controls: verify batch mode toggle, right-side context jump button, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
+- Batch controls: verify batch mode toggle, active toggle text contrast, right-side context copy/step/jump text contrast, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
 - Clipped hover/focus audit: hover and keyboard-focus the first, active, and last genre chips; first and last popular video cards; batch queue/progress rows and row actions; and the first/last point-rail timing chips. Verify lifted borders, shadows, and focus rings are not clipped by their scroll containers or rails.
 - Discovery preview controls: verify play/pause, close, preview loading/error, progress/waveform, and one-click convert controls.
 - Waveform scrubbing: tab to the preview waveform slider, verify a visible focus ring, then use ArrowLeft/ArrowRight, ArrowUp/ArrowDown, Home, End, PageUp, and PageDown to scrub while `aria-valuenow` and the visible playhead update.

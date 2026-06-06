@@ -51,6 +51,11 @@
     --button-primary-foreground: hsl(225 44% 8%);
     --button-secondary: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 100%), rgba(22, 31, 54, 0.76);
     --button-secondary-foreground: hsl(210 20% 96%);
+    --batch-active-foreground: hsl(210 20% 96%);
+    --batch-kicker-foreground: hsl(211 92% 78%);
+    --batch-muted-foreground: hsl(219 18% 78%);
+    --batch-step-foreground: hsl(214 24% 88%);
+    --batch-action-foreground: hsl(210 20% 96%);
     --lyrics-overlay: radial-gradient(circle at center, rgba(59, 130, 246, 0.18) 0%, transparent 72%);
     --lyrics-text-muted: rgba(230, 239, 255, 0.16);
     --lyrics-text-past: rgba(230, 239, 255, 0.08);

@@ -145,6 +145,10 @@
     --batch-accent-soft: var(--hero-orb-soft);
     --batch-accent-secondary: var(--ambient-secondary);
     --batch-active-foreground: var(--primary-foreground);
+    --batch-kicker-foreground: color-mix(in srgb, var(--batch-accent) 72%, var(--foreground));
+    --batch-muted-foreground: var(--muted-foreground);
+    --batch-step-foreground: color-mix(in srgb, var(--foreground) 82%, var(--muted-foreground));
+    --batch-action-foreground: var(--foreground);
     --theme-preview-space: linear-gradient(135deg, hsl(214 90% 78%), hsl(220 76% 47%) 55%, hsl(220 39% 9%));
     --theme-preview-green: linear-gradient(135deg, hsl(134 80% 73%), hsl(134 74% 37%) 55%, hsl(141 80% 10%));
     --theme-preview-frutiger: linear-gradient(135deg, hsl(191 100% 93%), hsl(186 86% 70%) 55%, hsl(134 62% 47%));
