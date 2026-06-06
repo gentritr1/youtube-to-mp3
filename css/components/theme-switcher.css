@@ -30,7 +30,7 @@
     border-radius: var(--radius-pill);
     border: 1px solid color-mix(in srgb, var(--hero-border) 85%, transparent);
     background: color-mix(in srgb, var(--hero-surface-strong) 84%, transparent);
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     cursor: pointer;
     transition:
         transform var(--transition-fast),
@@ -53,6 +53,7 @@
 .theme-option.active {
     background: color-mix(in srgb, var(--hero-orb) 17%, var(--surface-overlay-strong));
     border-color: color-mix(in srgb, var(--hero-orb) 68%, transparent);
+    color: var(--button-selected-foreground);
     box-shadow:
         0 16px 28px color-mix(in srgb, var(--hero-orb) 16%, transparent),
         0 0 0 1px color-mix(in srgb, var(--hero-orb) 18%, transparent) inset;
@@ -81,7 +82,12 @@
     font-size: 0.64rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
+}
+
+.theme-option.active .theme-option-short {
+    color: var(--button-selected-foreground);
+    opacity: 0.72;
 }
 
 .theme-option[data-theme-value="space"] .theme-option-swatch {

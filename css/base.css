@@ -141,6 +141,13 @@
     --button-primary-foreground: var(--primary-foreground);
     --button-secondary: linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 100%), color-mix(in srgb, var(--card) 60%, transparent);
     --button-secondary-foreground: var(--foreground);
+    --button-glass-foreground: var(--foreground);
+    --button-glass-muted-foreground: color-mix(in srgb, var(--foreground) 68%, var(--muted-foreground));
+    --button-selected-foreground: var(--foreground);
+    --button-danger-foreground: var(--rose);
+    --button-success-foreground: color-mix(in srgb, var(--foreground) 90%, var(--success));
+    --button-error-foreground: color-mix(in srgb, var(--foreground) 90%, var(--rose));
+    --button-disabled-foreground: color-mix(in srgb, var(--muted-foreground) 82%, transparent);
     --batch-accent: var(--hero-orb);
     --batch-accent-soft: var(--hero-orb-soft);
     --batch-accent-secondary: var(--ambient-secondary);

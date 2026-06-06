@@ -22,7 +22,7 @@
         color-mix(in srgb, var(--hero-surface-strong) 78%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 86%, transparent);
     border-radius: var(--radius-control);
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
@@ -543,44 +543,45 @@
     padding: 0 0.72rem;
     font-size: 0.76rem;
     font-weight: 700;
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
 }
 
 .batch-item-preview:hover:not(:disabled) {
     background: color-mix(in srgb, var(--hero-orb) 12%, transparent);
     border-color: color-mix(in srgb, var(--hero-orb) 48%, var(--hero-border));
-    color: color-mix(in srgb, var(--hero-orb) 88%, white);
+    color: var(--button-selected-foreground);
     transform: translateY(var(--hover-lift));
 }
 
 .batch-item-preview.is-active {
     background: color-mix(in srgb, var(--hero-orb) 16%, transparent);
     border-color: color-mix(in srgb, var(--hero-orb) 52%, var(--hero-border));
-    color: color-mix(in srgb, var(--hero-orb) 88%, var(--foreground));
+    color: var(--button-selected-foreground);
 }
 
 .batch-item-preview.has-error {
     background: color-mix(in srgb, var(--destructive) 12%, transparent);
     border-color: color-mix(in srgb, var(--destructive) 50%, var(--hero-border));
-    color: color-mix(in srgb, var(--destructive) 86%, var(--foreground));
+    color: var(--button-error-foreground);
 }
 
 .batch-item-preview:disabled {
     opacity: 0.45;
+    color: var(--button-disabled-foreground);
     cursor: not-allowed;
 }
 
 .batch-item-remove:hover {
     background: color-mix(in srgb, var(--rose) 12%, transparent);
     border-color: color-mix(in srgb, var(--rose) 48%, var(--hero-border));
-    color: var(--rose);
+    color: var(--button-danger-foreground);
     transform: translateY(var(--hover-lift));
 }
 
 .download-item-remove:hover {
     background: color-mix(in srgb, var(--rose) 12%, transparent);
     border-color: color-mix(in srgb, var(--rose) 48%, var(--hero-border));
-    color: var(--rose);
+    color: var(--button-danger-foreground);
     transform: translateY(var(--hover-lift));
 }
 
@@ -688,7 +689,7 @@
         linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 90%),
         color-mix(in srgb, var(--accent) 76%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 76%, transparent);
-    color: color-mix(in srgb, var(--foreground) 72%, var(--muted-foreground));
+    color: var(--button-glass-muted-foreground);
 }
 
 .clear-btn:disabled,
@@ -697,7 +698,7 @@
         linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent 90%),
         color-mix(in srgb, var(--card) 42%, transparent);
     border-color: color-mix(in srgb, var(--hero-border) 64%, transparent);
-    color: color-mix(in srgb, var(--muted-foreground) 82%, transparent);
+    color: var(--button-disabled-foreground);
 }
 
 .batch-progress-section {

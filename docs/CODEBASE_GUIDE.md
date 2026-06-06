@@ -366,6 +366,17 @@ Owns:
 - Keep the converter task dominant in the first viewport: URL input, format choice, and Convert should read as the primary workflow before discovery, lyrics, theme, or game affordances.
 - Decorative motion and secondary tools should not compete with conversion. Prefer static decoration or one subtle animation, and keep games, discovery, and studio links visibly secondary until the user chooses them.
 
+### Button Text Contrast
+
+Keep the playful gradients, glass fills, and tinted active states, but do not let a component guess its text color from the background. Every interactive state that changes the fill should also choose a semantic foreground token.
+
+- Use `--button-primary-foreground` on full primary gradient controls such as Convert, Add to Batch, download, and game start/restart buttons.
+- Use `--button-glass-foreground` and `--button-glass-muted-foreground` for glass, secondary, inactive, icon, and outline-style controls.
+- Use `--button-selected-foreground` for selected or active tabs, pills, toggles, theme chips, genre chips, and tinted assistant/studio controls.
+- Use `--button-danger-foreground`, `--button-success-foreground`, and `--button-error-foreground` for destructive, correct, and error/wrong answer states.
+- Use `--button-disabled-foreground` when disabled controls still show readable text; opacity can support the state, but should not be the only contrast mechanism.
+- Raw `white` is allowed for decorative highlights, sheens, and scrims. Do not use raw `white` for control text unless a named semantic foreground token is impossible and the state has been verified in all four themes.
+
 ### Hover And Focus Inside Clipped Containers
 
 Horizontal scrollers, vertical scroll panels, rails, and cards with `overflow: hidden` can crop lifted hover states, shadows, scaled children, and focus rings. Before adding hover lift, scale, large shadows, or `outline-offset` inside a clipped container:
@@ -409,6 +420,13 @@ Examples already in use:
 - `--button-primary-foreground`
 - `--button-secondary`
 - `--button-secondary-foreground`
+- `--button-glass-foreground`
+- `--button-glass-muted-foreground`
+- `--button-selected-foreground`
+- `--button-danger-foreground`
+- `--button-success-foreground`
+- `--button-error-foreground`
+- `--button-disabled-foreground`
 - `--success-surface`
 - `--success-border`
 - `--error-surface`

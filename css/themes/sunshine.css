@@ -124,6 +124,7 @@
         linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 88%),
         color-mix(in srgb, var(--genre-accent) 12%, rgba(255, 246, 236, 0.88));
     border-color: color-mix(in srgb, var(--genre-accent) 24%, rgba(207, 153, 98, 0.42));
+    color: var(--button-selected-foreground);
     box-shadow:
         0 12px 22px rgba(163, 88, 46, 0.08),
         0 0 0 1px rgba(207, 153, 98, 0.12) inset;

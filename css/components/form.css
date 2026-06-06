@@ -129,7 +129,7 @@
     background: color-mix(in srgb, var(--secondary) 84%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 78%, transparent);
     border-radius: var(--radius-control);
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
     cursor: pointer;
     transition:
         background var(--transition-fast),
@@ -146,7 +146,7 @@
 
 .paste-btn:hover {
     background: color-mix(in srgb, var(--hero-orb) 12%, var(--accent));
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     border-color: color-mix(in srgb, var(--hero-orb) 46%, transparent);
 }
 
@@ -170,7 +170,7 @@
     background: color-mix(in srgb, var(--secondary) 82%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 72%, transparent);
     border-radius: var(--radius-control);
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
     font-size: 0.92rem;
     font-weight: 600;
     font-family: inherit;
@@ -190,7 +190,7 @@
 
 .format-btn:hover {
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--accent));
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     border-color: color-mix(in srgb, var(--hero-orb) 42%, transparent);
 }
 

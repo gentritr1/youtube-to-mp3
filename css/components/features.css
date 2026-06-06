@@ -185,7 +185,7 @@
     padding: 0.5rem 0.92rem;
     border-radius: 100px;
     background: color-mix(in srgb, var(--secondary) 82%, transparent);
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
     border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     cursor: pointer;
     font-family: var(--font-sans);
@@ -206,13 +206,13 @@
 
 .genre-tab:hover {
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--accent));
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     border-color: color-mix(in srgb, var(--hero-orb) 42%, transparent);
     transform: translateY(var(--hover-lift));
 }
 
 .genre-tab.active {
-    color: var(--foreground);
+    color: var(--button-selected-foreground);
     background:
         linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 90%),
         color-mix(in srgb, var(--genre-accent) 18%, var(--surface-glass-strong));
@@ -384,7 +384,7 @@
     background: var(--surface-glass-strong);
     backdrop-filter: blur(4px);
     border: 1px solid var(--surface-border);
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -411,6 +411,7 @@
 .video-action-btn.disabled,
 .video-action-btn:disabled {
     opacity: 0.45;
+    color: var(--button-disabled-foreground);
     cursor: not-allowed;
     transform: none;
 }
@@ -641,7 +642,7 @@
 
 .preview-close:hover {
     background: var(--rose);
-    color: white;
+    color: var(--destructive-foreground);
 }
 
 .preview-close svg {
