@@ -9,6 +9,7 @@ type TaskAdapter = {
     updateTask(taskId: string, updates: Partial<Task>): Task | null;
     deleteTask(taskId: string): void;
     cleanupOldTasks(maxAgeMs?: number): number;
+    markProcessingTasksInterrupted(): number;
     close(): void;
 };
 
@@ -43,6 +44,10 @@ export function deleteTask(taskId: string): void {
 
 export function cleanupOldTasks(maxAgeMs?: number): number {
     return adapter.cleanupOldTasks(maxAgeMs);
+}
+
+export function markProcessingTasksInterrupted(): number {
+    return adapter.markProcessingTasksInterrupted();
 }
 
 export function close(): void {

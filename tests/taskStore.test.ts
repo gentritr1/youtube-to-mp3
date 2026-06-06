@@ -85,6 +85,23 @@ describe('Task Store', () => {
         expect(taskStore.findExistingTask('vid123', 'mp4')).toBeNull();
     });
 
+    it('marks active tasks interrupted on startup cleanup', async () => {
+        const taskStore = await import('../server/services/taskStore.ts');
+
+        taskStore.createTask({
+            taskId: 'task-interrupted',
+            videoId: 'vid-interrupted',
+            format: 'mp3',
+            state: 'processing',
+            progress: 33,
+        });
+
+        expect(taskStore.markProcessingTasksInterrupted()).toBe(1);
+        const task = taskStore.getTask('task-interrupted');
+        expect(task?.state).toBe('error');
+        expect(task?.error).toBe('Conversion was interrupted by a server restart');
+    });
+
     it('does not reuse completed memory tasks when the output file is missing', async () => {
         const { config } = await import('../server/config.ts');
         const taskStore = await import('../server/services/taskStore.ts');

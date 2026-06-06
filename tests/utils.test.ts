@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { formatDuration } from '../server/utils/formatDuration.ts';
 import { parseProgress } from '../server/utils/parseProgress.ts';
 import { sanitizeFilename } from '../server/utils/sanitize.ts';
+import { buildYouTubeWatchUrl, validateYouTubeVideoId } from '../server/utils/youtube.ts';
 
 describe('formatDuration', () => {
     it('formats seconds to MM:SS', () => {
@@ -85,5 +86,24 @@ describe('sanitizeFilename', () => {
     it('truncates long titles', () => {
         const longTitle = 'A'.repeat(150);
         expect(sanitizeFilename(longTitle).length).toBeLessThanOrEqual(120);
+    });
+});
+
+describe('YouTube utilities', () => {
+    it('accepts canonical YouTube video IDs', () => {
+        expect(validateYouTubeVideoId('dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+        expect(validateYouTubeVideoId(' dQw4w9WgXcQ ')).toBe('dQw4w9WgXcQ');
+    });
+
+    it('rejects query-string, path, and malformed IDs', () => {
+        expect(validateYouTubeVideoId('dQw4w9WgXcQ&list=PL')).toBeNull();
+        expect(validateYouTubeVideoId('../escape')).toBeNull();
+        expect(validateYouTubeVideoId('too-short')).toBeNull();
+        expect(validateYouTubeVideoId(42)).toBeNull();
+    });
+
+    it('builds a watch URL only from a validated ID', () => {
+        expect(buildYouTubeWatchUrl('dQw4w9WgXcQ')).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+        expect(() => buildYouTubeWatchUrl('dQw4w9WgXcQ&list=PL')).toThrow('Invalid YouTube video ID');
     });
 });

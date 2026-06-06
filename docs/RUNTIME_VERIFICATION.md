@@ -48,3 +48,11 @@ Open `http://localhost:3000` after `npm start`.
 - New async UI behavior has a request-id, abort, or equivalent stale-response guard.
 - Routes validate/respond; services own orchestration.
 - If a feature needs durable server state, it goes behind a store facade before route integration.
+- Static serving exposes only intentional public assets; repo-root files, databases, downloads, cookies, source files, and dependencies are not reachable over HTTP.
+- Every `spawn()` path has both `error` and `close` handling and fails only the owned request/task.
+- Shared domain values such as YouTube video IDs use shared validation helpers across every route and service entry point.
+- Direct and queued conversion paths go through the same dispatch boundary.
+- Persisted in-flight task state has a startup recovery rule.
+- Download paths are basename/containment checked before `res.download()`.
+- Production CORS origins are explicit through configuration.
+- Docker context excludes runtime files and secrets, and container startup does not upgrade tool versions from the network.

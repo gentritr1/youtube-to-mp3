@@ -7,6 +7,7 @@ import {
     findExistingTask,
     getTask,
     updateTask,
+    markProcessingTasksInterrupted,
 } from './sqliteTaskManager.js';
 import type { CreateTaskParams } from './memoryTaskAdapter.js';
 
@@ -53,6 +54,10 @@ export class SqliteTaskAdapter {
 
     cleanupOldTasks(maxAgeMs?: number): number {
         return cleanupOldTasks(maxAgeMs);
+    }
+
+    markProcessingTasksInterrupted(): number {
+        return markProcessingTasksInterrupted();
     }
 
     close(): void {

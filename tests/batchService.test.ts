@@ -48,8 +48,8 @@ describe('Batch Service', () => {
     describe('createBatch', () => {
         it('should create a batch with valid items', () => {
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' },
-                { videoId: 'video2', format: 'mp3', title: 'Song 2' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' },
+                { videoId: '9bZkp7q19f0', format: 'mp3', title: 'Song 2' }
             ];
 
             const batch = createBatch(items);
@@ -78,7 +78,7 @@ describe('Batch Service', () => {
 
         it('should validate item format', () => {
             const invalidItems = [
-                { videoId: 'video1', format: 'wav', title: 'Song 1' } // Invalid format
+                { videoId: 'dQw4w9WgXcQ', format: 'wav', title: 'Song 1' } // Invalid format
             ] as unknown as BatchItem[];
 
             expect(() => createBatch(invalidItems)).toThrow('Format must be mp3 or mp4');
@@ -89,13 +89,13 @@ describe('Batch Service', () => {
                 { videoId: '', format: 'mp3', title: 'Song 1' }
             ];
 
-            expect(() => createBatch(invalidItems)).toThrow('Video ID is required');
+            expect(() => createBatch(invalidItems)).toThrow('Valid YouTube video ID is required');
         });
 
         it('should create individual tasks for each batch item', () => {
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' },
-                { videoId: 'video2', format: 'mp4', title: 'Video 2' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' },
+                { videoId: '9bZkp7q19f0', format: 'mp4', title: 'Video 2' }
             ];
 
             createBatch(items);
@@ -106,8 +106,8 @@ describe('Batch Service', () => {
 
         it('should assign unique taskIds to each batch item', () => {
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' },
-                { videoId: 'video2', format: 'mp3', title: 'Song 2' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' },
+                { videoId: '9bZkp7q19f0', format: 'mp3', title: 'Song 2' }
             ];
 
             const batch = createBatch(items);
@@ -121,7 +121,7 @@ describe('Batch Service', () => {
     describe('getBatch', () => {
         it('should return batch by ID', () => {
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' }
             ];
 
             const created = createBatch(items);
@@ -145,8 +145,8 @@ describe('Batch Service', () => {
                 .mockReturnValueOnce({ state: 'processing', progress: 50 });
 
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' },
-                { videoId: 'video2', format: 'mp3', title: 'Song 2' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' },
+                { videoId: '9bZkp7q19f0', format: 'mp3', title: 'Song 2' }
             ];
 
             const batch = createBatch(items);
@@ -168,7 +168,7 @@ describe('Batch Service', () => {
                 .mockReturnValue({ state: 'completed', progress: 100 });
 
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' }
             ];
 
             const batch = createBatch(items);
@@ -183,8 +183,8 @@ describe('Batch Service', () => {
                 .mockReturnValueOnce({ state: 'error', progress: 0, error: 'Download failed' });
 
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' },
-                { videoId: 'video2', format: 'mp3', title: 'Song 2' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' },
+                { videoId: '9bZkp7q19f0', format: 'mp3', title: 'Song 2' }
             ];
 
             const batch = createBatch(items);
@@ -203,11 +203,11 @@ describe('Batch Service', () => {
                 .mockReturnValue({ state: 'processing', progress: 50 });
 
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' }
             ];
 
             const batch = createBatch(items);
-            const newItem: BatchItem = { videoId: 'video3', format: 'mp3', title: 'Song 3' };
+            const newItem: BatchItem = { videoId: 'kJQP7kiw5Fk', format: 'mp3', title: 'Song 3' };
 
             const updated = addItemToBatch(batch.batchId, newItem);
 
@@ -216,7 +216,7 @@ describe('Batch Service', () => {
         });
 
         it('should reject adding to non-existent batch', () => {
-            const newItem: BatchItem = { videoId: 'video3', format: 'mp3', title: 'Song 3' };
+            const newItem: BatchItem = { videoId: 'kJQP7kiw5Fk', format: 'mp3', title: 'Song 3' };
 
             expect(() => addItemToBatch('batch_nonexistent', newItem)).toThrow('Batch not found');
         });
@@ -224,7 +224,7 @@ describe('Batch Service', () => {
         it('should reject adding to completed batch', () => {
             // First create a batch, then manually mark it as completed
             const items: BatchItem[] = [
-                { videoId: 'video1', format: 'mp3', title: 'Song 1' }
+                { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1' }
             ];
 
             const batch = createBatch(items);
@@ -236,7 +236,7 @@ describe('Batch Service', () => {
             // This should update the batch state to completed
             getBatchProgress(batch.batchId);
 
-            const newItem: BatchItem = { videoId: 'video3', format: 'mp3', title: 'Song 3' };
+            const newItem: BatchItem = { videoId: 'kJQP7kiw5Fk', format: 'mp3', title: 'Song 3' };
 
             expect(() => addItemToBatch(batch.batchId, newItem)).toThrow('Cannot add items to completed batch');
         });
@@ -248,10 +248,10 @@ describe('Batch Service', () => {
 
             const items: BatchItem[] = Array(MAX_BATCH_SIZE)
                 .fill(null)
-                .map((_, i): BatchItem => ({ videoId: `video${i}`, format: 'mp3', title: `Song ${i}` }));
+                .map((_, i): BatchItem => ({ videoId: `testid${String(i).padStart(5, '0')}`, format: 'mp3', title: `Song ${i}` }));
 
             const batch = createBatch(items);
-            const newItem: BatchItem = { videoId: 'extra', format: 'mp3', title: 'Extra' };
+            const newItem: BatchItem = { videoId: 'M7FIvfx5J10', format: 'mp3', title: 'Extra' };
 
             expect(() => addItemToBatch(batch.batchId, newItem)).toThrow(`Batch cannot exceed ${MAX_BATCH_SIZE} items`);
         });

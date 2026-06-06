@@ -89,6 +89,16 @@ const statements = {
         WHERE created_at < ? OR state = 'error'
     `),
 
+    markProcessingInterrupted: db.prepare(`
+        UPDATE tasks
+        SET state = 'error',
+            progress = 0,
+            status = 'Interrupted',
+            error = 'Conversion was interrupted by a server restart',
+            updated_at = strftime('%s', 'now')
+        WHERE state = 'processing'
+    `),
+
     delete: db.prepare(`
         DELETE FROM tasks WHERE id = ?
     `),
@@ -258,6 +268,11 @@ export const updateProgress = (taskId: string, progress: number): void => {
 export const cleanupOldTasks = (maxAgeMs: number = config.FILE_MAX_AGE_MS): number => {
     const cutoff = Math.floor((Date.now() - maxAgeMs) / 1000);
     const result = statements.cleanup.run(cutoff);
+    return result.changes;
+};
+
+export const markProcessingTasksInterrupted = (): number => {
+    const result = statements.markProcessingInterrupted.run();
     return result.changes;
 };
 

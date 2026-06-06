@@ -19,8 +19,9 @@ import {
     saveBatch,
     updateBatch as updateStoredBatch,
 } from './batchStore.js';
-import { createTask as createSingleTask, getTask, updateTask } from './taskStore.js';
-import { convertVideo } from './ytdlp.js';
+import { createTask as createSingleTask, getTask } from './taskStore.js';
+import { startConversion } from './conversionRunner.js';
+import { validateYouTubeVideoId } from '../utils/youtube.js';
 
 // Constants
 export const MAX_BATCH_SIZE = 10;
@@ -36,8 +37,9 @@ const generateBatchId = (): string => {
  * Validate a single batch item
  */
 const validateItem = (item: BatchItem, index: number): void => {
-    if (!item.videoId || item.videoId.trim() === '') {
-        throw new Error(`Video ID is required for item ${index + 1}`);
+    const videoId = validateYouTubeVideoId(item.videoId);
+    if (!videoId) {
+        throw new Error(`Valid YouTube video ID is required for item ${index + 1}`);
     }
     if (!item.format || !['mp3', 'mp4'].includes(item.format)) {
         throw new Error(`Format must be mp3 or mp4 for item ${index + 1}`);
@@ -69,13 +71,13 @@ export const createBatch = (items: BatchItem[]): BatchJob => {
     // Create individual tasks for each item
     const processedItems: BatchItem[] = items.map((item, index) => {
         const taskId = randomUUID();
-        const url = `https://www.youtube.com/watch?v=${item.videoId}`;
+        const videoId = validateYouTubeVideoId(item.videoId)!;
         const safeTitle = item.title || `Video ${index + 1}`;
 
         // Create task in task manager
         createSingleTask({
             taskId,
-            videoId: item.videoId,
+            videoId,
             format: item.format,
             title: safeTitle,
             state: 'processing',
@@ -83,19 +85,11 @@ export const createBatch = (items: BatchItem[]): BatchJob => {
             status: 'Queued...',
         });
 
-        // Start conversion in background (non-blocking) with error handling
-        convertVideo(taskId, url, item.format).catch((err: Error) => {
-            console.error(`[BatchService] Conversion failed for ${taskId} (${item.videoId}):`, err.message);
-            // Update task to error state
-            updateTask(taskId, {
-                state: 'error',
-                progress: 0,
-                error: err.message || 'Conversion failed'
-            });
-        });
+        startConversion(taskId, videoId, item.format, safeTitle);
 
         return {
             ...item,
+            videoId,
             taskId,
             title: safeTitle
         };
@@ -233,12 +227,12 @@ export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
 
     // Create task for new item
     const taskId = randomUUID();
-    const url = `https://www.youtube.com/watch?v=${item.videoId}`;
+    const videoId = validateYouTubeVideoId(item.videoId)!;
     const safeTitle = item.title || `Video ${batch.items.length + 1}`;
 
     createSingleTask({
         taskId,
-        videoId: item.videoId,
+        videoId,
         format: item.format,
         title: safeTitle,
         state: 'processing',
@@ -246,19 +240,11 @@ export const addItemToBatch = (batchId: string, item: BatchItem): BatchJob => {
         status: 'Queued...',
     });
 
-    // Start conversion in background with error handling
-    convertVideo(taskId, url, item.format).catch((err: Error) => {
-        console.error(`[BatchService] Conversion failed for ${taskId} (${item.videoId}):`, err.message);
-        // Update task to error state
-        updateTask(taskId, {
-            state: 'error',
-            progress: 0,
-            error: err.message || 'Conversion failed'
-        });
-    });
+    startConversion(taskId, videoId, item.format, safeTitle);
 
     const newItem: BatchItem = {
         ...item,
+        videoId,
         taskId,
         title: safeTitle
     };

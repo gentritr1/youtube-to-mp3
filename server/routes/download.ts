@@ -19,7 +19,15 @@ router.get('/:taskId/:filename?', (req: Request, res: Response) => {
         return res.status(404).json({ message: 'File not found or still processing' });
     }
 
-    const filePath = path.join(config.DOWNLOADS_DIR, task.filename);
+    const filePath = path.resolve(config.DOWNLOADS_DIR, task.filename);
+    const downloadsRoot = path.resolve(config.DOWNLOADS_DIR);
+    if (
+        path.basename(task.filename) !== task.filename
+        || (filePath !== downloadsRoot && !filePath.startsWith(`${downloadsRoot}${path.sep}`))
+    ) {
+        console.error(`[Download] Refusing unsafe filename for task ${taskId}: ${task.filename}`);
+        return res.status(404).json({ message: 'File not found' });
+    }
 
     if (!fs.existsSync(filePath)) {
         console.error(`File not found: ${filePath}`);
