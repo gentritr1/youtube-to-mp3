@@ -13,7 +13,7 @@ A Node.js and vanilla JavaScript YouTube converter with themable UI, batch downl
 
 ## Prerequisites
 
-- Node.js
+- Node.js 22
 - `yt-dlp`
 - `ffmpeg`
 
@@ -30,6 +30,22 @@ npm start
 
 App URL:
 - [http://localhost:3000](http://localhost:3000)
+
+## Configuration
+
+Use `.env.example` as the reference for shell variables or deployment settings.
+
+Key environment variables:
+
+- `PORT`: server port, defaults to `3000`
+- `TASK_STORE`: `sqlite` or `memory`, defaults to `sqlite`
+- `USE_QUEUE`: set `true` to enable Redis queue initialization
+- `REDIS_URL`: Redis connection string for queue mode
+- `WATCH_GENRES`: reload genre files during development
+- `ALLOWED_ORIGINS`: comma-separated browser origins allowed in production CORS
+- `YT_COOKIES`: optional Netscape-format YouTube cookies for restricted videos
+
+Runtime data is intentionally not served as static content. Generated downloads are only available through `/api/download`.
 
 ## Testing
 

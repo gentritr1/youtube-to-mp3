@@ -8,6 +8,21 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
             return reject(new Error('File not found'));
         }
 
+        let settled = false;
+        const settle = (error?: Error, stats?: AudioStats) => {
+            if (settled) {
+                return;
+            }
+
+            settled = true;
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            resolve(stats!);
+        };
+
         // We will run ffprobe once for metadata
         const argsJson = [
             '-v', 'quiet',
@@ -22,9 +37,12 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
         const proc1 = spawn('ffprobe', argsJson);
         proc1.stdout.on('data', data => metadataOutput += data.toString());
         proc1.stderr.on('data', data => stderrOutput += data.toString());
+        proc1.on('error', error => {
+            settle(new Error(`ffprobe failed to start: ${error.message}`));
+        });
         proc1.on('close', async (code) => {
             if (code !== 0) {
-                return reject(new Error('ffprobe metadata analysis failed: ' + stderrOutput));
+                return settle(new Error('ffprobe metadata analysis failed: ' + stderrOutput));
             }
             try {
                 const metadata = JSON.parse(metadataOutput);
@@ -47,10 +65,13 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
                 let eburOutput = '';
                 const proc2 = spawn('ffmpeg', ffmpegArgs);
                 proc2.stderr.on('data', data => eburOutput += data.toString());
+                proc2.on('error', error => {
+                    settle(new Error(`ffmpeg failed to start: ${error.message}`));
+                });
                 proc2.on('close', (code2) => {
                     if (code2 !== 0) {
                         console.warn('ffmpeg ebur128 failed', code2, eburOutput);
-                        return reject(new Error('ffmpeg analysis failed: ' + eburOutput));
+                        return settle(new Error('ffmpeg analysis failed: ' + eburOutput));
                     }
 
                     let lufs = 0;
@@ -78,10 +99,10 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
 
                     if (!foundI || !foundPeak) {
                         console.warn('ffmpeg ebur128 missing output or parse failed');
-                        return reject(new Error('missing LUFS/peak metadata'));
+                        return settle(new Error('missing LUFS/peak metadata'));
                     }
 
-                    resolve({
+                    settle(undefined, {
                         bitrate,
                         sampleRate,
                         lufs,
@@ -91,7 +112,7 @@ export async function analyzeAudio(filePath: string): Promise<AudioStats> {
                     });
                 });
             } catch (e) {
-                reject(e);
+                settle(e as Error);
             }
         });
     });

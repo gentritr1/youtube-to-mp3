@@ -133,6 +133,27 @@ export class MemoryTaskAdapter {
         return deleted;
     }
 
+    markProcessingTasksInterrupted(): number {
+        let updated = 0;
+        for (const [taskId, task] of this.tasks.entries()) {
+            if (task.state !== 'processing') {
+                continue;
+            }
+
+            this.tasks.set(taskId, {
+                ...task,
+                state: 'error',
+                progress: 0,
+                status: 'Interrupted',
+                error: 'Conversion was interrupted by a server restart',
+                updatedAt: Date.now(),
+            });
+            updated++;
+        }
+
+        return updated;
+    }
+
     close(): void {
         // No-op for the in-memory adapter.
     }

@@ -12,7 +12,7 @@ import type { BatchJob } from '../server/types.js';
 const createBatch = (overrides: Partial<BatchJob> = {}): BatchJob => ({
     batchId: overrides.batchId ?? 'batch_test',
     items: overrides.items ?? [
-        { videoId: 'video1', format: 'mp3', title: 'Song 1', taskId: 'task1' }
+        { videoId: 'dQw4w9WgXcQ', format: 'mp3', title: 'Song 1', taskId: 'task1' }
     ],
     state: overrides.state ?? 'processing',
     totalItems: overrides.totalItems ?? 1,
@@ -36,14 +36,14 @@ describe('batchStore', () => {
         const batch = saveBatch(createBatch());
 
         expect(batch.batchId).toBe('batch_test');
-        expect(getBatch('batch_test')?.items[0].videoId).toBe('video1');
+        expect(getBatch('batch_test')?.items[0].videoId).toBe('dQw4w9WgXcQ');
     });
 
     it('returns cloned batches so callers cannot mutate store state implicitly', () => {
         saveBatch(createBatch());
 
         const batch = getBatch('batch_test');
-        batch?.items.push({ videoId: 'video2', format: 'mp4', title: 'Video 2' });
+        batch?.items.push({ videoId: '9bZkp7q19f0', format: 'mp4', title: 'Video 2' });
 
         expect(getBatch('batch_test')?.items).toHaveLength(1);
     });
@@ -66,7 +66,7 @@ describe('batchStore', () => {
         saveBatch(createBatch());
 
         const batches = getAllBatches();
-        batches.get('batch_test')?.items.push({ videoId: 'video2', format: 'mp4' });
+        batches.get('batch_test')?.items.push({ videoId: '9bZkp7q19f0', format: 'mp4' });
 
         expect(getBatch('batch_test')?.items).toHaveLength(1);
     });

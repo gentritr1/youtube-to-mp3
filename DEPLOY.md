@@ -17,6 +17,9 @@
 6. **Instance Type**: Select **Free**.
 7. Click **Create Web Service**.
 8. **Copy the URL** Render gives you (e.g., `https://yt-converter-123.onrender.com`).
+9. Add production environment variables:
+   * **Key**: `ALLOWED_ORIGINS`
+   * **Value**: your Netlify site origin, for example `https://your-site.netlify.app`
 
 ---
 
