@@ -366,6 +366,21 @@ Owns:
 - Keep the converter task dominant in the first viewport: URL input, format choice, and Convert should read as the primary workflow before discovery, lyrics, theme, or game affordances.
 - Decorative motion and secondary tools should not compete with conversion. Prefer static decoration or one subtle animation, and keep games, discovery, and studio links visibly secondary until the user chooses them.
 
+### Hover And Focus Inside Clipped Containers
+
+Horizontal scrollers, vertical scroll panels, rails, and cards with `overflow: hidden` can crop lifted hover states, shadows, scaled children, and focus rings. Before adding hover lift, scale, large shadows, or `outline-offset` inside a clipped container:
+
+1. Add internal breathing room on the scroll container or rail with small padding.
+2. Use an equal negative margin to preserve the base visual alignment when needed.
+3. Add `scroll-padding-inline` or `scroll-padding-block` so keyboard and snap movement do not park items against the clipped edge.
+4. Verify the first, active, and last items, not only middle items.
+5. Keep intentional internal crops, such as thumbnails, progress bars, text ellipsis, and masked media, scoped to the child that actually needs clipping.
+
+Existing examples:
+- `css/components/features.css`: `.genre-tabs` and `.video-carousel`
+- `css/components/batch.css`: `.batch-list` and `.batch-progress-list`
+- `css/components/karaoke-panel.css`: `.point-rail-window`
+
 ## Theme System
 
 ### Current themes
