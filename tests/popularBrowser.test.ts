@@ -67,7 +67,7 @@ describe('popularBrowser', () => {
             genreId: 'global'
         });
         expect(buttons[0].classList.contains('active')).toBe(true);
-        expect(buttons[0].style.background).toBe('rgb(17, 17, 17)');
+        expect(buttons[0].style.getPropertyValue('--genre-accent')).toBe('#111');
     });
 
     it('renders carousel cards and routes preview/convert interactions', () => {
