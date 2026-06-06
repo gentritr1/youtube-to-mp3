@@ -16,6 +16,7 @@ Use `docs/TESTING_STATUS.md` for transient build and environment notes only.
 - [Product Summary](#product-summary)
 - [Project Shape](#project-shape)
 - [Architecture Style](#architecture-style)
+- [Post-Review Lessons](#post-review-lessons)
 - [Frontend Module Ownership](#frontend-module-ownership)
 - [Styling Architecture](#styling-architecture)
 - [Theme System](#theme-system)
@@ -97,6 +98,109 @@ There is some OOP where it pays for itself:
 - studio/player adapters wrap imperative browser APIs behind narrow objects
 
 Most other code is functional/module-oriented. Prefer plain exported functions and scoped module state unless the feature has a real lifecycle that benefits from an instance.
+
+## Post-Review Lessons
+
+This section captures the gaps found during the repo review that produced PR #20. Treat these as prevention rules for future backend, deployment, and runtime changes.
+
+### Static asset boundary
+
+Gap:
+- the server used `express.static(config.ROOT_DIR)`, which made repo-root runtime files eligible for direct HTTP serving
+- runtime files such as SQLite databases, generated downloads, and local cookie files lived below that root
+- the download limiter and `/api/download` path were easy to bypass because static middleware could serve files first
+
+Fix:
+- serve only explicit frontend entry files and asset folders
+- keep generated media behind `/api/download`
+- add `.dockerignore` so local runtime files and accidental secrets are not copied into images
+
+Lesson:
+- never serve the repository root as a static web root
+- every static directory must be intentionally public
+- runtime data, local credentials, database files, generated downloads, source files, and dependency folders must stay outside static middleware
+
+### External process safety
+
+Gap:
+- `yt-dlp`, `ffmpeg`, and `ffprobe` subprocesses lacked `error` listeners
+- startup checks logged missing binaries but did not prevent later unhandled child-process errors
+- a missing or unlaunchable binary could terminate Node instead of failing one task
+
+Fix:
+- add subprocess `error` handlers and single-settlement guards
+- return conversion/info errors through task state or API responses
+
+Lesson:
+- every `spawn()` must handle `error` and `close`
+- process startup checks are useful diagnostics, not a substitute for per-call failure handling
+- background work should fail the task it owns, not the whole server
+
+### Input validation consistency
+
+Gap:
+- preview used a strict YouTube video ID whitelist
+- info, convert, and batch paths only checked presence/non-empty values
+- unvalidated IDs were interpolated into YouTube URLs, which allowed query-string expansion such as playlist parameters
+
+Fix:
+- add shared `validateYouTubeVideoId()` and `buildYouTubeWatchUrl()` helpers
+- use them across info, convert, batch, and preview flows
+- add tests for canonical IDs and rejected query/path/malformed values
+
+Lesson:
+- when several routes accept the same domain value, validation belongs in one shared helper
+- routes should reject malformed values before building URLs or starting expensive subprocess work
+- service tests should cover the invalid values that caused the review finding
+
+### Conversion lifecycle ownership
+
+Gap:
+- queue support initialized Redis but conversions still called `convertVideo()` directly
+- batch and single conversions duplicated dispatch/error handling
+- persisted `processing` tasks could survive restart and be returned by idempotency lookup even though no worker was running
+
+Fix:
+- add `conversionRunner` as the dispatch boundary for direct vs queued conversion
+- register a queue processor when Redis is actually ready
+- mark persisted `processing` tasks as interrupted during startup
+
+Lesson:
+- feature flags must be wired into the behavior they advertise
+- direct and queued execution should share one dispatch seam
+- persisted task state needs a startup recovery rule for in-flight work
+
+### File ownership and downloads
+
+Gap:
+- output filenames were based only on sanitized title and format
+- two videos with the same title could collide or overwrite each other
+- download paths trusted persisted filenames without a containment check
+
+Fix:
+- include the task ID in generated output filenames
+- verify the stored filename is a basename and resolves inside the downloads directory before `res.download()`
+
+Lesson:
+- user-facing names are not stable storage keys
+- download routes must validate persisted file paths too, because future writers or corrupted state can bypass current creation assumptions
+
+### Configuration and deployment drift
+
+Gap:
+- production CORS was permissive
+- operational environment variables were scattered across code and deploy docs
+- Docker copied the whole repo and upgraded `yt-dlp` at container startup
+
+Fix:
+- add `ALLOWED_ORIGINS` for production CORS
+- add `.env.example` and README/deploy config notes
+- move `yt-dlp` updates to image build time and ignore runtime/local files in Docker context
+
+Lesson:
+- every new env var needs a docs entry and, when useful, `.env.example`
+- container runtime should not mutate tool versions through network upgrades
+- deployment docs should explain security-sensitive configuration, not only happy-path startup
 
 ## Frontend Module Ownership
 
@@ -360,6 +464,13 @@ Before coding, decide whether the work belongs to:
 - the semantic token layer
 
 If ownership is unclear, split the feature first.
+
+For backend work, decide the same boundary up front:
+- routes validate HTTP input and shape responses
+- shared validators live in `server/utils`
+- orchestration lives in services such as `conversionRunner`
+- storage changes go through store facades such as `taskStore`
+- subprocess wrappers own command arguments, output parsing, and process failure handling
 
 ### 2. Use ES modules only
 
