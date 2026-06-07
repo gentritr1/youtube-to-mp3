@@ -1,9 +1,10 @@
 .karaoke-card {
     display: grid;
-    gap: var(--space-5);
-    padding: var(--space-6);
-    border-radius: 1.75rem;
-    min-height: 100%;
+    gap: var(--space-4);
+    align-content: start;
+    padding: var(--space-5);
+    border-radius: 1.35rem;
+    min-height: auto;
     border: 1px solid color-mix(in srgb, var(--hero-border) 60%, transparent);
     background:
         radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb-soft) 80%, transparent), transparent 45%),
@@ -23,8 +24,8 @@
 .karaoke-panel-header {
     display: flex;
     justify-content: space-between;
-    align-items: start;
-    gap: 0.9rem;
+    align-items: flex-start;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -45,9 +46,10 @@
 
 .karaoke-panel-title {
     margin: 0.35rem 0 0;
-    font-size: 1.2rem;
+    font-size: 1.08rem;
     font-weight: 800;
     letter-spacing: -0.035em;
+    line-height: 1.15;
 }
 
 .karaoke-panel-tabs {
@@ -95,10 +97,10 @@
 .karaoke-status {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0.85rem;
+    gap: var(--space-2);
     align-items: start;
-    padding: 1rem 1.15rem;
-    border-radius: 1.25rem;
+    padding: var(--space-3);
+    border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--foreground) 3%, color-mix(in srgb, var(--secondary) 40%, transparent));
     border: 1px solid color-mix(in srgb, var(--hero-border) 40%, transparent);
     box-shadow: 0 8px 24px color-mix(in srgb, black 10%, transparent);
@@ -108,7 +110,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 5.2rem;
+    width: fit-content;
+    min-width: 0;
     padding: 0.4rem 0.75rem;
     border-radius: 999px;
     background: var(--surface-overlay-strong);
@@ -133,9 +136,10 @@
 }
 
 .karaoke-status-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 700;
     margin: 0;
+    line-height: 1.3;
 }
 
 .karaoke-status-detail {
@@ -320,7 +324,7 @@
 .studio-teaser-card {
     display: grid;
     gap: var(--space-3);
-    padding: var(--space-4);
+    padding: var(--space-3);
     border-radius: var(--radius-xl);
     border: 1px solid color-mix(in srgb, var(--hero-orb) 28%, var(--surface-outline));
     background:
@@ -331,8 +335,42 @@
 .studio-teaser-copy {
     margin: 0;
     color: var(--foreground);
-    font-size: 0.88rem;
-    line-height: 1.65;
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.studio-teaser-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.studio-teaser-list li {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 2rem;
+    padding: 0.38rem var(--space-2);
+    border-radius: var(--radius);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 42%, transparent);
+    background: color-mix(in srgb, var(--surface-overlay-strong) 84%, transparent);
+    color: color-mix(in srgb, var(--foreground) 88%, var(--muted-foreground));
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.studio-teaser-list li::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--hero-orb) 82%, var(--foreground));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--hero-orb) 14%, transparent);
 }
 
 .studio-teaser-link {
@@ -716,6 +754,10 @@
     }
 
     .karaoke-status {
+        grid-template-columns: 1fr;
+    }
+
+    .studio-teaser-list {
         grid-template-columns: 1fr;
     }
 

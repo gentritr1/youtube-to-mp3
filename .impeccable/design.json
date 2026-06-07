@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-07T12:38:53Z",
+  "title": "Design System: YT Converter",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Converter Ink",
+        "canonical": "hsl(225 15% 5%)",
+        "tonalRamp": ["#0B0C0F", "#191A1F", "#282B32", "#3D414B", "#5E6574", "#8790A0", "#C4CAD3", "#F3F5F7"]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Stage Light",
+        "canonical": "hsl(210 20% 96%)",
+        "tonalRamp": ["#18202A", "#2C3744", "#475568", "#66768B", "#8C9AAC", "#B4BEC9", "#D8DEE5", "#F3F5F7"]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Panel Black",
+        "canonical": "hsl(225 14% 7%)",
+        "tonalRamp": ["#0F1114", "#1C1F25", "#2D313A", "#454B57", "#666E7E", "#929AA8", "#CACFD7", "#F4F5F7"]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Control Charcoal",
+        "canonical": "hsl(225 12% 11%)",
+        "tonalRamp": ["#111217", "#191A1F", "#2A2D34", "#424650", "#626A78", "#8F97A5", "#C8CDD5", "#F3F4F6"]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Soft Label",
+        "canonical": "hsl(220 10% 54%)",
+        "tonalRamp": ["#171A20", "#2B3038", "#434A56", "#606979", "#7E8695", "#A2A9B4", "#CDD1D8", "#F2F3F5"]
+      },
+      "emerald": {
+        "role": "primary",
+        "displayName": "Ready Green",
+        "canonical": "hsl(160 84% 39%)",
+        "tonalRamp": ["#052319", "#0A3F2D", "#0E6448", "#128C65", "#10B77F", "#3DD99F", "#8BE9C6", "#D7F8EA"]
+      },
+      "sky": {
+        "role": "primary",
+        "displayName": "Download Blue",
+        "canonical": "hsl(199 89% 48%)",
+        "tonalRamp": ["#061B27", "#0A3247", "#0B5073", "#0B78AD", "#0DA2E7", "#42C4F5", "#8DDEFB", "#D8F5FE"]
+      },
+      "amber": {
+        "role": "secondary",
+        "displayName": "Warm Queue Amber",
+        "canonical": "hsl(38 92% 50%)",
+        "tonalRamp": ["#2A1703", "#4A2B05", "#744408", "#A86208", "#F59F0A", "#F9BB44", "#FBD78D", "#FFF1D1"]
+      },
+      "rose": {
+        "role": "secondary",
+        "displayName": "Error Rose",
+        "canonical": "hsl(347 77% 50%)",
+        "tonalRamp": ["#2B0610", "#4B0A1B", "#75102B", "#A8173C", "#E21D48", "#EC5B78", "#F49BAD", "#FCE0E6"]
+      },
+      "violet": {
+        "role": "tertiary",
+        "displayName": "Studio Violet",
+        "canonical": "hsl(258 90% 66%)",
+        "tonalRamp": ["#16072F", "#28105A", "#431B8A", "#6230C4", "#895AF6", "#AA85FA", "#CCB7FD", "#EEE8FF"]
+      },
+      "theme-frutiger-background": {
+        "role": "theme",
+        "displayName": "Aero Atmosphere",
+        "canonical": "hsl(189 77% 92%)",
+        "tonalRamp": ["#10333A", "#1B5661", "#278191", "#42B2C5", "#8ADCEA", "#DBF6FA", "#ECFBFD", "#FAFEFF"]
+      },
+      "theme-sunshine-background": {
+        "role": "theme",
+        "displayName": "Breeze Atmosphere",
+        "canonical": "hsl(28 100% 95%)",
+        "tonalRamp": ["#3A1E0D", "#663817", "#965625", "#C87936", "#EDA866", "#FFD9B8", "#FFF1E5", "#FFFAF5"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero title and first-viewport value statement only." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles and major module labels." },
+      "title": { "displayName": "Title", "purpose": "Card titles, sidecar titles, preview titles." },
+      "body": { "displayName": "Body", "purpose": "Readable copy, helper text, and status detail." },
+      "label": { "displayName": "Label", "purpose": "Short uppercase UI labels and badges." },
+      "mono": { "displayName": "Mono", "purpose": "URLs, durations, counters, ranks, and technical metadata." }
+    },
+    "shadows": [
+      { "name": "shadow-panel", "value": "0 24px 50px rgba(0, 0, 0, 0.28)", "purpose": "Large feature panels over themed backgrounds." },
+      { "name": "shadow-card-hover", "value": "0 18px 40px -14px rgba(0, 0, 0, 0.6)", "purpose": "Interactive cards on hover." },
+      { "name": "shadow-float", "value": "0 4px 12px rgba(0, 0, 0, 0.25)", "purpose": "Small floating controls and badges." },
+      { "name": "shadow-input-inset", "value": "inset 0 10px 20px color-mix(in srgb, var(--glass-shadow) 36%, transparent)", "purpose": "URL inputs and glass fields." }
+    ],
+    "motion": [
+      { "name": "transition-fast", "value": "120ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Hover, focus, and control state transitions." },
+      { "name": "transition-base", "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Progress and ordinary state changes." },
+      { "name": "transition-smooth", "value": "350ms cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Panel and larger surface transitions." },
+      { "name": "hover-lift", "value": "-1px", "purpose": "Small interactive lift, disabled under reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "tablet-stack", "value": "1040px", "purpose": "Hero stage stacks from two columns to one." },
+      { "name": "mobile", "value": "720px", "purpose": "Container padding tightens and controls stack." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Convert Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main conversion action. Use once per primary workflow area.",
+      "html": "<button class=\"ds-button-primary\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3v12m0 0 5-5m-5 5-5-5M5 21h14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span>Convert video</span></button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:var(--control-gap,.5rem);height:var(--control-height-lg,3.25rem);padding:0 var(--control-padding-x,1rem);border:0;border-radius:var(--radius-control,1rem);background:linear-gradient(180deg,color-mix(in srgb,white 18%,transparent),transparent 48%),var(--button-primary,linear-gradient(135deg,#0da2e7,#10b77f));color:var(--button-primary-foreground,#111317);font:700 .96rem var(--font-sans,system-ui);cursor:pointer;box-shadow:0 22px 36px color-mix(in srgb,var(--hero-orb,#0da2e7) 18%,transparent);transition:opacity var(--transition-fast,120ms ease),transform var(--transition-fast,120ms ease),box-shadow var(--transition-fast,120ms ease)}.ds-button-primary:hover{opacity:.96;transform:translateY(var(--hover-lift,-1px))}.ds-button-primary:focus-visible{outline:var(--focus-ring-width,2px) solid var(--focus-ring-color,#424957);outline-offset:var(--focus-ring-offset,3px)}.ds-button-primary svg{width:18px;height:18px}"
+    },
+    {
+      "name": "Glass Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary or utility action with glass treatment.",
+      "html": "<button class=\"ds-button-glass\"><span>Preview track</span></button>",
+      "css": ".ds-button-glass{display:inline-flex;align-items:center;justify-content:center;min-height:var(--control-height,3rem);padding:var(--control-padding-y,.75rem) var(--control-padding-x,1rem);border-radius:var(--radius-control,1rem);border:1px solid color-mix(in srgb,var(--hero-border,#788fb4) 78%,transparent);background:color-mix(in srgb,var(--secondary,#191a1f) 84%,transparent);color:var(--button-glass-foreground,#f3f5f7);font:700 .9rem var(--font-sans,system-ui);cursor:pointer;box-shadow:0 1px 0 var(--glass-highlight,rgba(255,255,255,.08)) inset,0 10px 24px color-mix(in srgb,var(--glass-shadow,rgba(0,0,0,.22)) 65%,transparent);transition:background var(--transition-fast,120ms ease),border-color var(--transition-fast,120ms ease),transform var(--transition-fast,120ms ease)}.ds-button-glass:hover{background:color-mix(in srgb,var(--hero-orb,#10b77f) 12%,var(--accent,#1f2228));border-color:color-mix(in srgb,var(--hero-orb,#10b77f) 46%,transparent);transform:translateY(var(--hover-lift,-1px))}.ds-button-glass:focus-visible{outline:var(--focus-ring-width,2px) solid var(--focus-ring-color,#424957);outline-offset:var(--focus-ring-offset,3px)}"
+    },
+    {
+      "name": "URL Input",
+      "kind": "input",
+      "refersTo": "input-url",
+      "description": "Main YouTube URL field with paired icon button.",
+      "html": "<label class=\"ds-input-label\">Video link</label><div class=\"ds-input-row\"><input class=\"ds-url-input\" placeholder=\"Paste YouTube URL here...\"/><button class=\"ds-icon-button\" aria-label=\"Paste\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 9h11v11H9zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"/></svg></button></div>",
+      "css": ".ds-input-label{display:block;margin-bottom:.5rem;color:var(--muted-foreground,#7e8695);font:700 .7rem var(--font-sans,system-ui);letter-spacing:.08em;text-transform:uppercase}.ds-input-row{display:flex;gap:var(--control-gap,.5rem)}.ds-url-input{flex:1;height:var(--control-height-lg,3.25rem);padding:0 var(--control-padding-x,1rem);border:1px solid color-mix(in srgb,var(--hero-border,#788fb4) 78%,transparent);border-radius:var(--radius-control,1rem);background:color-mix(in srgb,var(--secondary,#191a1f) 85%,transparent);color:var(--foreground,#f3f5f7);font:400 .95rem var(--font-sans,system-ui);box-shadow:0 1px 0 var(--glass-highlight,rgba(255,255,255,.08)) inset,var(--shadow-input-inset,inset 0 10px 20px rgba(0,0,0,.08));transition:border-color var(--transition-fast,120ms ease),box-shadow var(--transition-fast,120ms ease)}.ds-url-input::placeholder{color:var(--muted-foreground,#7e8695)}.ds-url-input:focus{border-color:var(--ring,#424957);outline:none}.ds-url-input:focus-visible{outline:var(--focus-ring-width,2px) solid var(--focus-ring-color,#424957);outline-offset:var(--focus-ring-offset,3px)}.ds-icon-button{width:var(--control-icon-size,3.25rem);height:var(--control-icon-size,3.25rem);border-radius:var(--radius-control,1rem);border:1px solid color-mix(in srgb,var(--hero-border,#788fb4) 78%,transparent);background:color-mix(in srgb,var(--secondary,#191a1f) 84%,transparent);color:var(--button-glass-muted-foreground,#a6afbf);display:grid;place-items:center}.ds-icon-button svg{width:18px;height:18px}"
+    },
+    {
+      "name": "Format Toggle",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Two-option MP3/MP4 segmented control.",
+      "html": "<div class=\"ds-format-toggle\" role=\"group\" aria-label=\"Output format\"><button class=\"ds-format active\">MP3</button><button class=\"ds-format\">MP4</button></div>",
+      "css": ".ds-format-toggle{display:grid;grid-template-columns:1fr 1fr;gap:var(--control-gap,.5rem);max-width:360px}.ds-format{height:var(--control-height,3rem);border-radius:var(--radius-control,1rem);border:1px solid color-mix(in srgb,var(--hero-border,#788fb4) 72%,transparent);background:color-mix(in srgb,var(--secondary,#191a1f) 82%,transparent);color:var(--button-glass-muted-foreground,#a6afbf);font:600 .92rem var(--font-sans,system-ui);cursor:pointer;transition:background var(--transition-fast,120ms ease),border-color var(--transition-fast,120ms ease),color var(--transition-fast,120ms ease),transform var(--transition-fast,120ms ease)}.ds-format:hover{background:color-mix(in srgb,var(--hero-orb,#10b77f) 10%,var(--accent,#1f2228));color:var(--button-glass-foreground,#f3f5f7)}.ds-format.active{background:var(--button-primary,linear-gradient(135deg,#0da2e7,#10b77f));color:var(--button-primary-foreground,#111317);border-color:transparent;box-shadow:0 18px 32px color-mix(in srgb,var(--hero-orb,#10b77f) 18%,transparent)}.ds-format:focus-visible{outline:var(--focus-ring-width,2px) solid var(--focus-ring-color,#424957);outline-offset:var(--focus-ring-offset,3px)}"
+    },
+    {
+      "name": "Theme Chip",
+      "kind": "nav",
+      "refersTo": "chip",
+      "description": "Theme switcher option with swatch and compact label.",
+      "html": "<button class=\"ds-theme-chip active\"><span class=\"ds-theme-swatch\"></span><span><strong>Space</strong><small>Orbit</small></span></button>",
+      "css": ".ds-theme-chip{display:inline-flex;align-items:center;gap:var(--control-gap,.5rem);min-height:var(--control-height-sm,2.25rem);min-width:7rem;padding:.45rem .75rem;border-radius:var(--radius-pill,999px);border:1px solid color-mix(in srgb,var(--hero-border,#788fb4) 85%,transparent);background:color-mix(in srgb,var(--hero-surface-strong,#080c18) 84%,transparent);color:var(--button-glass-foreground,#f3f5f7);font-family:var(--font-sans,system-ui);cursor:pointer;transition:transform var(--transition-fast,120ms ease),border-color var(--transition-fast,120ms ease),background var(--transition-fast,120ms ease),box-shadow var(--transition-fast,120ms ease)}.ds-theme-chip:hover{transform:translateY(var(--hover-lift,-1px));border-color:color-mix(in srgb,var(--hero-orb,#10b77f) 62%,transparent)}.ds-theme-chip.active{background:color-mix(in srgb,var(--hero-orb,#10b77f) 17%,var(--surface-overlay-strong,rgba(255,255,255,.06)));border-color:color-mix(in srgb,var(--hero-orb,#10b77f) 68%,transparent);color:var(--button-selected-foreground,#f3f5f7)}.ds-theme-chip:focus-visible{outline:var(--focus-ring-width,2px) solid var(--focus-ring-color,#424957);outline-offset:var(--focus-ring-offset,3px)}.ds-theme-swatch{width:.9rem;height:.9rem;border-radius:999px;border:1px solid color-mix(in srgb,white 18%,transparent);background:var(--theme-preview-space,linear-gradient(135deg,#9ecaff,#3157d6,#0e1427))}.ds-theme-chip strong{display:block;font-size:.78rem}.ds-theme-chip small{display:block;color:var(--button-glass-muted-foreground,#a6afbf);font-size:.64rem;text-transform:uppercase;letter-spacing:.08em}"
+    },
+    {
+      "name": "Converter Panel",
+      "kind": "card",
+      "refersTo": "card-panel",
+      "description": "Primary glass panel for the conversion workflow.",
+      "html": "<section class=\"ds-converter-panel\"><span class=\"ds-panel-label\">Quick convert</span><h3>Turn a YouTube video into MP3 or MP4</h3><p>Paste a link, choose a format, and convert.</p></section>",
+      "css": ".ds-converter-panel{position:relative;max-width:520px;padding:var(--space-5,1.25rem);border-radius:1.5rem;border:1px solid color-mix(in srgb,var(--hero-border,#788fb4) 82%,transparent);background:radial-gradient(circle at top right,color-mix(in srgb,var(--hero-orb-soft,rgba(16,185,129,.22)) 82%,transparent),transparent 30%),linear-gradient(180deg,color-mix(in srgb,white 8%,transparent),transparent 24%),linear-gradient(165deg,color-mix(in srgb,var(--card,#0f1114) 94%,transparent),color-mix(in srgb,var(--hero-surface-strong,#080c18) 92%,transparent));color:var(--foreground,#f3f5f7);box-shadow:0 24px 58px color-mix(in srgb,var(--glass-shadow,rgba(0,0,0,.22)) 100%,transparent),0 1px 0 var(--glass-highlight,rgba(255,255,255,.08)) inset}.ds-panel-label{display:inline-flex;color:var(--muted-foreground,#7e8695);font:700 .7rem var(--font-sans,system-ui);letter-spacing:.08em;text-transform:uppercase}.ds-converter-panel h3{margin:.4rem 0 .35rem;font:800 1.3rem/1.05 var(--font-sans,system-ui);letter-spacing:-.04em}.ds-converter-panel p{margin:0;color:var(--muted-foreground,#7e8695);font:400 .86rem/1.6 var(--font-sans,system-ui)}"
+    },
+    {
+      "name": "Discovery Video Card",
+      "kind": "card",
+      "refersTo": "card-panel",
+      "description": "Compact music discovery card with thumbnail, rank, metadata, and action buttons.",
+      "html": "<article class=\"ds-video-card\"><div class=\"ds-video-thumb\"><span>3:21</span></div><div class=\"ds-video-info\"><small>#01 Trending</small><h4>Preview-ready track title</h4><p>Artist name</p><div><button>Preview</button><button>Convert</button></div></div></article>",
+      "css": ".ds-video-card{width:206px;overflow:hidden;border-radius:1.15rem;border:1px solid color-mix(in srgb,var(--border,#202227) 86%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--foreground,#f3f5f7) 3%,transparent),transparent 24%),color-mix(in srgb,var(--card,#0f1114) 96%,transparent);color:var(--foreground,#f3f5f7);transition:border-color var(--transition-base,200ms ease),box-shadow var(--transition-base,200ms ease),transform var(--transition-base,200ms ease)}.ds-video-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-card-hover,0 18px 40px -14px rgba(0,0,0,.6))}.ds-video-thumb{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--sky,#0da2e7),var(--emerald,#10b77f));overflow:hidden}.ds-video-thumb span{position:absolute;right:.4rem;bottom:.4rem;padding:.1rem .35rem;border-radius:4px;background:var(--surface-scrim-strong,rgba(0,0,0,.75));font:500 .6875rem var(--font-mono,monospace)}.ds-video-info{padding:.8rem .85rem .9rem}.ds-video-info small{color:color-mix(in srgb,var(--sky,#0da2e7) 42%,var(--foreground,#f3f5f7));font:700 .65rem var(--font-mono,monospace);letter-spacing:.08em;text-transform:uppercase}.ds-video-info h4{margin:.35rem 0 .2rem;font:700 .9rem/1.35 var(--font-sans,system-ui)}.ds-video-info p{margin:0;color:var(--muted-foreground,#7e8695);font:.74rem var(--font-sans,system-ui)}.ds-video-info div{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.7rem}.ds-video-info button{min-height:var(--control-height-sm,2.25rem);border-radius:var(--radius,.625rem);border:1px solid var(--surface-border,rgba(120,143,180,.26));background:var(--surface-glass-strong,rgba(8,12,24,.88));color:var(--button-glass-foreground,#f3f5f7);font:700 .7rem var(--font-sans,system-ui)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Cool Waiting Room",
+    "overview": "YT Converter is a product UI first: the conversion task stays dominant, and everything else supports the wait. The visual system should feel playful, fast, and music-oriented without becoming a noisy media portal. Themes add atmosphere, but the URL field, format toggle, progress state, and download action always remain the easiest things to read.\n\nThe system uses dark glass panels by default, bright semantic accents, rounded controls, and compact labels. Secondary features such as games, discovery, previews, lyrics, and the time-sync studio should feel like useful rooms beside the main workflow, not competing attractions in the first viewport.\n\nIt explicitly rejects interfaces that feel overloaded, noisy, or visually exhausting. If a screen starts to feel like an arcade page, a cluttered download portal, or a banner-heavy media site, it has broken the product contract.",
+    "keyCharacteristics": [
+      "Task-first converter layout with secondary tools kept opt-in.",
+      "Themed atmosphere through semantic tokens, not hardcoded component palettes.",
+      "Rounded glass surfaces with visible borders, restrained glows, and readable text.",
+      "Music-energy details in previews, lyrics, and waiting states.",
+      "Fast state feedback with reduced-motion fallbacks."
+    ],
+    "rules": [
+      { "name": "The Semantic Theme Rule", "body": "Components consume `css/base.css` semantic tokens and theme overrides in `css/themes/*.css`; never hardcode a palette inside component CSS when a semantic token exists.", "section": "colors" },
+      { "name": "The Accent Budget Rule", "body": "Accents mark primary actions, selected state, progress, success, warning, and errors. They are not wallpaper.", "section": "colors" },
+      { "name": "The One Sans Rule", "body": "Do not add another display family for product UI. Use Manrope weight, size, and spacing before introducing a new font.", "section": "typography" },
+      { "name": "The Small Uppercase Rule", "body": "Uppercase labels stay short. They are for state and structure, not sentences.", "section": "typography" },
+      { "name": "The Lift Means State Rule", "body": "Hover lift and extra shadow only appear on interactive surfaces. Static decoration should stay flat enough that users know where to click.", "section": "elevation" },
+      { "name": "The Glass With Restraint Rule", "body": "Blur and glow are allowed because the product already uses glass themes, but every glass surface needs readable text, a visible border, and a clear purpose.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the URL input, format choice, and Convert action dominant in the first viewport.",
+      "Do use `css/base.css` spacing, radius, focus, control, and motion tokens before adding one-off values.",
+      "Do verify every touched control in `space`, `green`, `frutiger-aero`, and `sunshine`.",
+      "Do keep games, discovery, lyrics, and studio affordances visibly secondary until the user chooses them.",
+      "Do use explicit transition properties and preserve reduced-motion behavior."
+    ],
+    "donts": [
+      "Don't create an interface that feels overloaded, noisy, or visually exhausting.",
+      "Don't make the product look like a cluttered download portal, a banner-heavy media site, or an arcade page where games and effects compete with conversion.",
+      "Don't hardcode component palettes when semantic theme tokens already exist.",
+      "Don't use `transition: all`.",
+      "Don't use colored side-stripe borders, gradient text, or decorative motion that does not communicate state.",
+      "Don't let inactive states use full-saturation accents or unreadable muted text."
+    ]
+  }
+}

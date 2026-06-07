@@ -566,10 +566,10 @@ const setSidecarMode = (mode) => {
         elements.karaokeStatusBadge.dataset.tone = 'ready';
     }
     if (elements.karaokeStatusTitle) {
-        elements.karaokeStatusTitle.textContent = 'Open Time Sync Studio separately.';
+        elements.karaokeStatusTitle.textContent = 'Use Studio when timing matters.';
     }
     if (elements.karaokeStatusDetail) {
-        elements.karaokeStatusDetail.textContent = 'Use the converter here, or open the studio for detailed lyric timing.';
+        elements.karaokeStatusDetail.textContent = 'Convert here, then open Studio for captions, lyric points, and export.';
     }
 };
 

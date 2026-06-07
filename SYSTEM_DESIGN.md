@@ -54,6 +54,7 @@ Frontend pattern:
 
 ### Deployment Considerations
 - **Dependency Updates**: Whenever a feature adds npm packages, system libraries, environment variables, or build steps, update the matching package files, Dockerfile, configuration docs, and deployment notes together.
+- **Dockerfile updates**: Review and update the Dockerfile whenever runtime dependencies, build steps, environment assumptions, or static asset generation behavior changes.
 - **Container Build**: Ensure all new system libraries (for example via `apk`) are included in the container build.
 
 ---

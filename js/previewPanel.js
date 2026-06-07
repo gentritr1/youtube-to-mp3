@@ -126,7 +126,7 @@ export const updatePreviewMetadata = ({ elements, state, video, emitPreviewState
 
     state.previewSource = video.previewSource === 'batch' ? 'batch' : 'popular';
     if (elements?.previewSourceBadge) {
-        elements.previewSourceBadge.textContent = state.previewSource === 'batch' ? 'Batch Preview' : 'Preview';
+        elements.previewSourceBadge.textContent = state.previewSource === 'batch' ? 'Batch Queue' : 'Preview';
     }
     state.previewVideoId = video.videoId;
     emitPreviewStateChange();

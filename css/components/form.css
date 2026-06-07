@@ -4,14 +4,16 @@
 .form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-3);
 }
 
 .converter-card-header {
     display: grid;
-    gap: var(--space-4);
-    margin-bottom: var(--space-5);
-    padding-bottom: var(--space-4);
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid color-mix(in srgb, var(--hero-border) 68%, transparent);
 }
 
@@ -58,7 +60,7 @@
 .converter-step {
     display: inline-flex;
     align-items: center;
-    padding: 0.45rem 0.7rem;
+    padding: 0.38rem 0.65rem;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--hero-border) 70%, transparent);
     background: color-mix(in srgb, var(--secondary) 74%, transparent);
@@ -298,8 +300,21 @@
 }
 
 @media (max-width: 720px) {
+    .converter-card-header {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+        padding-bottom: var(--space-3);
+    }
+
     .converter-card-title {
         font-size: 1.14rem;
+    }
+
+    .converter-card-subtitle,
+    .converter-card-steps {
+        display: none;
     }
 
     .form-section-label {

@@ -9,6 +9,8 @@ Use this document for:
 - how to add new features without increasing coupling
 - near-term extension guidance
 
+Use `docs/DESIGN_DECISION_HISTORY.md` for visual before/after records and product UI decisions that need screenshot context.
+
 Use `docs/TESTING_STATUS.md` for transient build and environment notes only.
 
 ## Table of Contents
@@ -451,6 +453,12 @@ It includes:
 
 Hero decoration should stay static or very calm so it does not compete with conversion.
 
+The right-side hero preview is a compact conversion teaser, not the full discovery audio preview. Keep it useful and enticing, but cap its desktop column so it does not inflate the hero height. On large screens, the hero should feel like conversion context rather than a billboard: keep the converter input and Convert action reachable in the first viewport at both the historical comparison size (`1491x851`) and a standard large desktop size (`1536x900`). On mobile, remove secondary teaser details such as the MP3/MP4 badge and progress rail before letting the converter input drop below the first viewport. See [DESIGN_DECISION_HISTORY.md](./DESIGN_DECISION_HISTORY.md) for the before/after record.
+
+The theme switcher remains available in the hero, but mobile uses compact swatch-style buttons with visually hidden labels. Preserve the accessible button text when changing this control.
+
+The desktop sidecar is supportive context, not a second primary card. Keep the converter column visibly wider, prevent the sidecar card from stretching to create empty space, and keep Studio/Arcade/Batch content compact enough to sit beside the converter without matching every pixel of its height.
+
 ### Converter Flow
 
 The converter flow is split into:
@@ -462,9 +470,11 @@ The converter flow is split into:
 
 Themed converter visuals should be driven by shared tokens and animation registries, not embedded inline in `app.js`.
 
-When batch mode is enabled, the sidecar should switch to batch context instead of continuing to promote unrelated studio/arcade content. Keep the queue count, next action, and progress/result state visible without creating a separate visual system.
+When batch mode is enabled, the sidecar should switch to batch context instead of continuing to promote unrelated studio/arcade content. Keep the queue count, next action, and progress/result state visible without creating a separate visual system. Use compact workflow rows for batch guidance; avoid large pill rows that make the sidecar feel wide and empty.
 
 Batch active states use dedicated text tokens because each theme places the active batch controls on different surface brightness. Use `--batch-active-foreground`, `--batch-kicker-foreground`, `--batch-muted-foreground`, `--batch-step-foreground`, and `--batch-action-foreground` instead of borrowing `--primary-foreground` or `--muted-foreground` directly for batch-specific filled/tinted controls. Verify Green and Frutiger Aero especially, because one is dark with saturated green fills and the other is light with pale blue fills.
+
+Sunshine should read as warm amber, peach, and clay. Do not let cool blue or cyan accents leak into the hero theme switcher, conversion teaser, primary button gradient, or batch assistant unless the component is explicitly previewing a non-Sunshine theme in a separate context. Primary, selected, and launch-style Sunshine buttons may use a restrained warm radiance effect, but the glow must remain theme-scoped, avoid layout shifts, and stop animating under `prefers-reduced-motion: reduce`.
 
 ### Karaoke Flow
 
@@ -564,6 +574,10 @@ node scripts/sync-service-worker-assets.mjs
 ```
 
 This keeps the service worker manifest aligned with reachable frontend assets and prevents stale PWA caches from missing new modules.
+
+The generated service-worker version hashes asset contents, not just asset paths. Keep that behavior intact: a CSS-only or HTML-only UI change must produce a new `service-worker-assets.js` version so returning browsers do not keep stale static files. The app registers the worker with `updateViaCache: 'none'` for the same reason.
+
+The service worker serves CSS and JS with a network-first strategy while online, then falls back to cache if the network fails. Do not move styles or scripts back to the cache-first static asset branch; that can make returning browser sessions keep old layouts after a UI-only change.
 
 ### 7. Keep files under 500 lines
 

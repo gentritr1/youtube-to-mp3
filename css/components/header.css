@@ -4,9 +4,9 @@
     --hero-chip-surface-strong: color-mix(in srgb, var(--hero-orb) 12%, var(--surface-overlay));
     width: 100%;
     display: grid;
-    gap: 1.15rem;
+    gap: var(--space-3);
     text-align: left;
-    padding: 1.35rem 1.4rem;
+    padding: var(--space-4);
     border: 1px solid color-mix(in srgb, var(--hero-border) 82%, transparent);
     border-radius: 1.6rem;
     background:
@@ -34,21 +34,21 @@
 .hero-header-top {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    align-items: start;
+    gap: var(--space-4);
+    align-items: center;
     flex-wrap: wrap;
 }
 
 .hero-main {
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
-    gap: 1.2rem;
-    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
+    gap: var(--space-4);
+    align-items: start;
 }
 
 .hero-content {
     display: grid;
-    gap: 1.05rem;
+    gap: var(--space-3);
     align-content: start;
 }
 
@@ -81,16 +81,16 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 0.8rem;
+    gap: var(--space-3);
     margin: 0;
 }
 
 .logo-badge {
-    width: 3rem;
-    height: 3rem;
+    width: 2.65rem;
+    height: 2.65rem;
     display: grid;
     place-items: center;
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     color: var(--foreground);
     border: 1px solid color-mix(in srgb, var(--hero-border) 85%, transparent);
     background:
@@ -113,16 +113,16 @@
 }
 
 .logo-text {
-    font-size: clamp(1.5rem, 2vw, 2rem);
+    font-size: 1.55rem;
     font-weight: 800;
-    letter-spacing: -0.045em;
-    line-height: 0.95;
+    letter-spacing: -0.04em;
+    line-height: 1;
     margin: 0;
 }
 
 .logo-kicker {
     color: var(--muted-foreground);
-    font-size: 0.82rem;
+    font-size: 0.72rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 700;
@@ -130,23 +130,24 @@
 
 .hero-copy {
     display: grid;
-    gap: 0.6rem;
+    gap: var(--space-2);
     max-width: 58rem;
     position: relative;
     z-index: 1;
 }
 
 .hero-title {
-    font-size: clamp(2rem, 4.4vw, 4.35rem);
-    line-height: 0.95;
-    letter-spacing: -0.06em;
+    font-size: 3rem;
+    line-height: 1.03;
+    letter-spacing: -0.035em;
     margin: 0;
-    max-width: 12ch;
+    max-width: 20ch;
+    text-wrap: balance;
 }
 
 .tagline {
-    font-size: 1rem;
-    line-height: 1.65;
+    font-size: 0.95rem;
+    line-height: 1.5;
     color: var(--muted-foreground);
     max-width: 48rem;
 }
@@ -185,6 +186,104 @@
 .hero-art-card > * {
     position: relative;
     z-index: 1;
+}
+
+.hero-art-card-teaser {
+    min-height: auto;
+    gap: 1.05rem;
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--emerald) 18%, transparent), transparent 42%),
+        linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 30%),
+        color-mix(in srgb, var(--hero-surface-strong) 90%, transparent);
+    box-shadow:
+        0 20px 44px color-mix(in srgb, var(--glass-shadow) 42%, transparent),
+        0 1px 0 color-mix(in srgb, white 16%, transparent) inset;
+}
+
+.teaser-shell {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-3);
+    align-items: center;
+    min-height: 4.25rem;
+    padding: 0.85rem;
+    border-radius: var(--radius-xl);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 72%, transparent);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 80%),
+        color-mix(in srgb, var(--secondary) 62%, transparent);
+}
+
+.teaser-icon {
+    display: grid;
+    place-items: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--hero-orb) 19%, var(--surface-overlay));
+    color: var(--foreground);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--hero-orb) 14%, transparent);
+}
+
+.teaser-copy {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.teaser-copy span {
+    color: var(--muted-foreground);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.teaser-copy strong {
+    color: var(--foreground);
+    font-size: 1.02rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.teaser-copy small {
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
+.teaser-format {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 4.4rem;
+    min-height: 2rem;
+    padding: 0.35rem 0.62rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid color-mix(in srgb, var(--hero-orb) 42%, transparent);
+    background: color-mix(in srgb, var(--hero-orb) 19%, var(--surface-overlay));
+    color: var(--foreground);
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+.teaser-meter {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+}
+
+.teaser-meter-line {
+    height: 0.35rem;
+    border-radius: var(--radius-pill);
+    background:
+        linear-gradient(90deg, var(--hero-orb), color-mix(in srgb, var(--emerald) 76%, var(--sky))) 0 0 / 61% 100% no-repeat,
+        color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 .hero-conversion-header {
@@ -339,12 +438,43 @@
 
 @media (max-width: 720px) {
     .hero-header {
-        padding: 1.15rem;
+        gap: var(--space-3);
+        padding: var(--space-4);
         border-radius: 1.3rem;
     }
 
     .hero-main {
         grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+
+    .hero-header-top {
+        gap: var(--space-3);
+    }
+
+    .hero-content,
+    .hero-copy {
+        gap: var(--space-3);
+    }
+
+    .logo-badge {
+        width: 2.6rem;
+        height: 2.6rem;
+    }
+
+    .hero-title {
+        font-size: clamp(1.8rem, 8.5vw, 2.65rem);
+        max-width: 14ch;
+    }
+
+    .tagline {
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    .hero-art-card-teaser {
+        gap: var(--space-2);
+        padding: var(--space-3);
     }
 
     .hero-conversion-flow,
@@ -362,5 +492,28 @@
 
     .hero-output-badge {
         width: fit-content;
+    }
+
+    .teaser-shell {
+        grid-template-columns: auto 1fr;
+        min-height: auto;
+        padding: var(--space-3);
+    }
+
+    .teaser-icon {
+        width: 2.35rem;
+        height: 2.35rem;
+    }
+
+    .teaser-copy small {
+        display: none;
+    }
+
+    .teaser-format {
+        display: none;
+    }
+
+    .teaser-meter {
+        display: none;
     }
 }

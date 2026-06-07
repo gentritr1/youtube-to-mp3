@@ -146,7 +146,34 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Best Practice: Cache First for static assets like scripts, styles, and images
+    const isFreshUiAsset = ['style', 'script', 'worker'].includes(event.request.destination)
+        || pathname.endsWith('.css')
+        || pathname.endsWith('.js');
+
+    if (isFreshUiAsset) {
+        event.respondWith(
+            fetch(event.request).then((networkResponse) => {
+                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                    return networkResponse;
+                }
+
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache);
+                });
+                return networkResponse;
+            }).catch((err) => {
+                console.log('[Service Worker] UI asset fetch failed.', err);
+                return caches.match(event.request).then((cacheRes) => {
+                    if (cacheRes) return cacheRes;
+                    return new Response('', { status: 503, statusText: 'Service Unavailable' });
+                });
+            })
+        );
+        return;
+    }
+
+    // Cache first for images, icons, and other non-code static assets.
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {

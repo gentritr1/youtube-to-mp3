@@ -106,8 +106,24 @@ export const buildAssetManifest = () => {
     collectManifestAssets(MANIFEST_FILE, assets);
 
     const sortedAssets = [...assets].sort();
+    const assetFingerprints = sortedAssets.map((assetPath) => {
+        const relativePath = assetPath === '/'
+            ? 'index.html'
+            : fromWebPath(assetPath);
+        let digest = 'missing';
+
+        try {
+            digest = createHash('sha256')
+                .update(read(relativePath))
+                .digest('hex');
+        } catch (_error) {
+            digest = 'unreadable';
+        }
+
+        return `${assetPath}:${digest}`;
+    });
     const version = createHash('sha256')
-        .update(JSON.stringify(sortedAssets))
+        .update(JSON.stringify(assetFingerprints))
         .digest('hex')
         .slice(0, 10);
 

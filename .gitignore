@@ -11,6 +11,9 @@ npm-debug.log*
 # User requested
 *.630
 
+# Impeccable local browser/live iteration transcripts
+.impeccable/live/sessions/
+
 # Runtime data
 tasks.json
 tasks.db

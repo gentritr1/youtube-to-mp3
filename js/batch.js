@@ -200,8 +200,8 @@ function createBatchUI() {
         batchContext.setAttribute('aria-live', 'polite');
         batchContext.innerHTML = `
             <div class="batch-context-copy">
-                <span class="batch-context-kicker">Batch mode</span>
-                <strong class="batch-context-title">Build a queue on the left.</strong>
+                <span class="batch-context-kicker">Batch queue</span>
+                <strong class="batch-context-title">Collect links, then convert once.</strong>
                 <span id="batch-context-detail" class="batch-context-detail">Paste a video link and add it to this batch.</span>
             </div>
             <div class="batch-context-meter" aria-hidden="true">
@@ -209,9 +209,9 @@ function createBatchUI() {
                 <span class="batch-context-total">/${batchState.maxItems}</span>
             </div>
             <ul class="batch-context-steps" aria-label="Batch workflow">
-                <li>Paste links</li>
-                <li>Add to queue</li>
-                <li>Convert together</li>
+                <li><span>1</span><strong>Paste links</strong></li>
+                <li><span>2</span><strong>Add to queue</strong></li>
+                <li><span>3</span><strong>Convert together</strong></li>
             </ul>
             <button type="button" id="batch-context-jump" class="batch-context-jump">Review queue</button>
         `;
@@ -578,7 +578,7 @@ function updateBatchContext() {
     if (batchElements.sidecarEyebrow) {
         batchElements.sidecarEyebrow.textContent = batchState.enabled
             ? 'Batch assistant'
-            : batchElements.sidecarEyebrow.dataset.defaultText || 'Standalone tool';
+            : batchElements.sidecarEyebrow.dataset.defaultText || 'Timing tools';
     }
 
     if (batchElements.sidecarTitle) {

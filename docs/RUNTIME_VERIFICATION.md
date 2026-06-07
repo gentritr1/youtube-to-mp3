@@ -21,12 +21,14 @@ Open `http://localhost:3000` after `npm start`.
 - Lyrics/studio: load a captioned video, verify lyric timing events update the studio, run autosync, nudge a point, undo, and export JSON.
 - Review player: replace the selected YouTube media source while the previous player is loading and verify only the latest player remains active.
 - Mini-games: launch Snake and Guess the Track from the arcade sidecar and verify theme colors update after switching themes.
-- Service worker: on localhost, verify the service worker only registers for allowed local origins and does not interfere with fresh asset loads.
+- Service worker: on localhost, verify the service worker only registers for allowed local origins, registers with `updateViaCache: 'none'`, serves CSS/JS network-first while online, and does not keep stale CSS/HTML after a UI-only asset change.
 
 ## Theme And Layout Pass
 
 - Themes: verify `space`, `green`, `frutiger-aero`, and `sunshine`.
-- Sunshine theme: verify active converter buttons, batch actions, popular genre tabs, and track tags use warm amber/peach/teal accents rather than harsh red fills.
+- Hero/converter first viewport: verify the hero preview remains compact, the URL input is visible without scrolling on desktop, narrow desktop/tablet, and mobile, and the Convert action remains visible at the historical `1491x851` comparison size plus a large `1536x900` desktop viewport.
+- Mobile theme switcher: verify the swatch controls stay one row, remain keyboard focusable, and keep accessible names despite visually hidden labels.
+- Sunshine theme: verify active converter buttons, batch actions, popular genre tabs, track tags, hero theme swatches, and conversion teaser accents use warm amber/peach/clay accents rather than cool blue/cyan or harsh red fills. Verify primary, selected, preview, and game-launch buttons have a controlled warm radiance in normal motion and become static under `prefers-reduced-motion: reduce`.
 - Viewports: verify one mobile width, one tablet width, and desktop.
 - Motion: verify normal motion and `prefers-reduced-motion: reduce`.
 - States: verify idle, loading, success, error, empty, active, inactive, popup, and panel states.
@@ -35,8 +37,8 @@ Open `http://localhost:3000` after `npm start`.
 
 - Keyboard focus: tab through converter input, paste, format, convert, theme options, download links, batch controls, discovery preview controls, sidecar tabs, and floating game controls; verify the focus ring is visible in all four themes.
 - Reduced motion: enable `prefers-reduced-motion: reduce` and verify decorative animation, shimmer, hover lift, lyric/card motion, and game-control motion are calmed while loading, progress, panel switches, and content reveal states still complete.
-- Hero reduced motion: verify the hero conversion preview renders as static decoration with no looping decorative scene motion.
-- Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar tab wrapping, batch context wrapping, batch action rows, and download buttons.
+- Hero reduced motion: verify the hero conversion teaser renders as static, useful conversion context with no looping decorative scene motion.
+- Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar proportions, sidecar tab wrapping, batch context wrapping, batch action rows, and download buttons.
 - Converter states: verify idle, pasted URL, active format, loading, progress, success/download, disabled, and error states.
 - Conversion success: verify the download button is visible immediately, or within roughly 500ms, after a successful conversion and is not blocked by a staged decorative reveal.
 - Format toggle semantics: inspect MP3/MP4 buttons and verify the selected button exposes `aria-pressed="true"` while the other exposes `aria-pressed="false"`.

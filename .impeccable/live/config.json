@@ -1,0 +1,6 @@
+{
+  "files": ["index.html", "time-sync-studio.html"],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

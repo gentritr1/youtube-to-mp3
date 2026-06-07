@@ -135,6 +135,19 @@ describe('service worker manifest', () => {
         }
     });
 
+    it('fetches UI code and styles before falling back to cached static assets', () => {
+        const source = readFileSync(SERVICE_WORKER_PATH, 'utf-8');
+        const freshAssetBranch = source.indexOf('if (isFreshUiAsset)');
+        const cacheFirstBranch = source.indexOf('Cache first for images, icons, and other non-code static assets.');
+
+        expect(source).toContain("['style', 'script', 'worker'].includes(event.request.destination)");
+        expect(source).toContain("pathname.endsWith('.css')");
+        expect(source).toContain("pathname.endsWith('.js')");
+        expect(freshAssetBranch).toBeGreaterThan(-1);
+        expect(cacheFirstBranch).toBeGreaterThan(-1);
+        expect(freshAssetBranch).toBeLessThan(cacheFirstBranch);
+    });
+
     it('generated manifest covers every local asset reachable from entry points', () => {
         const { assets: staticAssets } = parseGeneratedAssets();
         const expectedAssets = new Set<string>(['/', '/index.html', '/time-sync-studio.html']);

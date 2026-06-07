@@ -163,6 +163,10 @@ export const renderPopularVideoCarousel = ({
         const video = genre.videos.find((entry) => entry.videoId === videoId);
         const videoIsLive = card.dataset.isLive === 'true';
 
+        card.addEventListener('click', () => {
+            onConvertVideo(video);
+        });
+
         const previewBtn = card.querySelector('[data-action="preview"]');
         if (previewBtn && !videoIsLive) {
             previewBtn.addEventListener('click', (event) => {

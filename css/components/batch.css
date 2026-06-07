@@ -114,7 +114,7 @@
         "jump jump";
     gap: var(--space-3);
     align-items: center;
-    padding: var(--space-4);
+    padding: var(--space-3);
     border-radius: var(--radius-xl);
     border: 1px solid color-mix(in srgb, var(--batch-accent) 34%, var(--surface-outline));
     background:
@@ -132,6 +132,7 @@
 
 .karaoke-card.is-batch-mode {
     align-content: start;
+    gap: var(--space-3);
     min-height: auto;
 }
 
@@ -166,7 +167,7 @@
 
 .batch-context-title {
     color: var(--foreground);
-    font-size: 0.95rem;
+    font-size: 1rem;
     line-height: 1.35;
 }
 
@@ -181,7 +182,7 @@
     display: inline-flex;
     align-items: baseline;
     justify-content: center;
-    min-width: 4.5rem;
+    min-width: 3.75rem;
     padding: 0.6rem 0.75rem;
     border-radius: var(--radius-lg);
     border: 1px solid color-mix(in srgb, var(--batch-accent) 30%, var(--hero-border));
@@ -191,7 +192,7 @@
 .batch-context-steps {
     grid-area: steps;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: var(--space-2);
     list-style: none;
     margin: 0;
@@ -201,16 +202,39 @@
 .batch-context-steps li {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    gap: var(--space-2);
     min-height: var(--control-height-sm);
-    padding: 0.45rem 0.55rem;
-    border-radius: var(--radius-pill);
+    padding: 0.42rem var(--space-2);
+    border-radius: var(--radius);
     border: 1px solid color-mix(in srgb, var(--batch-accent) 24%, var(--hero-border));
     background: color-mix(in srgb, var(--batch-accent) 9%, var(--surface-overlay));
     color: var(--batch-step-foreground);
     font-size: 0.72rem;
     font-weight: 800;
-    text-align: center;
+    text-align: left;
+}
+
+.batch-context-steps li span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--batch-accent) 18%, var(--surface-overlay-strong));
+    border: 1px solid color-mix(in srgb, var(--batch-accent) 28%, transparent);
+    color: var(--batch-step-foreground);
+    font-size: 0.68rem;
+    flex: 0 0 auto;
+}
+
+.batch-context-steps li strong {
+    min-width: 0;
+    color: var(--batch-step-foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .batch-context-count {
@@ -234,7 +258,7 @@
     justify-content: center;
     min-height: var(--control-height-sm);
     padding: 0.5rem var(--control-padding-x);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius);
     border: 1px solid color-mix(in srgb, var(--batch-accent) 42%, transparent);
     background: color-mix(in srgb, var(--batch-accent) 14%, var(--surface-overlay-strong));
     color: var(--batch-action-foreground);

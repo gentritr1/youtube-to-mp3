@@ -23,8 +23,8 @@
     --amber-soft: hsl(38 78% 74%);
     --rose: hsl(11 86% 62%);
     --rose-soft: hsl(10 68% 78%);
-    --sky: hsl(193 78% 58%);
-    --sky-soft: hsl(192 70% 80%);
+    --sky: hsl(23 82% 58%);
+    --sky-soft: hsl(26 86% 82%);
     --violet: hsl(262 72% 68%);
     --violet-soft: hsl(262 54% 82%);
     --hero-surface: rgba(255, 241, 228, 0.78);
@@ -35,7 +35,7 @@
     --hero-glow: rgba(245, 196, 98, 0.3);
     --hero-headlight: hsl(48 100% 72%);
     --ambient-primary: rgba(251, 146, 60, 0.22);
-    --ambient-secondary: rgba(56, 189, 248, 0.12);
+    --ambient-secondary: rgba(232, 141, 94, 0.14);
     --glass-highlight: rgba(255, 255, 255, 0.42);
     --glass-shadow: rgba(163, 88, 46, 0.14);
     --liquid-tint: rgba(255, 204, 153, 0.22);
@@ -47,13 +47,13 @@
     --success-border: rgba(74, 222, 128, 0.34);
     --error-surface: rgba(248, 113, 113, 0.14);
     --error-border: rgba(248, 113, 113, 0.34);
-    --button-primary: linear-gradient(135deg, rgba(207, 150, 82, 0.94), rgba(247, 205, 111, 0.84) 54%, rgba(80, 174, 179, 0.72));
+    --button-primary: linear-gradient(135deg, rgba(207, 150, 82, 0.94), rgba(247, 205, 111, 0.84) 54%, rgba(232, 141, 94, 0.78));
     --button-primary-foreground: hsl(24 42% 16%);
     --button-secondary: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 235, 214, 0.3)), rgba(255, 248, 238, 0.36);
     --button-secondary-foreground: hsl(20 38% 22%);
     --batch-accent: hsl(38 72% 55%);
     --batch-accent-soft: rgba(245, 194, 122, 0.26);
-    --batch-accent-secondary: rgba(71, 178, 184, 0.24);
+    --batch-accent-secondary: rgba(232, 141, 94, 0.22);
     --batch-active-foreground: hsl(24 42% 16%);
     --batch-kicker-foreground: hsl(37 58% 34%);
     --batch-muted-foreground: hsl(24 24% 36%);
@@ -81,10 +81,38 @@
     --preview-playhead-bg: linear-gradient(180deg, rgba(255, 246, 232, 0.92), rgba(249, 115, 22, 0.96) 52%, rgba(251, 191, 36, 0.82));
     --preview-energy-start: hsl(35 62% 48%);
     --preview-energy-mid: hsl(39 88% 58%);
-    --preview-energy-end: hsl(184 48% 44%);
+    --theme-preview-space: linear-gradient(135deg, hsl(40 94% 78%), hsl(30 66% 57%) 55%, hsl(22 44% 28%));
+    --theme-preview-green: linear-gradient(135deg, hsl(48 82% 78%), hsl(36 72% 58%) 55%, hsl(24 44% 31%));
+    --theme-preview-frutiger: linear-gradient(135deg, hsl(42 100% 88%), hsl(28 80% 68%) 55%, hsl(18 50% 38%));
+    --theme-preview-sunshine: linear-gradient(135deg, hsl(42 100% 91%), hsl(36 72% 58%) 52%, hsl(24 58% 46%));
+    --preview-energy-end: hsl(18 64% 48%);
     --preview-energy-glow: rgba(204, 150, 82, 0.72);
     --preview-energy-scan: rgba(251, 191, 36, 0.34);
     --preview-energy-rest: rgba(255, 233, 204, 0.12);
+    --sunshine-radiance-soft:
+        0 0 0 1px rgba(255, 248, 238, 0.42) inset,
+        0 12px 24px rgba(163, 88, 46, 0.1),
+        0 0 18px rgba(247, 205, 111, 0.26),
+        0 0 34px rgba(232, 141, 94, 0.16);
+    --sunshine-radiance-soft-peak:
+        0 0 0 1px rgba(255, 248, 238, 0.5) inset,
+        0 14px 28px rgba(163, 88, 46, 0.12),
+        0 0 24px rgba(247, 205, 111, 0.36),
+        0 0 48px rgba(232, 141, 94, 0.22);
+    --sunshine-radiance-strong:
+        0 0 0 1px rgba(255, 248, 238, 0.5) inset,
+        0 18px 34px rgba(163, 88, 46, 0.14),
+        0 0 26px rgba(247, 205, 111, 0.34),
+        0 0 58px rgba(249, 115, 22, 0.2);
+    --sunshine-radiance-strong-peak:
+        0 0 0 1px rgba(255, 250, 242, 0.58) inset,
+        0 20px 40px rgba(163, 88, 46, 0.16),
+        0 0 36px rgba(247, 205, 111, 0.44),
+        0 0 74px rgba(249, 115, 22, 0.27);
+    --sunshine-radiance-hover:
+        0 0 0 1px rgba(255, 248, 238, 0.42) inset,
+        0 14px 26px rgba(163, 88, 46, 0.12),
+        0 0 24px rgba(247, 205, 111, 0.22);
 }
 
 :root[data-theme="sunshine"] .preview-player {
@@ -152,7 +180,61 @@
 :root[data-theme="sunshine"] .batch-mode-btn.active::before {
     background:
         linear-gradient(135deg, rgba(246, 187, 122, 0.28), transparent 42%),
-        linear-gradient(120deg, rgba(247, 205, 111, 0.36), rgba(71, 178, 184, 0.24));
+        linear-gradient(120deg, rgba(247, 205, 111, 0.36), rgba(232, 141, 94, 0.24));
+}
+
+:root[data-theme="sunshine"] :is(
+    .format-btn.active,
+    .batch-mode-btn.active,
+    .theme-option.active,
+    .karaoke-tab.active,
+    .studio-teaser-link,
+    .arcade-launch-btn,
+    .mini-game-btn.active,
+    .batch-context-jump,
+    .new-batch-btn
+) {
+    --sunshine-button-shadow: var(--sunshine-radiance-soft);
+    --sunshine-button-shadow-peak: var(--sunshine-radiance-soft-peak);
+    box-shadow: var(--sunshine-button-shadow);
+    animation: sunshineButtonRadiate 3.4s ease-in-out infinite;
+}
+
+:root[data-theme="sunshine"] :is(
+    .convert-btn:not(:disabled),
+    .convert-batch-btn:not(:disabled),
+    .download-btn,
+    .download-item-btn,
+    .preview-play-btn,
+    .preview-convert-btn
+) {
+    --sunshine-button-shadow: var(--sunshine-radiance-strong);
+    --sunshine-button-shadow-peak: var(--sunshine-radiance-strong-peak);
+    box-shadow: var(--sunshine-button-shadow);
+    animation: sunshineButtonRadiate 3.2s ease-in-out infinite;
+}
+
+:root[data-theme="sunshine"] :is(
+    .paste-btn:hover,
+    .format-btn:hover:not(.active),
+    .theme-option:hover:not(.active),
+    .clear-btn:hover:not(:disabled),
+    .preview-lyrics-btn:hover,
+    .karaoke-tab:hover:not(.active),
+    .mini-game-btn:hover:not(.active),
+    .game-minimize-btn:hover
+) {
+    box-shadow: var(--sunshine-radiance-hover);
+}
+
+@keyframes sunshineButtonRadiate {
+    0%, 100% {
+        box-shadow: var(--sunshine-button-shadow);
+    }
+
+    50% {
+        box-shadow: var(--sunshine-button-shadow-peak);
+    }
 }
 
 :root[data-theme="sunshine"] .preview-player {
@@ -207,4 +289,27 @@
 
 :root[data-theme="sunshine"] .theme-charm-sunshine {
     display: inline-flex;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root[data-theme="sunshine"] :is(
+        .format-btn.active,
+        .batch-mode-btn.active,
+        .theme-option.active,
+        .karaoke-tab.active,
+        .studio-teaser-link,
+        .arcade-launch-btn,
+        .mini-game-btn.active,
+        .batch-context-jump,
+        .new-batch-btn,
+        .convert-btn:not(:disabled),
+        .convert-batch-btn:not(:disabled),
+        .download-btn,
+        .download-item-btn,
+        .preview-play-btn,
+        .preview-convert-btn
+    ) {
+        animation: none;
+        box-shadow: var(--sunshine-button-shadow);
+    }
 }
