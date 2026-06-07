@@ -17,6 +17,15 @@ node --check js/ui/themeController.js
 
 ## Current Status
 
+- Sunshine hero preview alignment follow-up on 2026-06-07:
+  - Browser verification used the in-app browser against `http://127.0.0.1:3000` with a temporary `1491x851` viewport. Verified Sunshine active state, no horizontal overflow, `72px` between the hero edge and headline start, `72px` between the teaser end and hero edge, and the teaser centered in its column.
+  - Verified computed Sunshine teaser colors: warm cream/amber card, orange meter, and destination-specific theme swatches where Space stays blue, Green stays green, Frutiger Aero stays cyan/green, and Sunshine stays amber/peach.
+  - Added after-state screenshot at `docs/decision-history/screenshots/2026-06-07-sunshine-hero-after.jpg`.
+  - `npx vitest run tests/documentation.test.ts tests/serviceWorker.test.ts`: passed, 81 tests.
+  - `npm run build`: passed.
+  - `git diff --check`: passed.
+  - `rg "transition:\s*all" css js`: no matches.
+  - `node scripts/sync-service-worker-assets.mjs`: passed; service-worker asset hash is `2b3b9bc4ef`.
 - Sunshine theme swatch fix on 2026-06-07:
   - Browser verification used the in-app browser against `http://127.0.0.1:3000` after selecting Sunshine. Verified `4` distinct theme swatch backgrounds: Space stays blue, Green stays green, Frutiger Aero stays cyan/green, and Sunshine stays amber/peach. No horizontal overflow.
   - `npm run build`: passed.

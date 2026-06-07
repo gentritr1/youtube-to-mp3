@@ -144,6 +144,27 @@
     color: hsl(22 46% 35%);
 }
 
+:root[data-theme="sunshine"] .hero-art-card-teaser {
+    background:
+        linear-gradient(145deg, rgba(247, 205, 111, 0.24), transparent 42%),
+        radial-gradient(circle at top right, rgba(249, 181, 92, 0.18), transparent 38%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 30%),
+        rgba(255, 248, 238, 0.88);
+}
+
+:root[data-theme="sunshine"] .teaser-icon,
+:root[data-theme="sunshine"] .teaser-format {
+    background: color-mix(in srgb, var(--amber) 18%, var(--surface-overlay));
+    border-color: rgba(207, 150, 82, 0.36);
+    box-shadow: 0 10px 24px rgba(207, 150, 82, 0.12);
+}
+
+:root[data-theme="sunshine"] .teaser-meter-line {
+    background:
+        linear-gradient(90deg, hsl(36 64% 54%), hsl(28 84% 58%)) 0 0 / 61% 100% no-repeat,
+        rgba(96, 55, 33, 0.08);
+}
+
 :root[data-theme="sunshine"] .genre-tab.active {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 88%),

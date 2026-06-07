@@ -41,9 +41,10 @@
 
 .hero-main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
-    gap: var(--space-4);
-    align-items: start;
+    grid-template-columns: minmax(0, min(100%, 42rem)) minmax(280px, 400px);
+    justify-content: center;
+    gap: clamp(var(--space-4), 4vw, var(--space-8));
+    align-items: center;
 }
 
 .hero-content {
@@ -153,6 +154,8 @@
 }
 
 .hero-art {
+    display: flex;
+    justify-content: center;
     min-width: 0;
 }
 
@@ -189,6 +192,8 @@
 }
 
 .hero-art-card-teaser {
+    width: 100%;
+    max-width: 25rem;
     min-height: auto;
     gap: 1.05rem;
     padding: var(--space-4);

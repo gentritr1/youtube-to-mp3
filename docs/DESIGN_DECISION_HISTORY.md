@@ -163,3 +163,26 @@ The bundled detector now reports only `single-font`. This is documented as a fal
 ### Rule Going Forward
 
 Treat the original critique as resolved unless future changes move the URL input or Convert action out of the first viewport, make waiting tools visually primary before conversion, reintroduce cool blue/cyan Sunshine accents, or add detector warnings that are not documented false positives.
+
+---
+
+## 2026-06-07: Sunshine Hero Preview Follow-Up
+
+**Status:** Accepted
+
+**Trigger:** Sunshine still read too cool in the hero conversion preview, and the right-side teaser felt pushed to the far desktop edge instead of balanced with the headline.
+
+**After**
+
+![After Sunshine hero preview](./decision-history/screenshots/2026-06-07-sunshine-hero-after.jpg)
+
+### What Changed
+
+- Centered the hero's desktop column pair so the headline and teaser keep matching edge breathing room at the `1491x851` comparison size.
+- Kept the teaser capped at `25rem`, so it remains useful conversion context instead of becoming a large decorative preview.
+- Added Sunshine-specific teaser card, icon, badge, and meter colors using amber, peach, and clay.
+- Left the theme switcher swatches destination-specific: Space remains blue, Green remains green, Frutiger Aero remains cyan/green, and Sunshine remains amber.
+
+### Verification
+
+Browser verification at `1491x851` measured no horizontal overflow, `72px` between the hero edge and headline start, and `72px` between the teaser end and hero edge. Computed Sunshine teaser colors were warm cream/amber for the card and orange for the meter.
