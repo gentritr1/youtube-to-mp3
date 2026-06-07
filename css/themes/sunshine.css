@@ -81,9 +81,6 @@
     --preview-playhead-bg: linear-gradient(180deg, rgba(255, 246, 232, 0.92), rgba(249, 115, 22, 0.96) 52%, rgba(251, 191, 36, 0.82));
     --preview-energy-start: hsl(35 62% 48%);
     --preview-energy-mid: hsl(39 88% 58%);
-    --theme-preview-space: linear-gradient(135deg, hsl(40 94% 78%), hsl(30 66% 57%) 55%, hsl(22 44% 28%));
-    --theme-preview-green: linear-gradient(135deg, hsl(48 82% 78%), hsl(36 72% 58%) 55%, hsl(24 44% 31%));
-    --theme-preview-frutiger: linear-gradient(135deg, hsl(42 100% 88%), hsl(28 80% 68%) 55%, hsl(18 50% 38%));
     --theme-preview-sunshine: linear-gradient(135deg, hsl(42 100% 91%), hsl(36 72% 58%) 52%, hsl(24 58% 46%));
     --preview-energy-end: hsl(18 64% 48%);
     --preview-energy-glow: rgba(204, 150, 82, 0.72);

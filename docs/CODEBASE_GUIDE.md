@@ -476,6 +476,8 @@ Batch active states use dedicated text tokens because each theme places the acti
 
 Sunshine should read as warm amber, peach, and clay. Do not let cool blue or cyan accents leak into the hero theme switcher, conversion teaser, primary button gradient, or batch assistant unless the component is explicitly previewing a non-Sunshine theme in a separate context. Primary, selected, and launch-style Sunshine buttons may use a restrained warm radiance effect, but the glow must remain theme-scoped, avoid layout shifts, and stop animating under `prefers-reduced-motion: reduce`.
 
+Theme switcher swatches preview their destination themes even when another theme is active. Theme-specific CSS may override the active theme's own preview token, such as Sunshine warming `--theme-preview-sunshine`, but it must not override `--theme-preview-space`, `--theme-preview-green`, or `--theme-preview-frutiger` just because Sunshine is active.
+
 ### Karaoke Flow
 
 Karaoke is now visible in-panel instead of only rendering behind the page.

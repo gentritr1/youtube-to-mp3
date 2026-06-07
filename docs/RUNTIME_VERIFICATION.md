@@ -28,6 +28,7 @@ Open `http://localhost:3000` after `npm start`.
 - Themes: verify `space`, `green`, `frutiger-aero`, and `sunshine`.
 - Hero/converter first viewport: verify the hero preview remains compact, the URL input is visible without scrolling on desktop, narrow desktop/tablet, and mobile, and the Convert action remains visible at the historical `1491x851` comparison size plus a large `1536x900` desktop viewport.
 - Mobile theme switcher: verify the swatch controls stay one row, remain keyboard focusable, and keep accessible names despite visually hidden labels.
+- Theme swatches: verify each theme chip keeps its own destination swatch colors while another theme is active; selecting Sunshine must not make Space, Green, or Frutiger Aero swatches turn into Sunshine colors.
 - Sunshine theme: verify active converter buttons, batch actions, popular genre tabs, track tags, hero theme swatches, and conversion teaser accents use warm amber/peach/clay accents rather than cool blue/cyan or harsh red fills. Verify primary, selected, preview, and game-launch buttons have a controlled warm radiance in normal motion and become static under `prefers-reduced-motion: reduce`.
 - Viewports: verify one mobile width, one tablet width, and desktop.
 - Motion: verify normal motion and `prefers-reduced-motion: reduce`.

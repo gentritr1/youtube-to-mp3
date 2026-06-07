@@ -17,6 +17,13 @@ node --check js/ui/themeController.js
 
 ## Current Status
 
+- Sunshine theme swatch fix on 2026-06-07:
+  - Browser verification used the in-app browser against `http://127.0.0.1:3000` after selecting Sunshine. Verified `4` distinct theme swatch backgrounds: Space stays blue, Green stays green, Frutiger Aero stays cyan/green, and Sunshine stays amber/peach. No horizontal overflow.
+  - `npm run build`: passed.
+  - `npx vitest run tests/documentation.test.ts tests/serviceWorker.test.ts`: passed, 81 tests.
+  - `git diff --check`: passed.
+  - `rg "transition:\s*all" css js`: no matches.
+  - `node scripts/sync-service-worker-assets.mjs`: passed; service-worker asset hash is `a88de3ec6e`.
 - Critique closure on 2026-06-07:
   - Rechecked `.impeccable/critique/2026-06-07T12-49-27Z__index-html.md` against the current page.
   - `npm test`: passed, 30 test files and 347 tests.
