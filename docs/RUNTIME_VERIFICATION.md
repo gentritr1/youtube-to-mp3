@@ -16,16 +16,21 @@ Open `http://localhost:3000` after `npm start`.
 
 - Converter: paste a valid YouTube URL, fetch metadata, start an MP3 conversion, verify progress, completion animation, nerd stats fallback, and download link.
 - Conversion errors: submit an invalid URL and verify the user-facing error clears without leaving loading state stuck.
-- Batch mode: enable batch mode, add two URLs, preview one queued item, remove one item, convert the batch, and verify aggregate progress/results.
+- Batch mode: enable batch mode, verify the right-side batch context appears, add two URLs, preview one queued item, remove one item, convert the batch, and verify aggregate progress/results keep the context count and copy current.
 - Discovery preview: switch genres, play a popular preview, start another preview while the first is loading, close the panel, and verify stale audio does not resume.
 - Lyrics/studio: load a captioned video, verify lyric timing events update the studio, run autosync, nudge a point, undo, and export JSON.
 - Review player: replace the selected YouTube media source while the previous player is loading and verify only the latest player remains active.
 - Mini-games: launch Snake and Guess the Track from the arcade sidecar and verify theme colors update after switching themes.
-- Service worker: on localhost, verify the service worker only registers for allowed local origins and does not interfere with fresh asset loads.
+- Service worker: on localhost, verify the service worker only registers for allowed local origins, registers with `updateViaCache: 'none'`, serves CSS/JS network-first while online, and does not keep stale CSS/HTML after a UI-only asset change.
 
 ## Theme And Layout Pass
 
 - Themes: verify `space`, `green`, `frutiger-aero`, and `sunshine`.
+- Hero/converter first viewport: verify the hero preview remains compact, the hero copy keeps the same standard card padding rhythm as the rest of the page, the URL input is visible without scrolling on desktop, narrow desktop/tablet, and mobile, and the Convert action remains visible at the historical `1491x851` comparison size plus a large `1536x900` desktop viewport.
+- Mobile theme switcher: verify the swatch controls stay one row, remain keyboard focusable, and keep accessible names despite visually hidden labels.
+- Theme swatches: verify each theme chip keeps its own destination swatch colors while another theme is active; selecting Sunshine must not make Space, Green, or Frutiger Aero swatches turn into Sunshine colors.
+- Sunshine theme: verify active converter buttons, batch actions, popular genre tabs, track tags, hero theme swatches, and conversion teaser card/meter accents use warm amber/peach/clay accents rather than cool blue/cyan, green progress fills, or harsh red fills. Verify primary, selected, preview, and game-launch buttons have a controlled warm radiance in normal motion and become static under `prefers-reduced-motion: reduce`.
+- Sunshine hover: verify inactive hover states use a restrained warm border/surface/shadow, active MP3/MP4 format buttons do not pulse, and primary/launch radiance remains reserved for real action buttons.
 - Viewports: verify one mobile width, one tablet width, and desktop.
 - Motion: verify normal motion and `prefers-reduced-motion: reduce`.
 - States: verify idle, loading, success, error, empty, active, inactive, popup, and panel states.
@@ -34,12 +39,23 @@ Open `http://localhost:3000` after `npm start`.
 
 - Keyboard focus: tab through converter input, paste, format, convert, theme options, download links, batch controls, discovery preview controls, sidecar tabs, and floating game controls; verify the focus ring is visible in all four themes.
 - Reduced motion: enable `prefers-reduced-motion: reduce` and verify decorative animation, shimmer, hover lift, lyric/card motion, and game-control motion are calmed while loading, progress, panel switches, and content reveal states still complete.
-- Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar tab wrapping, batch action rows, and download buttons.
+- Hero reduced motion: verify the hero conversion teaser renders as static, useful conversion context with no looping decorative scene motion.
+- Responsive pass: check mobile, tablet, and desktop for stable converter control heights, button text fit, sidecar proportions, sidecar tab wrapping, batch context wrapping, batch action rows, and download buttons.
 - Converter states: verify idle, pasted URL, active format, loading, progress, success/download, disabled, and error states.
-- Batch controls: verify batch mode toggle, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
+- Conversion success: verify the download button is visible immediately, or within roughly 500ms, after a successful conversion and is not blocked by a staged decorative reveal.
+- Format toggle semantics: inspect MP3/MP4 buttons and verify the selected button exposes `aria-pressed="true"` while the other exposes `aria-pressed="false"`.
+- Batch controls: verify batch mode toggle, active toggle text contrast, right-side context copy/step/jump text contrast, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
+- Converter workflow rail: verify the Paste/Pick/Download guidance sits below the converter copy with enough separation, uses numeric markers instead of emoji pills, and does not right-align into a competing chip cluster on desktop.
+- Button contrast: verify active, inactive, hover, destructive, disabled, and selected text/icon contrast on converter controls, theme chips, genre tabs, video action buttons, preview close/actions, studio/assistant controls, arcade launch buttons, mini-game switch/minimize buttons, and Guess Track answer states in all four themes.
+- Clipped hover/focus audit: hover and keyboard-focus the first, active, and last genre chips; first and last popular video cards; batch queue/progress rows and row actions; and the first/last point-rail timing chips. Verify lifted borders, shadows, and focus rings are not clipped by their scroll containers or rails.
 - Discovery preview controls: verify play/pause, close, preview loading/error, progress/waveform, and one-click convert controls.
+- Discovery preview chrome: verify the `30s preview` badge uses the timer icon chip, the close control stays compact, and Sunshine close hover uses a warm glow instead of a red danger fill.
+- Product icons: verify converter labels, Timing Tools, audio details, popular tabs/cards, floating game headers, high scores, power-up status, and Guess Track lives render SVG icons instead of visible emoji glyphs.
+- Waveform scrubbing: tab to the preview waveform slider, verify a visible focus ring, then use ArrowLeft/ArrowRight, ArrowUp/ArrowDown, Home, End, PageUp, and PageDown to scrub while `aria-valuenow` and the visible playhead update.
 - Sidecar tabs: verify karaoke/arcade tab focus, active state, hover state, and reduced-motion behavior.
+- Studio sidecar: verify the timing tools panel is compact and populated with status, mode context, a timing meter, workflow rows, and the Time Sync Studio action without oversized empty boxes.
 - Floating game controls: verify Snake and Guess the Track launch/floating controls remain visible, focusable, and themed.
+- Popular scroller shadows: hover the first and last visible popular video cards and verify the lifted border/shadow is not clipped by the horizontal carousel.
 
 ## Release Gate
 

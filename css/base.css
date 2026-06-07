@@ -141,10 +141,25 @@
     --button-primary-foreground: var(--primary-foreground);
     --button-secondary: linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 100%), color-mix(in srgb, var(--card) 60%, transparent);
     --button-secondary-foreground: var(--foreground);
+    --button-glass-foreground: var(--foreground);
+    --button-glass-muted-foreground: color-mix(in srgb, var(--foreground) 68%, var(--muted-foreground));
+    --button-selected-foreground: var(--foreground);
+    --button-danger-foreground: var(--rose);
+    --button-success-foreground: color-mix(in srgb, var(--foreground) 90%, var(--success));
+    --button-error-foreground: color-mix(in srgb, var(--foreground) 90%, var(--rose));
+    --button-disabled-foreground: color-mix(in srgb, var(--muted-foreground) 82%, transparent);
+    --batch-accent: var(--hero-orb);
+    --batch-accent-soft: var(--hero-orb-soft);
+    --batch-accent-secondary: var(--ambient-secondary);
+    --batch-active-foreground: var(--primary-foreground);
+    --batch-kicker-foreground: color-mix(in srgb, var(--batch-accent) 72%, var(--foreground));
+    --batch-muted-foreground: var(--muted-foreground);
+    --batch-step-foreground: color-mix(in srgb, var(--foreground) 82%, var(--muted-foreground));
+    --batch-action-foreground: var(--foreground);
     --theme-preview-space: linear-gradient(135deg, hsl(214 90% 78%), hsl(220 76% 47%) 55%, hsl(220 39% 9%));
     --theme-preview-green: linear-gradient(135deg, hsl(134 80% 73%), hsl(134 74% 37%) 55%, hsl(141 80% 10%));
     --theme-preview-frutiger: linear-gradient(135deg, hsl(191 100% 93%), hsl(186 86% 70%) 55%, hsl(134 62% 47%));
-    --theme-preview-sunshine: linear-gradient(135deg, hsl(42 100% 91%), hsl(24 96% 61%) 48%, hsl(198 83% 57%));
+    --theme-preview-sunshine: linear-gradient(135deg, hsl(42 100% 91%), hsl(36 72% 58%) 52%, hsl(186 45% 52%));
     --lyrics-overlay: radial-gradient(circle at center, color-mix(in srgb, var(--hero-orb-soft) 42%, transparent) 0%, transparent 70%);
     --lyrics-text-muted: color-mix(in srgb, var(--foreground) 14%, transparent);
     --lyrics-text-past: color-mix(in srgb, var(--foreground) 8%, transparent);
@@ -158,6 +173,22 @@
     --game-shadow: rgba(0, 0, 0, 0.45);
     --game-canvas: hsl(225 18% 4%);
     --game-canvas-border: hsl(225 10% 13%);
+}
+
+.ui-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    flex: 0 0 auto;
+    color: currentcolor;
+    overflow: visible;
+}
+
+[data-ui-icon] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
 }
 
 /* ========================================

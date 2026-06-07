@@ -16,7 +16,7 @@ export const themes = [
     {
         id: 'frutiger-aero',
         label: 'Frutiger Aero',
-        shortLabel: 'Aero',
+        shortLabel: 'Glass',
         description: 'Glossy cyan-green glass with brighter, airy atmospheric color.',
         metaColor: '#bfeff7'
     },
@@ -24,7 +24,7 @@ export const themes = [
         id: 'sunshine',
         label: 'Sunshine',
         shortLabel: 'Breeze',
-        description: 'Warm sunset glass with coral light, sea-breeze blue, and brighter contrast.',
+        description: 'Warm sunset glass with amber light, peach glow, and brighter contrast.',
         metaColor: '#fff2e4'
     }
 ];

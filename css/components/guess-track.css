@@ -17,9 +17,11 @@
     --gt-option-hover-shadow: 0 12px 24px color-mix(in srgb, black 24%, transparent);
     --gt-option-correct-surface: linear-gradient(135deg, color-mix(in srgb, var(--success) 28%, transparent), color-mix(in srgb, var(--success) 12%, transparent));
     --gt-option-correct-border: color-mix(in srgb, var(--success) 65%, transparent);
+    --gt-option-correct-foreground: var(--button-success-foreground);
     --gt-option-correct-shadow: 0 12px 24px color-mix(in srgb, var(--success) 14%, transparent);
     --gt-option-wrong-surface: linear-gradient(135deg, color-mix(in srgb, var(--rose) 28%, transparent), color-mix(in srgb, var(--rose) 12%, transparent));
     --gt-option-wrong-border: color-mix(in srgb, var(--rose) 72%, transparent);
+    --gt-option-wrong-foreground: var(--button-error-foreground);
     --gt-audio-player-correct-shadow:
         inset 0 0 30px color-mix(in srgb, black 45%, transparent),
         0 20px 50px color-mix(in srgb, var(--success) 18%, transparent);
@@ -88,6 +90,25 @@
 .gt-streak-count {
     font-weight: 700;
     color: var(--foreground);
+}
+
+.gt-lives-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.16rem;
+}
+
+.gt-life-icon {
+    width: 0.82rem;
+    height: 0.82rem;
+}
+
+.gt-life-icon.is-live {
+    color: var(--rose);
+}
+
+.gt-life-icon.is-empty {
+    color: color-mix(in srgb, var(--muted-foreground) 48%, transparent);
 }
 
 .gt-audio-player {
@@ -258,7 +279,8 @@
         transform var(--transition-base),
         border-color var(--transition-base),
         background var(--transition-base),
-        box-shadow var(--transition-base);
+        box-shadow var(--transition-base),
+        color var(--transition-base);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -279,7 +301,7 @@
 .gt-option.correct {
     background: var(--gt-option-correct-surface);
     border-color: var(--gt-option-correct-border);
-    color: color-mix(in srgb, white 88%, var(--emerald));
+    color: var(--gt-option-correct-foreground);
     font-weight: 700;
     box-shadow: var(--gt-option-correct-shadow);
 }
@@ -287,7 +309,7 @@
 .gt-option.wrong {
     background: var(--gt-option-wrong-surface);
     border-color: var(--gt-option-wrong-border);
-    color: color-mix(in srgb, white 90%, var(--rose));
+    color: var(--gt-option-wrong-foreground);
     font-weight: 700;
     animation: gt-wrong-option 320ms ease-in-out;
 }
@@ -295,6 +317,7 @@
 .gt-option:disabled {
     cursor: not-allowed;
     opacity: 0.82;
+    color: var(--button-disabled-foreground);
 }
 
 .gt-start-btn {

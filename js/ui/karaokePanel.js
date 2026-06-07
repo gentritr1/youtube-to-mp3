@@ -1,3 +1,5 @@
+import { iconSvg } from './icons.js';
+
 export class KaraokePanel {
     constructor({
         root,
@@ -209,11 +211,11 @@ export class KaraokePanel {
         if (!this.linesContainer) return;
 
         this.lines = [];
-        const icons = ['🎤', '🎮', '✨'];
+        const icons = ['mic', 'gamepad', 'sparkles'];
 
         this.linesContainer.innerHTML = lines.map((line, index) => `
             <article class="karaoke-line-card placeholder">
-                <span class="karaoke-line-index">${icons[index] || '•'}</span>
+                <span class="karaoke-line-index">${iconSvg(icons[index] || 'sparkles', 'ui-icon')}</span>
                 <p class="karaoke-line-text">${this.escapeHtml(line)}</p>
             </article>
         `).join('');

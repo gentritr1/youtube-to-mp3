@@ -3,6 +3,8 @@
  * Handles DOM-based UI updates
  */
 
+import { setIcon } from '../ui/icons.js';
+
 export class UIManager {
     constructor(elements) {
         this.elements = elements;
@@ -32,8 +34,8 @@ export class UIManager {
             this.elements.powerupIndicator.classList.remove('ghost', 'speed', 'split');
             this.elements.powerupIndicator.classList.add(activePowerup);
 
-            const icons = { ghost: '👻', speed: '⚡', split: '✂️' };
-            this.elements.powerupIcon.textContent = icons[activePowerup] || '✨';
+            const icons = { ghost: 'ghost', speed: 'bolt', split: 'scissors' };
+            setIcon(this.elements.powerupIcon, icons[activePowerup] || 'sparkles', 'ui-icon');
             this.elements.powerupTimer.textContent = `${remaining}s`;
         } else {
             this.elements.powerupIndicator.classList.remove('active');

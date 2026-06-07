@@ -1,6 +1,5 @@
 /* ========================================
    Popular Music & Audio Preview
-   Elevated discovery shelf with motion
    ======================================== */
 
 .popular-videos-container {
@@ -79,8 +78,9 @@
 }
 
 .popular-title-icon {
-    font-size: 1.25rem;
-    animation: popular-icon-float 2.8s ease-in-out infinite;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: color-mix(in srgb, var(--hero-headlight) 72%, var(--hero-orb));
 }
 
 .popular-subtitle {
@@ -110,7 +110,6 @@
     border-radius: 999px;
     background: var(--emerald);
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--emerald) 45%, transparent);
-    animation: popular-pulse 1.8s ease-out infinite;
 }
 
 .popular-active-genre {
@@ -125,9 +124,9 @@
     padding: 0.9rem 1rem;
     border-radius: 1rem;
     background:
-        linear-gradient(140deg, color-mix(in srgb, var(--genre-accent) 14%, color-mix(in srgb, var(--foreground) 2%, transparent)), color-mix(in srgb, var(--foreground) 2%, transparent)),
+        linear-gradient(140deg, color-mix(in srgb, var(--genre-accent) 10%, color-mix(in srgb, var(--foreground) 2%, transparent)), color-mix(in srgb, var(--foreground) 2%, transparent)),
         color-mix(in srgb, var(--hero-surface-strong) 84%, transparent);
-    border: 1px solid color-mix(in srgb, var(--genre-accent) 24%, var(--surface-overlay-strong));
+    border: 1px solid color-mix(in srgb, var(--genre-accent) 18%, var(--surface-overlay-strong));
     animation: fadeSlideIn 320ms ease both;
 }
 
@@ -138,7 +137,12 @@
     height: 2.4rem;
     border-radius: 0.85rem;
     background: color-mix(in srgb, var(--genre-accent) 18%, transparent);
-    font-size: 1.15rem;
+    color: color-mix(in srgb, var(--genre-accent) 72%, var(--foreground));
+}
+
+.popular-genre-icon .ui-icon {
+    width: 1.12rem;
+    height: 1.12rem;
 }
 
 .popular-genre-copy {
@@ -173,8 +177,9 @@
     display: flex;
     gap: 0.45rem;
     overflow-x: auto;
-    padding-bottom: 0.875rem;
-    margin-bottom: 0.5rem;
+    padding: 0.45rem 0.7rem 1rem;
+    margin: -0.45rem -0.7rem 0.3rem;
+    scroll-padding-inline: 0.7rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -184,10 +189,11 @@
 }
 
 .genre-tab {
+    --genre-accent: var(--hero-orb);
     padding: 0.5rem 0.92rem;
     border-radius: 100px;
     background: color-mix(in srgb, var(--secondary) 82%, transparent);
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
     border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     cursor: pointer;
     font-family: var(--font-sans);
@@ -208,29 +214,42 @@
 
 .genre-tab:hover {
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--accent));
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     border-color: color-mix(in srgb, var(--hero-orb) 42%, transparent);
     transform: translateY(var(--hover-lift));
 }
 
 .genre-tab.active {
-    color: var(--button-primary-foreground);
-    background: var(--emerald);
-    border-color: transparent;
+    color: var(--button-selected-foreground);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 90%),
+        color-mix(in srgb, var(--genre-accent) 18%, var(--surface-glass-strong));
+    border-color: color-mix(in srgb, var(--genre-accent) 44%, var(--hero-border));
     box-shadow:
-        0 2px 8px color-mix(in srgb, var(--emerald) 25%, transparent),
-        0 0 0 1px color-mix(in srgb, var(--emerald) 10%, transparent);
+        0 12px 22px color-mix(in srgb, var(--genre-accent) 14%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--genre-accent) 14%, transparent) inset;
 }
 
 .genre-tab-icon {
-    font-size: 0.875rem;
+    display: inline-grid;
+    place-items: center;
+    width: 0.95rem;
+    height: 0.95rem;
+    color: color-mix(in srgb, var(--genre-accent) 70%, currentcolor);
+}
+
+.genre-tab-icon .ui-icon {
+    width: 0.95rem;
+    height: 0.95rem;
 }
 
 .video-carousel {
     display: flex;
     gap: 0.9rem;
     overflow-x: auto;
-    padding: 0.25rem 0 0.5rem;
+    padding: 0.75rem 1.75rem 2.15rem;
+    margin: -0.5rem -1.75rem -1.25rem;
+    scroll-padding-inline: 1.75rem;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--border) 92%, transparent) transparent;
     scroll-snap-type: x mandatory;
@@ -262,7 +281,6 @@
         color-mix(in srgb, var(--card) 96%, transparent);
     border-radius: 1.15rem;
     overflow: hidden;
-    cursor: pointer;
     transition:
         border-color var(--transition-base),
         box-shadow var(--transition-base),
@@ -320,55 +338,15 @@
     left: 0.5rem;
     padding: 0.22rem 0.45rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--card-accent) 68%, color-mix(in srgb, var(--game-surface-strong) 66%, transparent));
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 12%, transparent), transparent 88%),
+        color-mix(in srgb, var(--card-accent) 24%, color-mix(in srgb, var(--game-surface-strong) 66%, transparent));
+    border: 1px solid color-mix(in srgb, var(--card-accent) 28%, transparent);
     color: var(--foreground);
     font-size: 0.63rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-}
-
-.video-card-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, color-mix(in srgb, black 10%, transparent), var(--surface-scrim));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--transition-fast);
-}
-
-.video-card:hover .video-card-overlay,
-.video-card:focus-within .video-card-overlay {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.video-card-play {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: var(--foreground);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: scale(0.85);
-    transition: transform var(--transition-fast);
-    box-shadow: var(--shadow-float);
-}
-
-.video-card:hover .video-card-play,
-.video-card:focus-within .video-card-play {
-    transform: scale(1);
-}
-
-.video-card-play svg {
-    width: 18px;
-    height: 18px;
-    color: color-mix(in srgb, var(--background) 88%, black);
-    margin-left: 2px;
 }
 
 .video-card-info {
@@ -381,7 +359,7 @@
     font-size: 0.65rem;
     font-family: var(--font-mono);
     font-weight: 700;
-    color: color-mix(in srgb, var(--card-accent) 58%, white);
+    color: color-mix(in srgb, var(--card-accent) 42%, var(--foreground));
     letter-spacing: 0.08em;
 }
 
@@ -410,34 +388,30 @@
 }
 
 .video-card-actions {
-    position: absolute;
-    top: 0.4rem;
-    right: 0.4rem;
-    display: flex;
-    gap: 0.2rem;
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-
-.video-card:hover .video-card-actions,
-.video-card:focus-within .video-card-actions {
-    opacity: 1;
-    transform: translateY(0);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--control-gap);
+    margin-top: 0.7rem;
 }
 
 .video-action-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
+    min-height: var(--control-height-sm);
+    padding: 0.45rem 0.55rem;
+    border-radius: var(--radius);
     background: var(--surface-glass-strong);
     backdrop-filter: blur(4px);
     border: 1px solid var(--surface-border);
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 0.3rem;
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 0;
+    white-space: nowrap;
     transition:
         background var(--transition-fast),
         border-color var(--transition-fast),
@@ -448,19 +422,21 @@
 .video-action-btn:hover {
     background: var(--button-secondary);
     color: var(--button-secondary-foreground);
-    transform: scale(1.1);
+    transform: translateY(var(--hover-lift));
 }
 
 .video-action-btn.disabled,
 .video-action-btn:disabled {
     opacity: 0.45;
+    color: var(--button-disabled-foreground);
     cursor: not-allowed;
     transform: none;
 }
 
 .video-action-btn svg {
-    width: 13px;
-    height: 13px;
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
 }
 
 .preview-player {
@@ -637,6 +613,10 @@
 }
 
 .preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    min-height: 1.45rem;
     font-size: 0.5625rem;
     font-family: var(--font-mono);
     font-weight: 600;
@@ -652,12 +632,18 @@
     flex-shrink: 0;
     margin-left: auto;
     align-self: flex-start;
+    white-space: nowrap;
+}
+
+.preview-badge-icon {
+    width: 0.8rem;
+    height: 0.8rem;
 }
 
 .preview-close {
     width: 26px;
     height: 26px;
-    border-radius: 50%;
+    border-radius: 0.55rem;
     background: var(--surface-glass-soft);
     border: 1px solid color-mix(in srgb, var(--hero-border) 74%, transparent);
     color: var(--muted-foreground);
@@ -672,9 +658,20 @@
         transform var(--transition-fast);
 }
 
+.preview-waveform:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow:
+        0 0 0 var(--focus-ring-spread) var(--focus-ring-shadow),
+        inset 0 1px 0 color-mix(in srgb, white 12%, transparent),
+        0 18px 34px color-mix(in srgb, var(--glass-shadow) 18%, transparent);
+}
+
 .preview-close:hover {
-    background: var(--rose);
-    color: white;
+    background: color-mix(in srgb, var(--rose) 14%, var(--surface-glass-soft));
+    border-color: color-mix(in srgb, var(--rose) 42%, var(--hero-border));
+    color: color-mix(in srgb, var(--rose) 76%, var(--foreground));
+    transform: translateY(var(--hover-lift));
 }
 
 .preview-close svg {
@@ -1011,8 +1008,8 @@
 }
 
 .genre-tab:focus-visible,
-.video-card:focus-visible,
 .video-action-btn:focus-visible,
+.preview-waveform:focus-visible,
 .preview-close:focus-visible,
 .preview-play-btn:focus-visible,
 .preview-lyrics-btn:focus-visible,
@@ -1195,6 +1192,10 @@
 
     .video-card-title {
         font-size: 0.82rem;
+    }
+
+    .video-card-actions {
+        grid-template-columns: 1fr;
     }
 
     .genre-tabs {

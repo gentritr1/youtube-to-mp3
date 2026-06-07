@@ -1,6 +1,6 @@
 {
   "name": "Global Picks",
-  "icon": "🌍",
+  "icon": "globe",
   "color": "#22c55e",
   "description": "Worldwide, recognisable tracks chosen as the default set for broader region coverage.",
   "order": 10,

@@ -22,7 +22,7 @@
         color-mix(in srgb, var(--hero-surface-strong) 78%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 86%, transparent);
     border-radius: var(--radius-control);
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
@@ -46,8 +46,8 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 18%, transparent), transparent 42%),
-        linear-gradient(120deg, color-mix(in srgb, var(--hero-orb) 72%, transparent), color-mix(in srgb, var(--ambient-secondary) 88%, transparent));
+        linear-gradient(135deg, color-mix(in srgb, var(--batch-accent) 18%, transparent), transparent 42%),
+        linear-gradient(120deg, color-mix(in srgb, var(--batch-accent) 72%, transparent), color-mix(in srgb, var(--batch-accent-secondary) 88%, transparent));
     opacity: 0;
     transition: opacity var(--transition-base);
 }
@@ -61,10 +61,10 @@
 }
 
 .batch-mode-btn.active {
-    border-color: color-mix(in srgb, var(--hero-orb) 68%, var(--hero-border));
-    color: var(--primary-foreground);
+    border-color: color-mix(in srgb, var(--batch-accent) 68%, var(--hero-border));
+    color: var(--batch-active-foreground);
     box-shadow:
-        0 20px 44px color-mix(in srgb, var(--hero-orb) 24%, transparent),
+        0 20px 44px color-mix(in srgb, var(--batch-accent) 24%, transparent),
         0 1px 0 color-mix(in srgb, white 22%, transparent) inset;
 }
 
@@ -103,6 +103,180 @@
     color: var(--button-primary-foreground);
     box-shadow: 0 8px 20px color-mix(in srgb, var(--hero-orb) 26%, transparent);
     transition: transform 0.3s ease;
+}
+
+.batch-context-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "copy meter"
+        "steps steps"
+        "jump jump";
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-3);
+    border-radius: var(--radius-xl);
+    border: 1px solid color-mix(in srgb, var(--batch-accent) 34%, var(--surface-outline));
+    background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--batch-accent-soft) 78%, transparent), transparent 54%),
+        linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 86%),
+        color-mix(in srgb, var(--surface-glass-soft) 86%, transparent);
+    box-shadow:
+        0 18px 40px color-mix(in srgb, var(--glass-shadow) 24%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 16%, transparent);
+}
+
+.hero-sidecar.is-batch-mode {
+    align-self: start;
+}
+
+.karaoke-card.is-batch-mode {
+    align-content: start;
+    gap: var(--space-3);
+    min-height: auto;
+}
+
+.karaoke-card.is-batch-mode .karaoke-panel-tabs,
+.karaoke-card.is-batch-mode .karaoke-status,
+.karaoke-card.is-batch-mode .karaoke-panel-body {
+    display: none;
+}
+
+.batch-context-card.is-processing {
+    border-color: color-mix(in srgb, var(--sky) 42%, var(--hero-border));
+}
+
+.batch-context-card.has-results {
+    border-color: color-mix(in srgb, var(--emerald) 42%, var(--hero-border));
+}
+
+.batch-context-copy {
+    grid-area: copy;
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.batch-context-kicker {
+    color: var(--batch-kicker-foreground);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.batch-context-title {
+    color: var(--foreground);
+    font-size: 1rem;
+    line-height: 1.35;
+}
+
+.batch-context-detail {
+    color: var(--batch-muted-foreground);
+    font-size: 0.78rem;
+    line-height: 1.55;
+}
+
+.batch-context-meter {
+    grid-area: meter;
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    min-width: 3.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--batch-accent) 30%, var(--hero-border));
+    background: color-mix(in srgb, var(--batch-accent) 12%, var(--surface-overlay));
+}
+
+.batch-context-steps {
+    grid-area: steps;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.batch-context-steps li {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-2);
+    min-height: var(--control-height-sm);
+    padding: 0.42rem var(--space-2);
+    border-radius: var(--radius);
+    border: 1px solid color-mix(in srgb, var(--batch-accent) 24%, var(--hero-border));
+    background: color-mix(in srgb, var(--batch-accent) 9%, var(--surface-overlay));
+    color: var(--batch-step-foreground);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-align: left;
+}
+
+.batch-context-steps li span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--batch-accent) 18%, var(--surface-overlay-strong));
+    border: 1px solid color-mix(in srgb, var(--batch-accent) 28%, transparent);
+    color: var(--batch-step-foreground);
+    font-size: 0.68rem;
+    flex: 0 0 auto;
+}
+
+.batch-context-steps li strong {
+    min-width: 0;
+    color: var(--batch-step-foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.batch-context-count {
+    color: var(--foreground);
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.batch-context-total {
+    color: var(--batch-muted-foreground);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.batch-context-jump {
+    grid-area: jump;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-height-sm);
+    padding: 0.5rem var(--control-padding-x);
+    border-radius: var(--radius);
+    border: 1px solid color-mix(in srgb, var(--batch-accent) 42%, transparent);
+    background: color-mix(in srgb, var(--batch-accent) 14%, var(--surface-overlay-strong));
+    color: var(--batch-action-foreground);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+        transform var(--transition-fast),
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast);
+}
+
+.batch-context-jump:hover {
+    transform: translateY(var(--hover-lift));
+    border-color: color-mix(in srgb, var(--batch-accent) 58%, transparent);
+    background: color-mix(in srgb, var(--batch-accent) 20%, var(--surface-overlay-strong));
 }
 
 .batch-count.pulse {
@@ -195,11 +369,17 @@
 .batch-list {
     max-height: 300px;
     overflow-y: auto;
+    padding: 0.2rem 0.35rem 0.35rem;
+    margin: -0.2rem -0.35rem -0.35rem;
+    scroll-padding-block: 0.35rem;
 }
 
 .batch-progress-list {
     max-height: 220px;
     overflow-y: auto;
+    padding: 0.2rem 0.35rem 0.35rem;
+    margin: -0.2rem -0.35rem -0.35rem;
+    scroll-padding-block: 0.35rem;
 }
 
 .batch-list::-webkit-scrollbar,
@@ -387,44 +567,45 @@
     padding: 0 0.72rem;
     font-size: 0.76rem;
     font-weight: 700;
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
 }
 
 .batch-item-preview:hover:not(:disabled) {
     background: color-mix(in srgb, var(--hero-orb) 12%, transparent);
     border-color: color-mix(in srgb, var(--hero-orb) 48%, var(--hero-border));
-    color: color-mix(in srgb, var(--hero-orb) 88%, white);
+    color: var(--button-selected-foreground);
     transform: translateY(var(--hover-lift));
 }
 
 .batch-item-preview.is-active {
     background: color-mix(in srgb, var(--hero-orb) 16%, transparent);
     border-color: color-mix(in srgb, var(--hero-orb) 52%, var(--hero-border));
-    color: color-mix(in srgb, var(--hero-orb) 88%, var(--foreground));
+    color: var(--button-selected-foreground);
 }
 
 .batch-item-preview.has-error {
     background: color-mix(in srgb, var(--destructive) 12%, transparent);
     border-color: color-mix(in srgb, var(--destructive) 50%, var(--hero-border));
-    color: color-mix(in srgb, var(--destructive) 86%, var(--foreground));
+    color: var(--button-error-foreground);
 }
 
 .batch-item-preview:disabled {
     opacity: 0.45;
+    color: var(--button-disabled-foreground);
     cursor: not-allowed;
 }
 
 .batch-item-remove:hover {
     background: color-mix(in srgb, var(--rose) 12%, transparent);
     border-color: color-mix(in srgb, var(--rose) 48%, var(--hero-border));
-    color: var(--rose);
+    color: var(--button-danger-foreground);
     transform: translateY(var(--hover-lift));
 }
 
 .download-item-remove:hover {
     background: color-mix(in srgb, var(--rose) 12%, transparent);
     border-color: color-mix(in srgb, var(--rose) 48%, var(--hero-border));
-    color: var(--rose);
+    color: var(--button-danger-foreground);
     transform: translateY(var(--hover-lift));
 }
 
@@ -474,7 +655,8 @@
 .batch-item-preview:focus-visible,
 .batch-action-btn:focus-visible,
 .download-item-btn:focus-visible,
-.new-batch-btn:focus-visible {
+.new-batch-btn:focus-visible,
+.batch-context-jump:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
 }
@@ -531,7 +713,7 @@
         linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 90%),
         color-mix(in srgb, var(--accent) 76%, transparent);
     border: 1px solid color-mix(in srgb, var(--hero-border) 76%, transparent);
-    color: color-mix(in srgb, var(--foreground) 72%, var(--muted-foreground));
+    color: var(--button-glass-muted-foreground);
 }
 
 .clear-btn:disabled,
@@ -540,7 +722,7 @@
         linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent 90%),
         color-mix(in srgb, var(--card) 42%, transparent);
     border-color: color-mix(in srgb, var(--hero-border) 64%, transparent);
-    color: color-mix(in srgb, var(--muted-foreground) 82%, transparent);
+    color: var(--button-disabled-foreground);
 }
 
 .batch-progress-section {
@@ -778,6 +960,23 @@
 }
 
 @media (max-width: 480px) {
+    .batch-context-card {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "copy"
+            "meter"
+            "steps"
+            "jump";
+    }
+
+    .batch-context-meter {
+        justify-self: start;
+    }
+
+    .batch-context-steps {
+        grid-template-columns: 1fr;
+    }
+
     .batch-item-thumb {
         width: 40px;
         height: 22px;

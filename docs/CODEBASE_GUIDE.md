@@ -9,6 +9,8 @@ Use this document for:
 - how to add new features without increasing coupling
 - near-term extension guidance
 
+Use `docs/DESIGN_DECISION_HISTORY.md` for visual before/after records and product UI decisions that need screenshot context.
+
 Use `docs/TESTING_STATUS.md` for transient build and environment notes only.
 
 ## Table of Contents
@@ -363,6 +365,34 @@ Owns:
 - Interactive controls should rely on the shared `:focus-visible` baseline for buttons, links, form fields, and tabindex targets. Add component-specific focus styling only when the baseline is insufficient.
 - Do not use `transition: all`; list the exact properties that should animate so state changes stay predictable.
 - Respect `prefers-reduced-motion: reduce` by calming decorative animation and hover motion without hiding content or preventing layout/state changes from completing.
+- Keep the converter task dominant in the first viewport: URL input, format choice, and Convert should read as the primary workflow before discovery, lyrics, theme, or game affordances.
+- Decorative motion and secondary tools should not compete with conversion. Prefer static decoration or one subtle animation, and keep games, discovery, and studio links visibly secondary until the user chooses them.
+
+### Button Text Contrast
+
+Keep the playful gradients, glass fills, and tinted active states, but do not let a component guess its text color from the background. Every interactive state that changes the fill should also choose a semantic foreground token.
+
+- Use `--button-primary-foreground` on full primary gradient controls such as Convert, Add to Batch, download, and game start/restart buttons.
+- Use `--button-glass-foreground` and `--button-glass-muted-foreground` for glass, secondary, inactive, icon, and outline-style controls.
+- Use `--button-selected-foreground` for selected or active tabs, pills, toggles, theme chips, genre chips, and tinted assistant/studio controls.
+- Use `--button-danger-foreground`, `--button-success-foreground`, and `--button-error-foreground` for destructive, correct, and error/wrong answer states.
+- Use `--button-disabled-foreground` when disabled controls still show readable text; opacity can support the state, but should not be the only contrast mechanism.
+- Raw `white` is allowed for decorative highlights, sheens, and scrims. Do not use raw `white` for control text unless a named semantic foreground token is impossible and the state has been verified in all four themes.
+
+### Hover And Focus Inside Clipped Containers
+
+Horizontal scrollers, vertical scroll panels, rails, and cards with `overflow: hidden` can crop lifted hover states, shadows, scaled children, and focus rings. Before adding hover lift, scale, large shadows, or `outline-offset` inside a clipped container:
+
+1. Add internal breathing room on the scroll container or rail with small padding.
+2. Use an equal negative margin to preserve the base visual alignment when needed.
+3. Add `scroll-padding-inline` or `scroll-padding-block` so keyboard and snap movement do not park items against the clipped edge.
+4. Verify the first, active, and last items, not only middle items.
+5. Keep intentional internal crops, such as thumbnails, progress bars, text ellipsis, and masked media, scoped to the child that actually needs clipping.
+
+Existing examples:
+- `css/components/features.css`: `.genre-tabs` and `.video-carousel`
+- `css/components/batch.css`: `.batch-list` and `.batch-progress-list`
+- `css/components/karaoke-panel.css`: `.point-rail-window`
 
 ## Theme System
 
@@ -378,7 +408,8 @@ Owns:
 1. Components should consume semantic variables, not hardcoded palette values.
 2. Theme-specific visual differences should be expressed through `css/themes/*.css` first.
 3. JavaScript should not assign presentation colors unless the value is genuinely data-driven.
-4. New UI states should prefer semantic tokens over ad hoc selectors.
+4. Data-driven accents, such as popular-genre colors, should be passed as local custom properties only; component CSS must derive softened surfaces, borders, and labels from them rather than applying raw inline backgrounds.
+5. New UI states should prefer semantic tokens over ad hoc selectors.
 
 ### Common semantic tokens
 
@@ -391,6 +422,13 @@ Examples already in use:
 - `--button-primary-foreground`
 - `--button-secondary`
 - `--button-secondary-foreground`
+- `--button-glass-foreground`
+- `--button-glass-muted-foreground`
+- `--button-selected-foreground`
+- `--button-danger-foreground`
+- `--button-success-foreground`
+- `--button-error-foreground`
+- `--button-disabled-foreground`
 - `--success-surface`
 - `--success-border`
 - `--error-surface`
@@ -409,11 +447,19 @@ The hero is now a first-class layout area rather than a narrow centered card.
 It includes:
 - theme switcher
 - branded hero copy
-- right-side visual runway/art panel
+- right-side conversion preview panel
 - modular converter section
 - karaoke/arcade sidecar
 
-Hero motion is decorative only and now includes reduced-motion fallbacks.
+Hero decoration should stay static or very calm so it does not compete with conversion.
+
+The right-side hero preview is a compact conversion teaser, not the full discovery audio preview. Keep it useful and enticing, but cap its desktop column so it does not inflate the hero height. On large screens, the hero should feel like conversion context rather than a billboard: keep the hero copy on the same standard card padding rhythm as the rest of the surface instead of adding a special left inset to balance the preview, and keep the converter input and Convert action reachable in the first viewport at both the historical comparison size (`1491x851`) and a standard large desktop size (`1536x900`). On mobile, remove secondary teaser details such as the MP3/MP4 badge and progress rail before letting the converter input drop below the first viewport. See [DESIGN_DECISION_HISTORY.md](./DESIGN_DECISION_HISTORY.md) for the before/after record.
+
+The theme switcher remains available in the hero, but mobile uses compact swatch-style buttons with visually hidden labels. Preserve the accessible button text when changing this control.
+
+The desktop sidecar is supportive context, not a second primary card. Keep the converter column visibly wider, prevent the sidecar card from stretching to create empty space, and keep Studio/Arcade/Batch content compact enough to sit beside the converter without matching every pixel of its height.
+
+The Studio sidecar should feel like a compact timing tool, not a sparse promo card. Keep the status, mode context, timing meter, workflow rows, and Time Sync Studio action in one dense panel. Avoid broad three-column feature boxes or stacked empty cards that make the right side feel oversized.
 
 ### Converter Flow
 
@@ -424,7 +470,19 @@ The converter flow is split into:
 - completion/download state
 - batch flow when enabled
 
+The converter's quick workflow guidance should read like product UI, not marketing decoration. Use a restrained inline step rail with text labels and small numeric markers. Avoid emoji pills, oversized badges, or right-aligned chip clusters that compete with the input.
+
 Themed converter visuals should be driven by shared tokens and animation registries, not embedded inline in `app.js`.
+
+When batch mode is enabled, the sidecar should switch to batch context instead of continuing to promote unrelated studio/arcade content. Keep the queue count, next action, and progress/result state visible without creating a separate visual system. Use compact workflow rows for batch guidance; avoid large pill rows that make the sidecar feel wide and empty.
+
+Batch active states use dedicated text tokens because each theme places the active batch controls on different surface brightness. Use `--batch-active-foreground`, `--batch-kicker-foreground`, `--batch-muted-foreground`, `--batch-step-foreground`, and `--batch-action-foreground` instead of borrowing `--primary-foreground` or `--muted-foreground` directly for batch-specific filled/tinted controls. Verify Green and Frutiger Aero especially, because one is dark with saturated green fills and the other is light with pale blue fills.
+
+Sunshine should read as warm amber, peach, and clay. Do not let cool blue, cyan, or green progress accents leak into the hero theme switcher, conversion teaser card, conversion teaser meter, primary button gradient, or batch assistant unless the component is explicitly previewing a non-Sunshine theme in a separate context. Primary, selected, and launch-style Sunshine buttons may use a restrained warm radiance effect, but the glow must remain theme-scoped, avoid layout shifts, and stop animating under `prefers-reduced-motion: reduce`.
+
+Sunshine hover should be quieter than Sunshine primary/launch radiance. Keep ordinary hover states to warm border, surface, and small shadow changes. Active format buttons should use a static warm shadow instead of pulsing, so hovering format choices does not feel like a large decorative glow.
+
+Theme switcher swatches preview their destination themes even when another theme is active. Theme-specific CSS may override the active theme's own preview token, such as Sunshine warming `--theme-preview-sunshine`, but it must not override `--theme-preview-space`, `--theme-preview-green`, or `--theme-preview-frutiger` just because Sunshine is active.
 
 ### Karaoke Flow
 
@@ -454,6 +512,8 @@ Preview implementation details:
 - `service-worker-assets.js` must include any new browser module imported by the preview flow.
 
 Do not route preview playback through `app.js`. The only handoff from discovery to conversion should remain the explicit convert callback wired by `app.js`.
+
+Horizontal discovery scrollers need internal padding large enough for hover lift, borders, shadows, and focus rings. Keep first and last popular video cards from clipping by balancing negative carousel margins with larger inline and bottom padding.
 
 ### Mini-Games and Stats
 
@@ -525,6 +585,10 @@ node scripts/sync-service-worker-assets.mjs
 
 This keeps the service worker manifest aligned with reachable frontend assets and prevents stale PWA caches from missing new modules.
 
+The generated service-worker version hashes asset contents, not just asset paths. Keep that behavior intact: a CSS-only or HTML-only UI change must produce a new `service-worker-assets.js` version so returning browsers do not keep stale static files. The app registers the worker with `updateViaCache: 'none'` for the same reason.
+
+The service worker serves CSS and JS with a network-first strategy while online, then falls back to cache if the network fails. Do not move styles or scripts back to the cache-first static asset branch; that can make returning browser sessions keep old layouts after a UI-only change.
+
 ### 7. Keep files under 500 lines
 
 If a module exceeds roughly 500 lines, look for stable boundaries to split before adding more work to it. The goal is not arbitrary splitting for its own sake; extract responsibilities that are already distinct, such as player adapter, export formatter, or assistant client.
@@ -590,7 +654,6 @@ Rule in force:
 Completed migration targets:
 - `js/features.js` now ships as an ES module with named exports
 - `js/batch.js` now ships as an ES module with named exports
-- `js/hero-runner.js` is imported as a side-effect ES module by `app.js`
 - the active Snake runtime comes from `js/game/*` through ES module imports
 
 Remaining legacy target:
@@ -774,6 +837,7 @@ During review:
 - reject synthetic event dispatches across module boundaries
 - prefer narrow APIs between modules over shared mutable state
 - document the intended boundary whenever introducing a new server-side subsystem
+- use the shared `js/ui/icons.js` SVG helper for product icons; do not add visible emoji glyphs to labels, badges, tabs, game headers, or genre data
 
 ### Recommended sequence
 
@@ -793,6 +857,7 @@ During review:
 - avoid cross-module DOM mutations and synthetic event dispatches
 - check reduced-motion behavior for decorative motion
 - verify all visible states in all themes
+- scan touched UI for visible emoji glyphs and replace them with shared SVG icons or plain text
 - run the browser smoke pass in `docs/RUNTIME_VERIFICATION.md` for runtime-sensitive changes
 - add a race-condition test for any new async UI flow
 - run `npm run build`

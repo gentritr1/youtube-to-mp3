@@ -1,4 +1,8 @@
+import { iconSvg } from './ui/icons.js';
+
 export const isLivePopularVideo = (video) => Boolean(video?.isLive || video?.duration === 'LIVE');
+
+const renderGenreIcon = (genre, className) => iconSvg(genre?.icon || genre?.id || 'music', className);
 
 export const resolveActiveGenreId = (genres, activeGenre) => {
     if (!Array.isArray(genres) || genres.length === 0) {
@@ -59,12 +63,14 @@ export const renderPopularGenreTabs = ({
     }
 
     genreTabs.innerHTML = (Array.isArray(genres) ? genres : []).map((genre) => `
-        <button 
+        <button
+            type="button"
             class="genre-tab ${genre.id === activeGenre ? 'active' : ''}" 
             data-genre="${escapeAttr(genre.id)}"
-            style="${genre.id === activeGenre ? `background: ${escapeAttr(genre.color)};` : ''}"
+            style="--genre-accent: ${escapeAttr(genre.color)};"
+            aria-pressed="${genre.id === activeGenre ? 'true' : 'false'}"
         >
-            <span class="genre-tab-icon">${escapeHtml(genre.icon)}</span>
+            <span class="genre-tab-icon">${renderGenreIcon(genre, 'ui-icon')}</span>
             <span>${escapeHtml(genre.name)}</span>
         </button>
     `).join('');
@@ -81,11 +87,14 @@ export const updatePopularGenreTabStyles = ({
     genres,
     genreId
 } = {}) => {
-    const genre = (Array.isArray(genres) ? genres : []).find((entry) => entry.id === genreId);
     genreTabs?.querySelectorAll('.genre-tab').forEach((tab) => {
         const isActive = tab.dataset.genre === genreId;
+        const tabGenre = (Array.isArray(genres) ? genres : []).find((entry) => entry.id === tab.dataset.genre);
         tab.classList.toggle('active', isActive);
-        tab.style.background = isActive && genre ? genre.color : '';
+        tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        if (tabGenre?.color) {
+            tab.style.setProperty('--genre-accent', tabGenre.color);
+        }
     });
 };
 
@@ -111,7 +120,7 @@ export const renderPopularVideoCarousel = ({
     if (activeGenreSummary) {
         activeGenreSummary.innerHTML = `
             <div class="popular-genre-card" style="--genre-accent: ${escapeAttr(genre.color)}">
-                <span class="popular-genre-icon">${escapeHtml(genre.icon)}</span>
+                <span class="popular-genre-icon">${renderGenreIcon(genre, 'ui-icon')}</span>
                 <div class="popular-genre-copy">
                     <span class="popular-genre-label">${escapeHtml(genre.name)}</span>
                     <p class="popular-genre-description">${escapeHtml(genre.description || 'Curated tracks for preview and conversion.')}</p>
@@ -127,33 +136,28 @@ export const renderPopularVideoCarousel = ({
                 <img src="${escapeAttr(video.thumbnail)}" alt="${escapeAttr(video.title)}" loading="lazy">
                 <span class="video-card-duration">${escapeHtml(video.duration)}</span>
                 ${video.tag ? `<span class="video-card-tag">${escapeHtml(video.tag)}</span>` : ''}
-                <div class="video-card-overlay">
-                    <div class="video-card-play">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    </div>
-                </div>
-                <div class="video-card-actions">
-                    <button class="video-action-btn${isLivePopularVideo(video) ? ' disabled' : ''}" data-action="preview" title="${isLivePopularVideo(video) ? 'Preview unavailable for live streams' : 'Preview'}" ${isLivePopularVideo(video) ? 'disabled' : ''}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
-                        </svg>
-                    </button>
-                    <button class="video-action-btn" data-action="convert" title="Convert">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                    </button>
-                </div>
             </div>
             <div class="video-card-info">
                 <span class="video-card-rank">${String(index + 1).padStart(2, '0')}</span>
                 <h3 class="video-card-title">${escapeHtml(video.title)}</h3>
                 <p class="video-card-artist">${escapeHtml(video.artist)}</p>
+                <div class="video-card-actions">
+                    <button type="button" class="video-action-btn${isLivePopularVideo(video) ? ' disabled' : ''}" data-action="preview" aria-label="${isLivePopularVideo(video) ? 'Preview unavailable for live streams' : `Preview ${escapeAttr(video.title)}`}" title="${isLivePopularVideo(video) ? 'Preview unavailable for live streams' : 'Preview'}" ${isLivePopularVideo(video) ? 'disabled' : ''}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                        </svg>
+                        <span>Preview</span>
+                    </button>
+                    <button type="button" class="video-action-btn" data-action="convert" aria-label="Convert ${escapeAttr(video.title)}" title="Convert">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Convert</span>
+                    </button>
+                </div>
             </div>
         </article>
     `).join('');
@@ -162,6 +166,10 @@ export const renderPopularVideoCarousel = ({
         const videoId = card.dataset.videoId;
         const video = genre.videos.find((entry) => entry.videoId === videoId);
         const videoIsLive = card.dataset.isLive === 'true';
+
+        card.addEventListener('click', () => {
+            onConvertVideo(video);
+        });
 
         const previewBtn = card.querySelector('[data-action="preview"]');
         if (previewBtn && !videoIsLive) {
@@ -173,15 +181,6 @@ export const renderPopularVideoCarousel = ({
 
         card.querySelector('[data-action="convert"]')?.addEventListener('click', (event) => {
             event.stopPropagation();
-            onConvertVideo(video);
-        });
-
-        card.addEventListener('click', () => {
-            if (!videoIsLive) {
-                onShowPreview(video);
-                return;
-            }
-
             onConvertVideo(video);
         });
     });

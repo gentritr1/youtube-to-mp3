@@ -224,7 +224,7 @@
 }
 
 /* ========================================
-   Download Section - Orchestrated Animation
+   Download Section
    ======================================== */
 .download-section {
     display: flex;
@@ -245,7 +245,6 @@
         0 12px 28px color-mix(in srgb, var(--glass-shadow) 26%, transparent);
 }
 
-/* Green sweep overlay - animates width from 0 to 100% */
 .border-progress {
     position: absolute;
     top: 0;
@@ -258,15 +257,13 @@
     border-left: 3px solid var(--success);
     pointer-events: none;
     z-index: 0;
-    transition: width 2.5s ease-out;
+    transition: opacity var(--transition-fast);
 }
 
-/* When animating, sweep across */
 .download-section.animating .border-progress {
     width: 100%;
 }
 
-/* Final complete state - green border all around */
 .download-section.complete {
     border-color: var(--success-border);
     box-shadow:
@@ -276,7 +273,6 @@
 
 .download-section.complete .border-progress {
     opacity: 0;
-    transition: opacity 0.3s ease;
 }
 
 /* Success Icon with Checkmark Animation */
@@ -290,7 +286,7 @@
     color: var(--success);
     opacity: 0;
     transform: scale(0.5);
-    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: opacity var(--transition-base), transform var(--transition-base);
 }
 
 .download-section.show-icon .success-icon {
@@ -306,13 +302,13 @@
 .checkmark-circle {
     stroke-dasharray: 62;
     stroke-dashoffset: 62;
-    transition: stroke-dashoffset 0.4s ease 0.1s;
+    transition: stroke-dashoffset var(--transition-base);
 }
 
 .checkmark-check {
     stroke-dasharray: 20;
     stroke-dashoffset: 20;
-    transition: stroke-dashoffset 0.3s ease 0.4s;
+    transition: stroke-dashoffset var(--transition-base);
 }
 
 .download-section.show-icon .checkmark-circle {
@@ -330,7 +326,7 @@
     flex-direction: column;
     opacity: 0;
     transform: translateX(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity var(--transition-base), transform var(--transition-base);
 }
 
 .download-section.show-content .download-content {
@@ -370,8 +366,8 @@
     opacity: 0;
     transform: translateY(5px) scale(0.95);
     transition:
-        opacity var(--motion-duration-smooth) var(--motion-ease-standard),
-        transform var(--motion-duration-smooth) var(--motion-ease-pop),
+        opacity var(--transition-base),
+        transform var(--transition-base),
         background var(--transition-base),
         box-shadow var(--transition-base);
 }

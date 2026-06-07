@@ -749,8 +749,8 @@
                 this.elements.powerupIndicator.classList.add('active');
                 this.elements.powerupIndicator.classList.remove('ghost', 'speed', 'split');
                 this.elements.powerupIndicator.classList.add(this.activePowerup);
-                const icons = { ghost: '👻', speed: '⚡', split: '✂️' };
-                this.elements.powerupIcon.textContent = icons[this.activePowerup] || '✨';
+                const icons = { ghost: 'Ghost', speed: 'Fast', split: 'Split' };
+                this.elements.powerupIcon.textContent = icons[this.activePowerup] || 'Power';
                 this.elements.powerupTimer.textContent = `${remaining}s`;
             } else {
                 this.elements.powerupIndicator.classList.remove('active');
@@ -811,7 +811,7 @@
                 ctx.font = '11px Inter, sans-serif';
                 ctx.fillStyle = '#fbbf24';
                 ctx.textAlign = 'center';
-                ctx.fillText(`🐍 Snake ${this.activeSnakeIndex + 1}/${this.snakes.length} • Press X`, canvas.width / 2, 24);
+                ctx.fillText(`Snake ${this.activeSnakeIndex + 1}/${this.snakes.length} | Press X`, canvas.width / 2, 24);
             }
         }
 
@@ -903,7 +903,7 @@
                     ctx.fillStyle = '#fbbf24';
                     ctx.shadowBlur = 10;
                     ctx.shadowColor = '#fbbf24';
-                    ctx.fillText(`🔥 COMBO x${this.comboCount}`, cx, badgeY);
+                    ctx.fillText(`COMBO x${this.comboCount}`, cx, badgeY);
                     ctx.shadowBlur = 0;
                     badgeY += 26;
                 }
@@ -913,7 +913,7 @@
                     ctx.fillStyle = '#f43f5e';
                     ctx.shadowBlur = 10;
                     ctx.shadowColor = '#f43f5e';
-                    ctx.fillText('✂️ SPLIT MASTER', cx, badgeY);
+                    ctx.fillText('SPLIT MASTER', cx, badgeY);
                     ctx.shadowBlur = 0;
                 }
 
@@ -1046,4 +1046,3 @@
             this.overlayAnimationFrameId = null;
         }
     }
-

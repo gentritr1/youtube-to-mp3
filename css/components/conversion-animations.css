@@ -42,7 +42,7 @@
 }
 
 /* ========================================
-   1. Vinyl Record 🎵
+   1. Vinyl Record
    ======================================== */
 .anim-vinyl {
     position: relative;
@@ -191,7 +191,7 @@
 }
 
 /* ========================================
-   2. Cassette Tape 📼
+   2. Cassette Tape
    ======================================== */
 .anim-cassette {
     position: relative;
@@ -313,7 +313,7 @@
 }
 
 /* ========================================
-   3. Equalizer 🎛️
+   3. Equalizer
    ======================================== */
 .anim-equalizer {
     display: flex;
@@ -422,7 +422,7 @@
 }
 
 /* ========================================
-   4. Waveform 🌊
+   4. Waveform
    ======================================== */
 .anim-waveform {
     width: 140px;
@@ -533,7 +533,7 @@
     background:
         linear-gradient(180deg, var(--frutiger-active-top), var(--frutiger-active-bottom)),
         linear-gradient(135deg, var(--frutiger-active-accent-1), var(--frutiger-active-accent-2));
-    color: color-mix(in srgb, var(--foreground) 88%, var(--primary));
+    color: var(--button-primary-foreground);
     border: 1px solid var(--frutiger-active-border);
     box-shadow:
         0 1px 0 var(--frutiger-active-inset) inset,
@@ -551,7 +551,7 @@
 }
 
 :root[data-theme="frutiger-aero"] .format-btn:not(.active) {
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
 }
 
 :root[data-theme="frutiger-aero"] .conversion-animation::before,

@@ -68,7 +68,7 @@ describe('previewPanel', () => {
         expect(elements.previewPlayer.getAttribute('aria-busy')).toBe('false');
         expect(elements.previewLoading.getAttribute('role')).toBe('alert');
         expect(elements.previewTransitionNote.textContent).toBe('Preview unavailable');
-        expect(elements.previewLoadingText.textContent).toBe('⚠️ Preview failed');
+        expect(elements.previewLoadingText.textContent).toBe('Preview failed');
         expect(elements.previewLoadingText.style.color).toBe('var(--destructive)');
 
         resetPreviewLoadingText(elements);

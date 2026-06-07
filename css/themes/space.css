@@ -51,6 +51,11 @@
     --button-primary-foreground: hsl(225 44% 8%);
     --button-secondary: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 100%), rgba(22, 31, 54, 0.76);
     --button-secondary-foreground: hsl(210 20% 96%);
+    --batch-active-foreground: hsl(210 20% 96%);
+    --batch-kicker-foreground: hsl(211 92% 78%);
+    --batch-muted-foreground: hsl(219 18% 78%);
+    --batch-step-foreground: hsl(214 24% 88%);
+    --batch-action-foreground: hsl(210 20% 96%);
     --lyrics-overlay: radial-gradient(circle at center, rgba(59, 130, 246, 0.18) 0%, transparent 72%);
     --lyrics-text-muted: rgba(230, 239, 255, 0.16);
     --lyrics-text-past: rgba(230, 239, 255, 0.08);
@@ -89,19 +94,6 @@
     --preview-energy-glow: var(--hero-orb);
     --preview-energy-scan: rgba(96, 165, 250, 0.36);
     --preview-energy-rest: rgba(191, 219, 254, 0.08);
-}
-
-:root[data-theme="space"] .theme-scene-moon,
-:root[data-theme="space"] .theme-scene-star,
-:root[data-theme="space"] .theme-mini-moon,
-:root[data-theme="space"] .theme-mini-stars {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-}
-
-:root[data-theme="space"] .theme-scene-moon,
-:root[data-theme="space"] .theme-mini-moon {
-    filter: drop-shadow(0 0 16px rgba(96, 165, 250, 0.18));
 }
 
 :root[data-theme="space"] .theme-charm-space {

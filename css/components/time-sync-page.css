@@ -15,7 +15,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     text-decoration: none;
     font-weight: 700;
 }
@@ -231,6 +231,7 @@
 .studio-teaser-link {
     background: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay-strong));
     border-color: color-mix(in srgb, var(--hero-orb) 44%, transparent);
+    color: var(--button-glass-foreground);
 }
 
 .studio-primary-btn:hover,
@@ -335,6 +336,7 @@
 .studio-secondary-btn.is-active {
     background: color-mix(in srgb, var(--hero-orb) 26%, var(--surface-overlay-emphasis));
     border-color: color-mix(in srgb, var(--hero-orb) 62%, transparent);
+    color: var(--button-selected-foreground);
 }
 
 .sync-editor-copy {

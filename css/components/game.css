@@ -74,8 +74,14 @@
     letter-spacing: -0.01em;
 }
 
-.game-floating .game-title::before {
-    content: none;
+.game-title-icon,
+.mini-game-btn .ui-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.game-title-icon {
+    color: color-mix(in srgb, var(--hero-orb) 76%, var(--foreground));
 }
 
 .game-header-right {
@@ -110,7 +116,7 @@
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--game-border) 68%, transparent);
     border-radius: 5px;
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
     cursor: pointer;
     transition:
         background var(--transition-fast),
@@ -121,7 +127,7 @@
 
 .game-minimize-btn:hover {
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--game-surface-soft));
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     border-color: var(--game-border-strong);
 }
 
@@ -181,7 +187,7 @@
     background: color-mix(in srgb, var(--game-surface-soft) 80%, transparent);
     border: 1px solid color-mix(in srgb, var(--game-border) 72%, transparent);
     border-radius: 99px;
-    color: var(--muted-foreground);
+    color: var(--button-glass-muted-foreground);
     font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
@@ -196,14 +202,14 @@
 
 .mini-game-btn:hover {
     background: color-mix(in srgb, var(--hero-orb) 10%, var(--game-surface-soft));
-    color: var(--foreground);
+    color: var(--button-glass-foreground);
     border-color: var(--game-border-strong);
     transform: translateY(var(--hover-lift));
 }
 
 .mini-game-btn.active {
     background: color-mix(in srgb, var(--hero-orb) 14%, var(--game-surface-soft));
-    color: var(--foreground);
+    color: var(--button-selected-foreground);
     border-color: var(--game-border-strong);
     box-shadow: 0 12px 22px color-mix(in srgb, var(--hero-orb) 16%, transparent);
     transform: translateY(var(--hover-lift));
@@ -242,7 +248,9 @@
 }
 
 .stat-item .stat-icon {
-    font-size: 0.75rem;
+    width: 0.78rem;
+    height: 0.78rem;
+    color: currentcolor;
 }
 
 .stat-item .stat-value {
@@ -508,9 +516,11 @@
     font-size: 0.8125rem;
     padding: 0.5rem 1.25rem;
     border-radius: var(--radius);
-    background: var(--emerald);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 14%, transparent), transparent 70%),
+        var(--button-primary);
     border: none;
-    color: white;
+    color: var(--button-primary-foreground);
     cursor: pointer;
     transition:
         background var(--transition-base),
@@ -521,14 +531,16 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     box-shadow:
-        0 2px 8px color-mix(in srgb, var(--emerald) 30%, transparent);
+        0 14px 26px color-mix(in srgb, var(--hero-orb) 18%, transparent);
 }
 
 .restart-btn:hover {
-    background: color-mix(in srgb, var(--emerald) 88%, white);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 70%),
+        var(--button-primary);
     transform: translateY(var(--hover-lift));
     box-shadow:
-        0 4px 16px color-mix(in srgb, var(--emerald) 35%, transparent);
+        0 18px 34px color-mix(in srgb, var(--hero-orb) 24%, transparent);
 }
 
 .restart-btn:active {
@@ -564,8 +576,13 @@
 }
 
 .high-scores h4::before {
-    content: '🏆';
-    font-size: 0.8rem;
+    content: none;
+}
+
+.high-scores h4 .ui-icon {
+    width: 0.85rem;
+    height: 0.85rem;
+    color: color-mix(in srgb, var(--amber) 82%, var(--foreground));
 }
 
 #high-scores-list {
