@@ -27,12 +27,20 @@
 .convert-action-title {
     display: inline-flex;
     align-items: center;
+    gap: 0.38rem;
     width: fit-content;
     color: var(--muted-foreground);
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+}
+
+.converter-card-eyebrow .eyebrow-icon,
+.nerd-stats-label .eyebrow-icon {
+    width: 0.82rem;
+    height: 0.82rem;
+    color: color-mix(in srgb, var(--hero-headlight) 84%, var(--foreground));
 }
 
 .converter-card-title {

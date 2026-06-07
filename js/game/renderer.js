@@ -71,13 +71,13 @@ export class Renderer {
         if (comboCount >= 2) {
             ctx.font = '13px Inter, sans-serif';
             ctx.fillStyle = COLORS.gameOverCombo;
-            ctx.fillText(`🔥 Best Combo: x${comboCount}`, canvas.width / 2, canvas.height / 2 + 55);
+            ctx.fillText(`Best Combo: x${comboCount}`, canvas.width / 2, canvas.height / 2 + 55);
         }
 
         // Show split achievement
         if (hasSplitSnake) {
             ctx.fillStyle = COLORS.gameOverSplit;
-            ctx.fillText('✂️ Split Master!', canvas.width / 2, canvas.height / 2 + (comboCount >= 2 ? 75 : 55));
+            ctx.fillText('Split Master!', canvas.width / 2, canvas.height / 2 + (comboCount >= 2 ? 75 : 55));
         }
     }
 
@@ -94,6 +94,6 @@ export class Renderer {
         ctx.font = '11px Inter, sans-serif';
         ctx.fillStyle = COLORS.switchHintText;
         ctx.textAlign = 'center';
-        ctx.fillText(`🐍 Snake ${activeSnakeIndex + 1}/${totalSnakes} • Press X`, this.canvas.width / 2, 24);
+        ctx.fillText(`Snake ${activeSnakeIndex + 1}/${totalSnakes} | Press X`, this.canvas.width / 2, 24);
     }
 }

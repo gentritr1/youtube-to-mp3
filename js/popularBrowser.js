@@ -1,4 +1,8 @@
+import { iconSvg } from './ui/icons.js';
+
 export const isLivePopularVideo = (video) => Boolean(video?.isLive || video?.duration === 'LIVE');
+
+const renderGenreIcon = (genre, className) => iconSvg(genre?.icon || genre?.id || 'music', className);
 
 export const resolveActiveGenreId = (genres, activeGenre) => {
     if (!Array.isArray(genres) || genres.length === 0) {
@@ -66,7 +70,7 @@ export const renderPopularGenreTabs = ({
             style="--genre-accent: ${escapeAttr(genre.color)};"
             aria-pressed="${genre.id === activeGenre ? 'true' : 'false'}"
         >
-            <span class="genre-tab-icon">${escapeHtml(genre.icon)}</span>
+            <span class="genre-tab-icon">${renderGenreIcon(genre, 'ui-icon')}</span>
             <span>${escapeHtml(genre.name)}</span>
         </button>
     `).join('');
@@ -116,7 +120,7 @@ export const renderPopularVideoCarousel = ({
     if (activeGenreSummary) {
         activeGenreSummary.innerHTML = `
             <div class="popular-genre-card" style="--genre-accent: ${escapeAttr(genre.color)}">
-                <span class="popular-genre-icon">${escapeHtml(genre.icon)}</span>
+                <span class="popular-genre-icon">${renderGenreIcon(genre, 'ui-icon')}</span>
                 <div class="popular-genre-copy">
                     <span class="popular-genre-label">${escapeHtml(genre.name)}</span>
                     <p class="popular-genre-description">${escapeHtml(genre.description || 'Curated tracks for preview and conversion.')}</p>

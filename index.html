@@ -111,7 +111,7 @@
                 <section class="converter-card">
                         <div class="converter-card-header">
                         <div class="converter-card-copy">
-                            <span class="converter-card-eyebrow">⚡ Quick convert</span>
+                            <span class="converter-card-eyebrow"><span class="eyebrow-icon" data-ui-icon="bolt" aria-hidden="true"></span>Quick convert</span>
                             <h3 class="converter-card-title">Turn a YouTube video into MP3 or MP4</h3>
                             <p class="converter-card-subtitle">Paste a link, choose a format, and convert.</p>
                         </div>
@@ -255,7 +255,7 @@
                     <section class="karaoke-card" id="karaoke-card">
                         <div class="karaoke-panel-header">
                             <div>
-                                <span class="karaoke-eyebrow">🎚️ Timing tools</span>
+                                <span class="karaoke-eyebrow"><span class="eyebrow-icon" data-ui-icon="sliders" aria-hidden="true"></span>Timing tools</span>
                                 <h2 class="karaoke-panel-title">Need detailed lyric timing?</h2>
                             </div>
                             <div class="karaoke-panel-tabs" role="group" aria-label="Sidecar mode">
@@ -275,11 +275,19 @@
                         <div class="karaoke-panel-body">
                             <div id="studio-view" class="karaoke-view">
                                 <div class="studio-teaser-card">
-                                    <p class="studio-teaser-copy">A focused workspace for captions and lyric timing, separate from the quick converter.</p>
+                                    <div class="studio-teaser-top">
+                                        <p class="studio-teaser-copy">A focused workspace for captions and lyric timing, separate from the quick converter.</p>
+                                        <span class="studio-teaser-mode">Caption / Sync / Export</span>
+                                    </div>
+                                    <div class="studio-teaser-meter" aria-hidden="true">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
                                     <ul class="studio-teaser-list" aria-label="Studio tools">
-                                        <li>Captions</li>
-                                        <li>Timing points</li>
-                                        <li>JSON export</li>
+                                        <li><span>Captions</span><small>Load transcript text</small></li>
+                                        <li><span>Timing points</span><small>Review line positions</small></li>
+                                        <li><span>JSON export</span><small>Save sidecar timing</small></li>
                                     </ul>
                                     <a href="/time-sync-studio.html" class="studio-teaser-link">Open Time Sync Studio</a>
                                 </div>
@@ -310,7 +318,7 @@
         <!-- Audio details panel (outside card for wider layout) -->
         <div id="nerd-stats" class="nerd-stats hidden">
             <button type="button" class="nerd-stats-toggle" id="nerd-stats-toggle" aria-expanded="false">
-                <span class="nerd-stats-label">📊 Audio details</span>
+                <span class="nerd-stats-label"><span class="eyebrow-icon" data-ui-icon="chart" aria-hidden="true"></span>Audio details</span>
                 <svg class="nerd-stats-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -357,9 +365,9 @@
     <!-- Floating Game Panel -->
     <div id="game-container" class="game-container game-floating hidden">
         <div class="game-header">
-            <span class="game-title">🐍 Snake</span>
+            <span class="game-title"><span class="game-title-icon" data-ui-icon="snake" aria-hidden="true"></span>Snake</span>
             <div class="game-header-right">
-                <button type="button" class="mini-game-btn" data-game="guesstrack" title="Switch to Guess the Track">🎵 Switch</button>
+                <button type="button" class="mini-game-btn" data-game="guesstrack" title="Switch to Guess the Track"><span data-ui-icon="music" aria-hidden="true"></span>Switch</button>
                 <span class="game-score">Score: <span id="score">0</span></span>
                 <button type="button" id="game-minimize" class="game-minimize-btn" aria-label="Minimize game">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -374,22 +382,22 @@
             <!-- Stats Bar -->
             <div class="game-stats">
                 <div class="stat-item">
-                    <span class="stat-icon">📏</span>
+                    <span class="stat-icon" data-ui-icon="ruler" aria-hidden="true"></span>
                     <span>Length:</span>
                     <span id="snake-length" class="stat-value">3</span>
                 </div>
                 <div id="combo-display" class="combo-display">
-                    <span>🔥</span>
+                    <span class="stat-icon" data-ui-icon="flame" aria-hidden="true"></span>
                     <span id="combo-count">x2</span>
                     <span>COMBO!</span>
                 </div>
                 <div id="split-indicator" class="split-indicator">
-                    <span>🐍</span>
+                    <span class="stat-icon" data-ui-icon="snake" aria-hidden="true"></span>
                     <span>Snake <span id="split-snake-num">1</span></span>
                     <kbd>X</kbd>
                 </div>
                 <div id="powerup-indicator" class="powerup-indicator">
-                    <span id="powerup-icon">👻</span>
+                    <span id="powerup-icon" class="stat-icon" data-ui-icon="ghost" aria-hidden="true"></span>
                     <span id="powerup-timer">5s</span>
                 </div>
             </div>
@@ -426,7 +434,7 @@
 
             <!-- High Scores -->
             <div class="high-scores">
-                <h4>High Scores</h4>
+                <h4><span data-ui-icon="trophy" aria-hidden="true"></span>High Scores</h4>
                 <ul id="high-scores-list">
                     <!-- Scores will be injected here -->
                 </ul>
@@ -437,9 +445,9 @@
     <!-- Floating Guess the Track Panel -->
     <div id="guess-track-container" class="guess-track-container game-floating hidden">
         <div class="game-header">
-            <span class="game-title">🎵 Guess the Track</span>
+            <span class="game-title"><span class="game-title-icon" data-ui-icon="music" aria-hidden="true"></span>Guess the Track</span>
             <div class="game-header-right">
-                <button type="button" class="mini-game-btn" data-game="snake" title="Switch to Snake">🐍 Switch</button>
+                <button type="button" class="mini-game-btn" data-game="snake" title="Switch to Snake"><span data-ui-icon="snake" aria-hidden="true"></span>Switch</button>
                 <span class="game-score">Score: <span id="gt-score">0</span></span>
                 <button type="button" id="gt-minimize" class="game-minimize-btn" aria-label="Minimize game">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -452,7 +460,7 @@
         <div class="game-body gt-body">
             <div class="gt-stats-bar">
                 <div class="gt-lives">
-                    Lives: <span id="gt-lives-count">❤️❤️❤️</span>
+                    Lives: <span id="gt-lives-count" aria-label="3 lives"></span>
                 </div>
                 <div class="gt-streak">
                     Combo: <span id="gt-streak-count">0</span>

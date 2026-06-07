@@ -92,6 +92,25 @@
     color: var(--foreground);
 }
 
+.gt-lives-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.16rem;
+}
+
+.gt-life-icon {
+    width: 0.82rem;
+    height: 0.82rem;
+}
+
+.gt-life-icon.is-live {
+    color: var(--rose);
+}
+
+.gt-life-icon.is-empty {
+    color: color-mix(in srgb, var(--muted-foreground) 48%, transparent);
+}
+
 .gt-audio-player {
     width: 100%;
     min-height: 154px;

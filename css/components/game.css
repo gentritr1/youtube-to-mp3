@@ -74,8 +74,14 @@
     letter-spacing: -0.01em;
 }
 
-.game-floating .game-title::before {
-    content: none;
+.game-title-icon,
+.mini-game-btn .ui-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.game-title-icon {
+    color: color-mix(in srgb, var(--hero-orb) 76%, var(--foreground));
 }
 
 .game-header-right {
@@ -242,7 +248,9 @@
 }
 
 .stat-item .stat-icon {
-    font-size: 0.75rem;
+    width: 0.78rem;
+    height: 0.78rem;
+    color: currentcolor;
 }
 
 .stat-item .stat-value {
@@ -568,8 +576,13 @@
 }
 
 .high-scores h4::before {
-    content: '🏆';
-    font-size: 0.8rem;
+    content: none;
+}
+
+.high-scores h4 .ui-icon {
+    width: 0.85rem;
+    height: 0.85rem;
+    color: color-mix(in srgb, var(--amber) 82%, var(--foreground));
 }
 
 #high-scores-list {

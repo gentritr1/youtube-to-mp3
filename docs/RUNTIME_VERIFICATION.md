@@ -30,6 +30,7 @@ Open `http://localhost:3000` after `npm start`.
 - Mobile theme switcher: verify the swatch controls stay one row, remain keyboard focusable, and keep accessible names despite visually hidden labels.
 - Theme swatches: verify each theme chip keeps its own destination swatch colors while another theme is active; selecting Sunshine must not make Space, Green, or Frutiger Aero swatches turn into Sunshine colors.
 - Sunshine theme: verify active converter buttons, batch actions, popular genre tabs, track tags, hero theme swatches, and conversion teaser card/meter accents use warm amber/peach/clay accents rather than cool blue/cyan, green progress fills, or harsh red fills. Verify primary, selected, preview, and game-launch buttons have a controlled warm radiance in normal motion and become static under `prefers-reduced-motion: reduce`.
+- Sunshine hover: verify inactive hover states use a restrained warm border/surface/shadow, active MP3/MP4 format buttons do not pulse, and primary/launch radiance remains reserved for real action buttons.
 - Viewports: verify one mobile width, one tablet width, and desktop.
 - Motion: verify normal motion and `prefers-reduced-motion: reduce`.
 - States: verify idle, loading, success, error, empty, active, inactive, popup, and panel states.
@@ -48,9 +49,13 @@ Open `http://localhost:3000` after `npm start`.
 - Button contrast: verify active, inactive, hover, destructive, disabled, and selected text/icon contrast on converter controls, theme chips, genre tabs, video action buttons, preview close/actions, studio/assistant controls, arcade launch buttons, mini-game switch/minimize buttons, and Guess Track answer states in all four themes.
 - Clipped hover/focus audit: hover and keyboard-focus the first, active, and last genre chips; first and last popular video cards; batch queue/progress rows and row actions; and the first/last point-rail timing chips. Verify lifted borders, shadows, and focus rings are not clipped by their scroll containers or rails.
 - Discovery preview controls: verify play/pause, close, preview loading/error, progress/waveform, and one-click convert controls.
+- Discovery preview chrome: verify the `30s preview` badge uses the timer icon chip, the close control stays compact, and Sunshine close hover uses a warm glow instead of a red danger fill.
+- Product icons: verify converter labels, Timing Tools, audio details, popular tabs/cards, floating game headers, high scores, power-up status, and Guess Track lives render SVG icons instead of visible emoji glyphs.
 - Waveform scrubbing: tab to the preview waveform slider, verify a visible focus ring, then use ArrowLeft/ArrowRight, ArrowUp/ArrowDown, Home, End, PageUp, and PageDown to scrub while `aria-valuenow` and the visible playhead update.
 - Sidecar tabs: verify karaoke/arcade tab focus, active state, hover state, and reduced-motion behavior.
+- Studio sidecar: verify the timing tools panel is compact and populated with status, mode context, a timing meter, workflow rows, and the Time Sync Studio action without oversized empty boxes.
 - Floating game controls: verify Snake and Guess the Track launch/floating controls remain visible, focusable, and themed.
+- Popular scroller shadows: hover the first and last visible popular video cards and verify the lifted border/shadow is not clipped by the horizontal carousel.
 
 ## Release Gate
 

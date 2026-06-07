@@ -205,3 +205,43 @@ Browser verification at `1491x851` measured no horizontal overflow, `72px` betwe
 ### Verification
 
 Browser verification at `1491x851` measured no horizontal overflow, `17px` between the hero edge and headline start, and `17px` between the teaser end and hero edge. The converter workflow rail sits below the converter copy with a `12px` gap and no pill backgrounds.
+
+---
+
+## 2026-06-08: Sunshine Hover, Studio Sidecar, And Popular Shadow Polish
+
+**Status:** Accepted
+
+**Trigger:** Sunshine hover states felt too glowy, the Timing Tools sidecar still looked sparse, and popular video card hover shadows clipped at the carousel edge.
+
+### What Changed
+
+- Kept Sunshine active format buttons warm, but made them static instead of pulsing with the primary button radiance.
+- Reduced ordinary Sunshine hover shadows so hover reads as selection feedback, not a large decorative glow.
+- Changed the Studio sidecar from broad feature boxes into a compact timing panel with mode context, a timing meter, workflow rows, and one action.
+- Increased popular carousel internal padding so first and last card hover borders, shadows, and focus rings have room to render.
+
+### Verification
+
+Browser verification at `1491x851` confirmed no horizontal overflow, Sunshine active MP3 format button `animation-name: none`, the Studio sidecar populated as a dense timing panel, and popular carousel padding of `28px` inline and `34px` bottom around the first card.
+
+---
+
+## 2026-06-08: Product Icons And Preview Control Polish
+
+**Status:** Accepted
+
+**Trigger:** Visible emoji in product labels, popular genre tabs, and floating game controls made the interface feel generated instead of intentionally designed. The active preview panel also had a preview badge and close affordance that felt too loud in Sunshine hover states.
+
+**Product principle:** Playful waiting tools are allowed, but controls should use one consistent product icon language. Emoji belongs in user content, not core converter chrome.
+
+### What Changed
+
+- Added `js/ui/icons.js`, a small shared inline-SVG icon helper for static hydration and dynamic renderers.
+- Replaced visible emoji glyphs in converter labels, timing tools, audio details, floating game controls, high scores, Guess Track lives, popular genre tabs/cards, genre data, preview errors, and canvas game-over messages.
+- Kept legacy emoji aliases in escaped form inside the helper so older genre data still resolves without rendering emoji.
+- Changed the preview badge to a timer-icon chip and softened the close hover state. Sunshine now uses warm amber/clay hover treatment instead of a harsh red circle.
+
+### Rule Going Forward
+
+Use the shared SVG helper for product chrome. Do not add new visible emoji glyphs to labels, badges, tabs, genre metadata, status chips, or game controls. Preview close remains a compact dismiss control, not a destructive action.

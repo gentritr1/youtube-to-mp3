@@ -6,6 +6,7 @@
 import { drawWaveform as renderWaveform } from './waveformRenderer.js';
 import { loadWaveformSamples } from './waveformSignal.js';
 import { PreviewAudioEngine } from './previewAudioEngine.js';
+import { iconSvg } from './ui/icons.js';
 import {
     activatePreviewPanel,
     deactivatePreviewPanel,
@@ -142,7 +143,7 @@ const FeaturesModule = (() => {
                 <div class="popular-header-copy">
                     <span class="popular-eyebrow">Suggestions</span>
                     <h2 class="popular-title">
-                        <span class="popular-title-icon">🔥</span>
+                        ${iconSvg('music', 'ui-icon popular-title-icon')}
                         Popular Music
                     </h2>
                     <p class="popular-subtitle">Easy picks to preview, explore, and convert right away.</p>
@@ -178,7 +179,7 @@ const FeaturesModule = (() => {
                             <span class="preview-title" id="preview-title">Loading...</span>
                             <span class="preview-artist" id="preview-artist"></span>
                         </div>
-                        <span class="preview-badge">30s Preview</span>
+                        <span class="preview-badge">${iconSvg('timer', 'ui-icon preview-badge-icon')}<span>30s preview</span></span>
                     </div>
                     <button class="preview-close" id="preview-close" aria-label="Close preview">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

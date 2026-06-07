@@ -1,6 +1,6 @@
 {
   "name": "Pop Hits",
-  "icon": "🎤",
+  "icon": "mic",
   "color": "#f43f5e",
   "description": "High-recognition pop records with official uploads and preview-friendly runtime.",
   "order": 20,

@@ -459,6 +459,8 @@ The theme switcher remains available in the hero, but mobile uses compact swatch
 
 The desktop sidecar is supportive context, not a second primary card. Keep the converter column visibly wider, prevent the sidecar card from stretching to create empty space, and keep Studio/Arcade/Batch content compact enough to sit beside the converter without matching every pixel of its height.
 
+The Studio sidecar should feel like a compact timing tool, not a sparse promo card. Keep the status, mode context, timing meter, workflow rows, and Time Sync Studio action in one dense panel. Avoid broad three-column feature boxes or stacked empty cards that make the right side feel oversized.
+
 ### Converter Flow
 
 The converter flow is split into:
@@ -477,6 +479,8 @@ When batch mode is enabled, the sidecar should switch to batch context instead o
 Batch active states use dedicated text tokens because each theme places the active batch controls on different surface brightness. Use `--batch-active-foreground`, `--batch-kicker-foreground`, `--batch-muted-foreground`, `--batch-step-foreground`, and `--batch-action-foreground` instead of borrowing `--primary-foreground` or `--muted-foreground` directly for batch-specific filled/tinted controls. Verify Green and Frutiger Aero especially, because one is dark with saturated green fills and the other is light with pale blue fills.
 
 Sunshine should read as warm amber, peach, and clay. Do not let cool blue, cyan, or green progress accents leak into the hero theme switcher, conversion teaser card, conversion teaser meter, primary button gradient, or batch assistant unless the component is explicitly previewing a non-Sunshine theme in a separate context. Primary, selected, and launch-style Sunshine buttons may use a restrained warm radiance effect, but the glow must remain theme-scoped, avoid layout shifts, and stop animating under `prefers-reduced-motion: reduce`.
+
+Sunshine hover should be quieter than Sunshine primary/launch radiance. Keep ordinary hover states to warm border, surface, and small shadow changes. Active format buttons should use a static warm shadow instead of pulsing, so hovering format choices does not feel like a large decorative glow.
 
 Theme switcher swatches preview their destination themes even when another theme is active. Theme-specific CSS may override the active theme's own preview token, such as Sunshine warming `--theme-preview-sunshine`, but it must not override `--theme-preview-space`, `--theme-preview-green`, or `--theme-preview-frutiger` just because Sunshine is active.
 
@@ -508,6 +512,8 @@ Preview implementation details:
 - `service-worker-assets.js` must include any new browser module imported by the preview flow.
 
 Do not route preview playback through `app.js`. The only handoff from discovery to conversion should remain the explicit convert callback wired by `app.js`.
+
+Horizontal discovery scrollers need internal padding large enough for hover lift, borders, shadows, and focus rings. Keep first and last popular video cards from clipping by balancing negative carousel margins with larger inline and bottom padding.
 
 ### Mini-Games and Stats
 
@@ -831,6 +837,7 @@ During review:
 - reject synthetic event dispatches across module boundaries
 - prefer narrow APIs between modules over shared mutable state
 - document the intended boundary whenever introducing a new server-side subsystem
+- use the shared `js/ui/icons.js` SVG helper for product icons; do not add visible emoji glyphs to labels, badges, tabs, game headers, or genre data
 
 ### Recommended sequence
 
@@ -850,6 +857,7 @@ During review:
 - avoid cross-module DOM mutations and synthetic event dispatches
 - check reduced-motion behavior for decorative motion
 - verify all visible states in all themes
+- scan touched UI for visible emoji glyphs and replace them with shared SVG icons or plain text
 - run the browser smoke pass in `docs/RUNTIME_VERIFICATION.md` for runtime-sensitive changes
 - add a race-condition test for any new async UI flow
 - run `npm run build`

@@ -17,6 +17,19 @@ node --check js/ui/themeController.js
 
 ## Current Status
 
+- Product icon and preview-control polish on 2026-06-08:
+  - Replaced visible emoji product chrome with shared SVG icons and verified `rg -n --pcre2 "\p{Emoji_Presentation}|\p{Extended_Pictographic}" index.html js css server/data tests docs` returns no matches.
+  - Browser verification used the in-app browser against `http://127.0.0.1:3000` at `1491x851`. Verified Sunshine selected, no horizontal overflow, no visible emoji-like text, active MP3 `animation-name: none`, active preview badge `103x25`, preview close `26x26`, Studio sidecar has 3 workflow rows and 3 meter segments, and popular carousel has `28px` left room plus `34px` bottom room around the first card.
+  - Browser all-theme pass checked `space`, `green`, `frutiger-aero`, and `sunshine`: one active theme, no horizontal overflow, no visible emoji-like text, and SVG icons rendered in each theme.
+  - Verified theme swatches while Sunshine is active: Space remains blue, Green remains green, Frutiger Aero remains cyan/green, and Sunshine remains amber/peach.
+  - Verified the loaded Sunshine preview-close hover rule uses warm amber/clay background, border, text, and `--sunshine-radiance-hover` instead of a red danger fill. Pointer hover could not be forced through the browser automation API, so stylesheet verification plus computed base sizing were used.
+  - `npx vitest run tests/popularBrowser.test.ts tests/previewPanel.test.ts tests/documentation.test.ts tests/serviceWorker.test.ts`: passed, 88 tests.
+  - `npm test`: passed, 30 test files and 347 tests. Redis connection errors in `tests/jobQueue.test.ts` were expected fallback logs and did not fail the suite.
+  - `npm run build`: passed.
+  - `git diff --check`: passed.
+  - `rg "transition:\s*all" css js`: no matches.
+  - `node .agents/skills/impeccable/scripts/detect.mjs --json index.html`: only `single-font` remains; this is the documented false positive for this product UI.
+  - `node scripts/sync-service-worker-assets.mjs`: passed; service-worker asset hash is `43c6646079`.
 - Converter step rail and hero padding correction on 2026-06-08:
   - Browser verification used the in-app browser against `http://127.0.0.1:3000` with a temporary `1491x851` viewport. Verified Sunshine active state, no horizontal overflow, `17px` between the hero edge and headline start, `17px` between the teaser end and hero edge, and the converter workflow rail below the converter copy with a `12px` gap.
   - Replaced emoji workflow pills with numbered text markers for `Paste link`, `Pick format`, and `Download file`; numbers are visual-only with `aria-hidden="true"`.

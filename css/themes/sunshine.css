@@ -107,9 +107,9 @@
         0 0 36px rgba(247, 205, 111, 0.44),
         0 0 74px rgba(249, 115, 22, 0.27);
     --sunshine-radiance-hover:
-        0 0 0 1px rgba(255, 248, 238, 0.42) inset,
-        0 14px 26px rgba(163, 88, 46, 0.12),
-        0 0 24px rgba(247, 205, 111, 0.22);
+        0 1px 0 rgba(255, 248, 238, 0.46) inset,
+        0 8px 14px rgba(163, 88, 46, 0.08),
+        0 0 0 1px rgba(207, 150, 82, 0.16);
 }
 
 :root[data-theme="sunshine"] .preview-player {
@@ -202,7 +202,6 @@
 }
 
 :root[data-theme="sunshine"] :is(
-    .format-btn.active,
     .batch-mode-btn.active,
     .theme-option.active,
     .karaoke-tab.active,
@@ -216,6 +215,22 @@
     --sunshine-button-shadow-peak: var(--sunshine-radiance-soft-peak);
     box-shadow: var(--sunshine-button-shadow);
     animation: sunshineButtonRadiate 3.4s ease-in-out infinite;
+}
+
+:root[data-theme="sunshine"] .format-btn.active {
+    box-shadow:
+        0 1px 0 rgba(255, 248, 238, 0.5) inset,
+        0 12px 22px rgba(163, 88, 46, 0.12),
+        0 0 0 1px rgba(207, 150, 82, 0.22);
+    animation: none;
+}
+
+:root[data-theme="sunshine"] .format-btn.active:hover {
+    border-color: rgba(207, 150, 82, 0.34);
+    box-shadow:
+        0 1px 0 rgba(255, 248, 238, 0.54) inset,
+        0 10px 18px rgba(163, 88, 46, 0.1),
+        0 0 0 1px rgba(207, 150, 82, 0.2);
 }
 
 :root[data-theme="sunshine"] :is(
@@ -235,6 +250,7 @@
 :root[data-theme="sunshine"] :is(
     .paste-btn:hover,
     .format-btn:hover:not(.active),
+    .batch-mode-btn:hover:not(.active),
     .theme-option:hover:not(.active),
     .clear-btn:hover:not(:disabled),
     .preview-lyrics-btn:hover,
@@ -287,6 +303,15 @@
     color: hsl(22 44% 28%);
 }
 
+:root[data-theme="sunshine"] .preview-close:hover {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 82%),
+        rgba(255, 215, 170, 0.72);
+    border-color: rgba(207, 150, 82, 0.52);
+    color: hsl(20 52% 28%);
+    box-shadow: var(--sunshine-radiance-hover);
+}
+
 :root[data-theme="sunshine"] .preview-controls {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 88%),
@@ -311,7 +336,6 @@
 
 @media (prefers-reduced-motion: reduce) {
     :root[data-theme="sunshine"] :is(
-        .format-btn.active,
         .batch-mode-btn.active,
         .theme-option.active,
         .karaoke-tab.active,

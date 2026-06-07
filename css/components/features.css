@@ -78,7 +78,9 @@
 }
 
 .popular-title-icon {
-    font-size: 1.25rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: color-mix(in srgb, var(--hero-headlight) 72%, var(--hero-orb));
 }
 
 .popular-subtitle {
@@ -135,7 +137,12 @@
     height: 2.4rem;
     border-radius: 0.85rem;
     background: color-mix(in srgb, var(--genre-accent) 18%, transparent);
-    font-size: 1.15rem;
+    color: color-mix(in srgb, var(--genre-accent) 72%, var(--foreground));
+}
+
+.popular-genre-icon .ui-icon {
+    width: 1.12rem;
+    height: 1.12rem;
 }
 
 .popular-genre-copy {
@@ -170,8 +177,9 @@
     display: flex;
     gap: 0.45rem;
     overflow-x: auto;
-    padding: 0.35rem 0.35rem 0.95rem;
-    margin: -0.35rem -0.35rem 0.35rem;
+    padding: 0.45rem 0.7rem 1rem;
+    margin: -0.45rem -0.7rem 0.3rem;
+    scroll-padding-inline: 0.7rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -223,16 +231,25 @@
 }
 
 .genre-tab-icon {
-    font-size: 0.875rem;
+    display: inline-grid;
+    place-items: center;
+    width: 0.95rem;
+    height: 0.95rem;
+    color: color-mix(in srgb, var(--genre-accent) 70%, currentcolor);
+}
+
+.genre-tab-icon .ui-icon {
+    width: 0.95rem;
+    height: 0.95rem;
 }
 
 .video-carousel {
     display: flex;
     gap: 0.9rem;
     overflow-x: auto;
-    padding: 0.55rem 0.35rem 0.8rem;
-    margin: -0.3rem -0.35rem -0.3rem;
-    scroll-padding-inline: 0.35rem;
+    padding: 0.75rem 1.75rem 2.15rem;
+    margin: -0.5rem -1.75rem -1.25rem;
+    scroll-padding-inline: 1.75rem;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--border) 92%, transparent) transparent;
     scroll-snap-type: x mandatory;
@@ -596,6 +613,10 @@
 }
 
 .preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    min-height: 1.45rem;
     font-size: 0.5625rem;
     font-family: var(--font-mono);
     font-weight: 600;
@@ -611,12 +632,18 @@
     flex-shrink: 0;
     margin-left: auto;
     align-self: flex-start;
+    white-space: nowrap;
+}
+
+.preview-badge-icon {
+    width: 0.8rem;
+    height: 0.8rem;
 }
 
 .preview-close {
     width: 26px;
     height: 26px;
-    border-radius: 50%;
+    border-radius: 0.55rem;
     background: var(--surface-glass-soft);
     border: 1px solid color-mix(in srgb, var(--hero-border) 74%, transparent);
     color: var(--muted-foreground);
@@ -641,8 +668,10 @@
 }
 
 .preview-close:hover {
-    background: var(--rose);
-    color: var(--destructive-foreground);
+    background: color-mix(in srgb, var(--rose) 14%, var(--surface-glass-soft));
+    border-color: color-mix(in srgb, var(--rose) 42%, var(--hero-border));
+    color: color-mix(in srgb, var(--rose) 76%, var(--foreground));
+    transform: translateY(var(--hover-lift));
 }
 
 .preview-close svg {

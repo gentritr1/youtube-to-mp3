@@ -1,6 +1,6 @@
 {
   "name": "Genre Name",
-  "icon": "🎵",
+  "icon": "music",
   "color": "#22c55e",
   "description": "Short description for the UI.",
   "order": 100,

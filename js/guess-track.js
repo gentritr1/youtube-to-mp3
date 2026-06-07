@@ -3,6 +3,7 @@
  */
 
 import { RUNTIME_THEME_TOKEN_DEFAULTS } from './ui/runtimeColorFallbacks.js';
+import { iconSvg } from './ui/icons.js';
 
 let _getRandomTracks = null;
 
@@ -19,8 +20,8 @@ const getBurstConfigs = (root = document.documentElement) => {
     const foreground = readThemeValue(styles, '--foreground', RUNTIME_THEME_TOKEN_DEFAULTS.foreground);
 
     return {
-        success: { count: 14, symbols: ['✦', '•', '♪'], colors: [emerald, amber, sky] },
-        streak: { count: 18, symbols: ['🔥', '✦', '♫'], colors: [rose, amber, heroHeadlight] },
+        success: { count: 14, symbols: ['+', '*', '.'], colors: [emerald, amber, sky] },
+        streak: { count: 18, symbols: ['*', '+', 'x'], colors: [rose, amber, heroHeadlight] },
         miss: { count: 10, symbols: ['✕', '•'], colors: [rose, roseSoft, foreground] }
     };
 };
@@ -398,7 +399,11 @@ export class GuessTrackGame {
     updateStatsUI() {
         this.elements.scoreDisplay.textContent = this.score;
         const clampedLives = Math.max(0, Math.min(this.lives, 3));
-        this.elements.livesDisplay.textContent = '❤️'.repeat(clampedLives) + '🖤'.repeat(3 - clampedLives);
+        this.elements.livesDisplay.innerHTML = Array.from({ length: 3 }, (_, index) => iconSvg(
+            index < clampedLives ? 'heart' : 'heart-empty',
+            `ui-icon gt-life-icon ${index < clampedLives ? 'is-live' : 'is-empty'}`
+        )).join('');
+        this.elements.livesDisplay.setAttribute('aria-label', `${clampedLives} ${clampedLives === 1 ? 'life' : 'lives'}`);
         this.elements.streakDisplay.textContent = this.streak;
         const streakProgress = Math.min((this.streak / 3) * 100, 100);
         if (this.elements.streakMeterFill) {

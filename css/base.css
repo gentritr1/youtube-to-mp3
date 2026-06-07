@@ -175,6 +175,22 @@
     --game-canvas-border: hsl(225 10% 13%);
 }
 
+.ui-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    flex: 0 0 auto;
+    color: currentcolor;
+    overflow: visible;
+}
+
+[data-ui-icon] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
 /* ========================================
    Reset & Base
    ======================================== */

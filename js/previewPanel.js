@@ -37,7 +37,7 @@ export const showPreviewError = (elements, message) => {
     if (elements?.previewTransitionNote) {
         elements.previewTransitionNote.textContent = 'Preview unavailable';
     }
-    elements.previewLoadingText.textContent = `⚠️ ${message}`;
+    elements.previewLoadingText.textContent = message;
     elements.previewLoadingText.style.color = 'var(--destructive)';
 };
 

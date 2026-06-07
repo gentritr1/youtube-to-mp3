@@ -1,9 +1,9 @@
 .karaoke-card {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--space-3);
     align-content: start;
-    padding: var(--space-5);
-    border-radius: 1.35rem;
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
     min-height: auto;
     border: 1px solid color-mix(in srgb, var(--hero-border) 60%, transparent);
     background:
@@ -22,16 +22,16 @@
 }
 
 .karaoke-panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
     gap: var(--space-3);
-    flex-wrap: wrap;
 }
 
 .karaoke-eyebrow {
     display: inline-flex;
     align-items: center;
+    gap: 0.38rem;
     width: fit-content;
     padding: 0.28rem 0.55rem;
     border-radius: 999px;
@@ -44,6 +44,12 @@
     text-transform: uppercase;
 }
 
+.karaoke-eyebrow .eyebrow-icon {
+    width: 0.82rem;
+    height: 0.82rem;
+    color: color-mix(in srgb, var(--hero-orb) 76%, var(--foreground));
+}
+
 .karaoke-panel-title {
     margin: 0.35rem 0 0;
     font-size: 1.08rem;
@@ -54,6 +60,7 @@
 
 .karaoke-panel-tabs {
     display: inline-flex;
+    width: fit-content;
     padding: var(--space-1);
     border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--foreground) 3%, transparent);
@@ -99,11 +106,12 @@
     grid-template-columns: auto 1fr;
     gap: var(--space-2);
     align-items: start;
-    padding: var(--space-3);
+    padding: 0.85rem;
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--foreground) 3%, color-mix(in srgb, var(--secondary) 40%, transparent));
-    border: 1px solid color-mix(in srgb, var(--hero-border) 40%, transparent);
-    box-shadow: 0 8px 24px color-mix(in srgb, black 10%, transparent);
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 9%, transparent), transparent 62%),
+        color-mix(in srgb, var(--surface-overlay-soft) 86%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 34%, transparent);
 }
 
 .karaoke-status-badge {
@@ -323,54 +331,114 @@
 
 .studio-teaser-card {
     display: grid;
-    gap: var(--space-3);
-    padding: var(--space-3);
+    gap: 0.85rem;
+    padding: 0.9rem;
     border-radius: var(--radius-xl);
     border: 1px solid color-mix(in srgb, var(--hero-orb) 28%, var(--surface-outline));
     background:
-        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 14%, transparent), color-mix(in srgb, var(--foreground) 3%, transparent)),
+        radial-gradient(circle at top right, color-mix(in srgb, var(--hero-orb) 10%, transparent), transparent 56%),
+        linear-gradient(135deg, color-mix(in srgb, var(--hero-orb) 8%, transparent), color-mix(in srgb, var(--foreground) 3%, transparent)),
         var(--surface-overlay-soft);
+}
+
+.studio-teaser-top {
+    display: grid;
+    gap: 0.45rem;
 }
 
 .studio-teaser-copy {
     margin: 0;
     color: var(--foreground);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     line-height: 1.55;
+}
+
+.studio-teaser-mode {
+    width: fit-content;
+    border-radius: var(--radius-pill);
+    border: 1px solid color-mix(in srgb, var(--hero-border) 40%, transparent);
+    background: color-mix(in srgb, var(--surface-overlay-strong) 78%, transparent);
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 0.28rem 0.5rem;
+}
+
+.studio-teaser-meter {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 0.2rem;
+}
+
+.studio-teaser-meter span {
+    position: relative;
+    height: 0.38rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--hero-orb) 20%, var(--surface-overlay-strong));
+}
+
+.studio-teaser-meter span:first-child {
+    background: color-mix(in srgb, var(--hero-orb) 54%, var(--surface-overlay-strong));
+}
+
+.studio-teaser-meter span:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: calc(100% + 0.12rem);
+    top: 50%;
+    width: 0.22rem;
+    height: 1px;
+    background: color-mix(in srgb, var(--hero-border) 62%, transparent);
 }
 
 .studio-teaser-list {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-2);
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
 .studio-teaser-list li {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: auto 1fr;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    min-height: 2rem;
-    padding: 0.38rem var(--space-2);
+    column-gap: var(--space-2);
+    min-height: 2.35rem;
+    padding: 0.44rem 0.55rem;
     border-radius: var(--radius);
     border: 1px solid color-mix(in srgb, var(--hero-border) 42%, transparent);
     background: color-mix(in srgb, var(--surface-overlay-strong) 84%, transparent);
     color: color-mix(in srgb, var(--foreground) 88%, var(--muted-foreground));
-    font-size: 0.72rem;
-    font-weight: 800;
-    text-align: center;
+    text-align: left;
 }
 
 .studio-teaser-list li::before {
     content: '';
+    grid-row: 1 / span 2;
     width: 0.5rem;
     height: 0.5rem;
     border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--hero-orb) 82%, var(--foreground));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--hero-orb) 14%, transparent);
+}
+
+.studio-teaser-list li span {
+    color: var(--foreground);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.studio-teaser-list li small {
+    color: var(--muted-foreground);
+    font-size: 0.68rem;
+    line-height: 1.25;
 }
 
 .studio-teaser-link {
@@ -380,7 +448,7 @@
     width: fit-content;
     min-height: var(--control-height);
     padding: var(--control-padding-y) var(--control-padding-x);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-control);
     border: 1px solid color-mix(in srgb, var(--hero-orb) 44%, transparent);
     background: color-mix(in srgb, var(--hero-orb) 14%, var(--surface-overlay-strong));
     color: var(--button-glass-foreground);

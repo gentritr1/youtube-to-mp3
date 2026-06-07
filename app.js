@@ -11,6 +11,7 @@ import { batchDownloads, setApiBaseUrl, setPreviewCallback } from './js/batch.js
 import { SnakeGame } from './js/game/index.js';
 import { GuessTrackGame, setTrackProvider } from './js/guess-track.js';
 import { AudioVisualizer } from './js/visualizer.js';
+import { hydrateIcons } from './js/ui/icons.js';
 
 // Configuration
 const API_URL = '';
@@ -75,6 +76,7 @@ let statsIntervalId = null;
 const YT_REGEX = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
 try {
+    hydrateIcons(document);
     themeController.init();
 } catch (error) {
     console.error('themeController.init failed', error);
