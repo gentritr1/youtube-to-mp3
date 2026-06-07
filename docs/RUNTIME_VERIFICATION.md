@@ -26,7 +26,7 @@ Open `http://localhost:3000` after `npm start`.
 ## Theme And Layout Pass
 
 - Themes: verify `space`, `green`, `frutiger-aero`, and `sunshine`.
-- Hero/converter first viewport: verify the hero preview remains compact, the hero preview and headline have balanced edge breathing room on desktop, the URL input is visible without scrolling on desktop, narrow desktop/tablet, and mobile, and the Convert action remains visible at the historical `1491x851` comparison size plus a large `1536x900` desktop viewport.
+- Hero/converter first viewport: verify the hero preview remains compact, the hero copy keeps the same standard card padding rhythm as the rest of the page, the URL input is visible without scrolling on desktop, narrow desktop/tablet, and mobile, and the Convert action remains visible at the historical `1491x851` comparison size plus a large `1536x900` desktop viewport.
 - Mobile theme switcher: verify the swatch controls stay one row, remain keyboard focusable, and keep accessible names despite visually hidden labels.
 - Theme swatches: verify each theme chip keeps its own destination swatch colors while another theme is active; selecting Sunshine must not make Space, Green, or Frutiger Aero swatches turn into Sunshine colors.
 - Sunshine theme: verify active converter buttons, batch actions, popular genre tabs, track tags, hero theme swatches, and conversion teaser card/meter accents use warm amber/peach/clay accents rather than cool blue/cyan, green progress fills, or harsh red fills. Verify primary, selected, preview, and game-launch buttons have a controlled warm radiance in normal motion and become static under `prefers-reduced-motion: reduce`.
@@ -44,6 +44,7 @@ Open `http://localhost:3000` after `npm start`.
 - Conversion success: verify the download button is visible immediately, or within roughly 500ms, after a successful conversion and is not blocked by a staged decorative reveal.
 - Format toggle semantics: inspect MP3/MP4 buttons and verify the selected button exposes `aria-pressed="true"` while the other exposes `aria-pressed="false"`.
 - Batch controls: verify batch mode toggle, active toggle text contrast, right-side context copy/step/jump text contrast, add/remove item controls, preview item button, convert/clear actions, per-item download buttons, and new-batch action.
+- Converter workflow rail: verify the Paste/Pick/Download guidance sits below the converter copy with enough separation, uses numeric markers instead of emoji pills, and does not right-align into a competing chip cluster on desktop.
 - Button contrast: verify active, inactive, hover, destructive, disabled, and selected text/icon contrast on converter controls, theme chips, genre tabs, video action buttons, preview close/actions, studio/assistant controls, arcade launch buttons, mini-game switch/minimize buttons, and Guess Track answer states in all four themes.
 - Clipped hover/focus audit: hover and keyboard-focus the first, active, and last genre chips; first and last popular video cards; batch queue/progress rows and row actions; and the first/last point-rail timing chips. Verify lifted borders, shadows, and focus rings are not clipped by their scroll containers or rails.
 - Discovery preview controls: verify play/pause, close, preview loading/error, progress/waveform, and one-click convert controls.

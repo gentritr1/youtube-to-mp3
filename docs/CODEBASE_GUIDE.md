@@ -453,7 +453,7 @@ It includes:
 
 Hero decoration should stay static or very calm so it does not compete with conversion.
 
-The right-side hero preview is a compact conversion teaser, not the full discovery audio preview. Keep it useful and enticing, but cap its desktop column so it does not inflate the hero height. On large screens, the hero should feel like conversion context rather than a billboard: keep the preview and headline in a centered column pair with matching edge breathing room, and keep the converter input and Convert action reachable in the first viewport at both the historical comparison size (`1491x851`) and a standard large desktop size (`1536x900`). On mobile, remove secondary teaser details such as the MP3/MP4 badge and progress rail before letting the converter input drop below the first viewport. See [DESIGN_DECISION_HISTORY.md](./DESIGN_DECISION_HISTORY.md) for the before/after record.
+The right-side hero preview is a compact conversion teaser, not the full discovery audio preview. Keep it useful and enticing, but cap its desktop column so it does not inflate the hero height. On large screens, the hero should feel like conversion context rather than a billboard: keep the hero copy on the same standard card padding rhythm as the rest of the surface instead of adding a special left inset to balance the preview, and keep the converter input and Convert action reachable in the first viewport at both the historical comparison size (`1491x851`) and a standard large desktop size (`1536x900`). On mobile, remove secondary teaser details such as the MP3/MP4 badge and progress rail before letting the converter input drop below the first viewport. See [DESIGN_DECISION_HISTORY.md](./DESIGN_DECISION_HISTORY.md) for the before/after record.
 
 The theme switcher remains available in the hero, but mobile uses compact swatch-style buttons with visually hidden labels. Preserve the accessible button text when changing this control.
 
@@ -467,6 +467,8 @@ The converter flow is split into:
 - conversion progress state
 - completion/download state
 - batch flow when enabled
+
+The converter's quick workflow guidance should read like product UI, not marketing decoration. Use a restrained inline step rail with text labels and small numeric markers. Avoid emoji pills, oversized badges, or right-aligned chip clusters that compete with the input.
 
 Themed converter visuals should be driven by shared tokens and animation registries, not embedded inline in `app.js`.
 

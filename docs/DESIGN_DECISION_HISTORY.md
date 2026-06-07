@@ -168,7 +168,7 @@ Treat the original critique as resolved unless future changes move the URL input
 
 ## 2026-06-07: Sunshine Hero Preview Follow-Up
 
-**Status:** Accepted
+**Status:** Superseded by the 2026-06-08 spacing correction
 
 **Trigger:** Sunshine still read too cool in the hero conversion preview, and the right-side teaser felt pushed to the far desktop edge instead of balanced with the headline.
 
@@ -186,3 +186,22 @@ Treat the original critique as resolved unless future changes move the URL input
 ### Verification
 
 Browser verification at `1491x851` measured no horizontal overflow, `72px` between the hero edge and headline start, and `72px` between the teaser end and hero edge. Computed Sunshine teaser colors were warm cream/amber for the card and orange for the meter.
+
+---
+
+## 2026-06-08: Converter Step Rail And Hero Padding Correction
+
+**Status:** Accepted
+
+**Trigger:** The centered hero column pair added visible left padding to the “Paste a YouTube link…” headline, which made the hero feel detached from the converter card spacing. The converter workflow chips also read as emoji-heavy decoration.
+
+### What Changed
+
+- Restored the hero main grid to the shared card padding rhythm so the headline starts at the normal hero inset.
+- Kept the compact conversion teaser and warm Sunshine-specific preview colors.
+- Replaced the right-aligned emoji workflow pills with a quiet inline step rail: Paste link, Pick format, Download file.
+- Hid the visual step numbers from assistive text so the labels remain clean.
+
+### Verification
+
+Browser verification at `1491x851` measured no horizontal overflow, `17px` between the hero edge and headline start, and `17px` between the teaser end and hero edge. The converter workflow rail sits below the converter copy with a `12px` gap and no pill backgrounds.

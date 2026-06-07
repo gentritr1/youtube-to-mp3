@@ -17,6 +17,14 @@ node --check js/ui/themeController.js
 
 ## Current Status
 
+- Converter step rail and hero padding correction on 2026-06-08:
+  - Browser verification used the in-app browser against `http://127.0.0.1:3000` with a temporary `1491x851` viewport. Verified Sunshine active state, no horizontal overflow, `17px` between the hero edge and headline start, `17px` between the teaser end and hero edge, and the converter workflow rail below the converter copy with a `12px` gap.
+  - Replaced emoji workflow pills with numbered text markers for `Paste link`, `Pick format`, and `Download file`; numbers are visual-only with `aria-hidden="true"`.
+  - `npx vitest run tests/documentation.test.ts tests/serviceWorker.test.ts`: passed, 81 tests.
+  - `npm run build`: passed.
+  - `git diff --check`: passed.
+  - `rg "transition:\s*all" css js`: no matches.
+  - `node scripts/sync-service-worker-assets.mjs`: passed; service-worker asset hash is `9d164c95ad`.
 - Sunshine hero preview alignment follow-up on 2026-06-07:
   - Browser verification used the in-app browser against `http://127.0.0.1:3000` with a temporary `1491x851` viewport. Verified Sunshine active state, no horizontal overflow, `72px` between the hero edge and headline start, `72px` between the teaser end and hero edge, and the teaser centered in its column.
   - Verified computed Sunshine teaser colors: warm cream/amber card, orange meter, and destination-specific theme swatches where Space stays blue, Green stays green, Frutiger Aero stays cyan/green, and Sunshine stays amber/peach.
